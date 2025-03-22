@@ -279,6 +279,9 @@ void BiDirCPURenderThread::ConnectVertices(const float time,
 			BSDF bsdfConn;
 			Spectrum connectionThroughput;
 			PathVolumeInfo volInfo = eyeVertex.volInfo; // I need to use a copy here
+			// For the connection event, we need to evaluate the volume based on whether the shadow ray is going into the object or not
+			bool connectionIntoObject = (Dot(lightVertex.bsdf.hitPoint.geometryN, -shadowRayDir) < 0.f);
+			volInfo.SetCurrentVolume(connectionIntoObject ? lightVertex.bsdf.hitPoint.interiorVolume : lightVertex.bsdf.hitPoint.exteriorVolume);
 			if (!scene->Intersect(device, LIGHT_RAY | INDIRECT_RAY | SHADOW_RAY, &volInfo, u0, &p2pRay, &p2pRayHit, &bsdfConn,
 					&connectionThroughput)) {
 				// Nothing was hit, the light path vertex is visible

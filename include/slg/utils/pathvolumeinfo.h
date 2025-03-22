@@ -50,6 +50,7 @@ public:
 
 	void AddVolume(const Volume *vol);
 	void RemoveVolume(const Volume *vol);
+	void SetCurrentVolume(const Volume *vol) { currentVolume = vol; }
 
 	const Volume *SimulateRemoveVolume(const Volume *vol) const;
 	const Volume *SimulateAddVolume(const Volume *vol) const;
