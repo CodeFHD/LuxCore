@@ -6,7 +6,7 @@
     "prerelease": "dev0"
   },
   "Dependencies": {
-    "user": "howetuft",
+    "user": "LuxCoreRender",
     "release": "1.1.0-dev0"
   },
   "Build": {
