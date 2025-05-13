@@ -310,7 +310,6 @@ jobs:
             dnf install -y almalinux-release-devel
             dnf install -y ccache
             dnf install -y perl-IPC-Cmd perl-Digest-SHA
-            dnf install -y sudo
 
             # Install gh (via conda)
             dnf install -y wget
