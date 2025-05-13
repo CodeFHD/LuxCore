@@ -147,6 +147,16 @@ if(LINUX)
           GROUP_READ GROUP_EXECUTE
           WORLD_READ WORLD_EXECUTE
     )
+    # This step seems necessary for some distros (including Ubuntu...)
+    install(
+      PROGRAMS "${LUX_OIDN_CORE}"
+        TYPE LIB
+        COMPONENT luxcore
+        PERMISSIONS
+          OWNER_WRITE OWNER_READ OWNER_EXECUTE
+          GROUP_READ GROUP_EXECUTE
+          WORLD_READ WORLD_EXECUTE
+    )
 endif()
 # For MacOS, DENOISE_CPU is declared as dep and directly installed by
 # luxcore's runtime_dependencies
