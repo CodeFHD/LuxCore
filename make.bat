@@ -57,6 +57,8 @@ if "%COMMAND%" == "" (
     call :WinRecompose %2
 ) else if "%COMMAND%" == "list-presets" (
     call :ListPresets
+) else if "%COMMAND%" == "wheel-test" (
+    call :WheelTest
 ) else (
     echo Command "%COMMAND%" unknown
 )
@@ -93,6 +95,10 @@ goto :EOF
 
 :Clean
 call %LUXMAKE% clean
+goto :EOF
+
+:WheelTest
+call %LUX_CMAKE% wheel-test
 goto :EOF
 
 :Clear
