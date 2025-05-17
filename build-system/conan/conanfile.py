@@ -58,8 +58,7 @@ class LuxCore(ConanFile):
                 / f"libOpenImageDenoise_device_cpu.so.{oidn_version}"
             )
             denoise_core = (
-                oidn_libdir
-                / f"libOpenImageDenoise_core.so.{oidn_version}"
+                oidn_libdir / f"libOpenImageDenoise_core.so.{oidn_version}"
             )
         elif self_settings_os == "Windows":
             denoise_cpu = oidn_bindir / "OpenImageDenoise_device_cpu.dll"
@@ -70,8 +69,7 @@ class LuxCore(ConanFile):
                 / f"OpenImageDenoise_device_cpu.{oidn_version}.pylib"
             )
             denoise_core = (
-                oidn_libdir
-                / f"OpenImageDenoise_core.{oidn_version}.pylib"
+                oidn_libdir / f"OpenImageDenoise_core.{oidn_version}.pylib"
             )
         else:
             raise RuntimeError(f"OIDN: Unhandled os ({self_settings_os})")

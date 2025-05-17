@@ -30,7 +30,9 @@ def unpack(path, dest):
         str(path),
     ]
     try:
-        output = subprocess.check_output(args, text=True, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(
+            args, text=True, stderr=subprocess.STDOUT
+        )
     except subprocess.CalledProcessError as err:
         print(err.output)
         raise
@@ -48,7 +50,9 @@ def pack(directory, dest_dir):
         str(directory),
     ]
     try:
-        output = subprocess.check_output(args, text=True, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(
+            args, text=True, stderr=subprocess.STDOUT
+        )
     except subprocess.CalledProcessError as err:
         print(err.output)
         raise

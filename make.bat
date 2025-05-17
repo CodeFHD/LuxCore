@@ -15,7 +15,7 @@ if "%LUX_PYTHON%" == "" (
     set LUX_PYTHON=python
 )
 
-set LUX_CMAKE="%LUX_PYTHON%" -u build-system\luxmake\cmake.py
+set LUX_CMAKE="%LUX_PYTHON%" -u -m build-system.luxmake
 
 if "%COMMAND%" == "" (
     call :Config

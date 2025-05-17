@@ -33,6 +33,8 @@ from dataclasses import (
 )
 
 
+from .constants import BINARY_DIR
+
 CONAN_ALL_PACKAGES = '"*"'
 
 
@@ -189,7 +191,7 @@ def download(
         logger.warning(msg)
         msg = (
             Colors.WARNING,
-            "Cannot find 'gh'application - ",
+            "Cannot find 'gh' application - ",
             "Dependencies origin cannot be checked.",
             Colors.ENDC,
         )
@@ -513,6 +515,13 @@ def main(
 
     msg = Colors.OKBLUE + "END" + Colors.ENDC
     logger.info(msg)
+
+
+def deps(
+    _,
+):
+    """Install dependencies."""
+    main([f"--output={BINARY_DIR}"])
 
 
 if __name__ == "__main__":
