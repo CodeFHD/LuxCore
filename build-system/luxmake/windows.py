@@ -13,10 +13,22 @@ from pathlib import Path
 import argparse
 import tempfile
 import shutil
+import sys
 
 from wheel.wheelfile import WheelFile
 
 from .utils import pack, unpack, logger
+
+def _rename(basepath, org, dest):
+    """Rename wheel component."""
+    try:
+        shutil.move(
+            basepath / "pyluxcore.libs" / org,
+            basepath / "pyluxcore.libs" / dest,
+        )
+    except FileNotFoundError:
+        logger.error("Missing file in wheel: '%s'", org)
+        sys.exit(1)
 
 
 def win_recompose(args):
@@ -35,23 +47,17 @@ def win_recompose(args):
 
         # Rename and move oidnDenoise
         logger.info("Renaming oidnDenoise.pyd into oidnDenoise.exe")
-        shutil.move(
-            unpacked_wheel_path / "pyluxcore.libs" / "oidnDenoise.pyd",
-            unpacked_wheel_path / "pyluxcore.libs" / "oidnDenoise.exe",
-        )
+        _rename(unpacked_wheel_path, "oidnDenoise.pyd", "oidnDenoise.exe")
 
         # Rename and move OpenImageDenoise_device_cpu
         logger.info(
             "Renaming OpenImageDenoise_device_cpu.pyd "
             "into OpenImageDenoise_device_cpu.dll"
         )
-        shutil.move(
-            unpacked_wheel_path
-            / "pyluxcore.libs"
-            / "OpenImageDenoise_device_cpu.pyd",
-            unpacked_wheel_path
-            / "pyluxcore.libs"
-            / "OpenImageDenoise_device_cpu.dll",
+        _rename(
+            unpacked_wheel_path,
+            "OpenImageDenoise_device_cpu.pyd",
+            "OpenImageDenoise_device_cpu.dll",
         )
 
         # Repack wheel

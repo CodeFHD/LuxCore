@@ -67,7 +67,7 @@ def main():
 
     # Win wheel recomposing
     parser_wheel = subparsers.add_parser("win-recompose")
-    parser_build_and_install.add_argument("wheel")
+    parser_wheel.add_argument("wheel")
     parser_wheel.set_defaults(func=win_recompose)
 
     # Clear

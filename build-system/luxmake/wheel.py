@@ -16,7 +16,7 @@ from pathlib import Path
 from .constants import SOURCE_DIR, INSTALL_DIR, BINARY_DIR, WHEELHOUSE_DIR
 from .utils import logger, pack
 from .build import build_and_install
-from .windows import recompose
+from .windows import win_recompose
 
 _WHEEL_SNIPPET = """\
 Wheel-Version: 1.0
