@@ -36,7 +36,7 @@ install:
 package:
 	$(LUX-CMAKE) build-and-install package
 
-wheel-test:
+wheel-test: pyluxcore
 	$(LUX-CMAKE) wheel-test
 
 win-recompose:

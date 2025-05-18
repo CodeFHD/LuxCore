@@ -97,6 +97,7 @@ call %LUXMAKE% clean
 goto :EOF
 
 :WheelTest
+call %LUXMAKE% pyluxcore
 call %LUXMAKE% wheel-test
 goto :EOF
 
