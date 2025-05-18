@@ -329,13 +329,13 @@ jobs:
             fi
 
             # Install dependencies
-            pip install conan && make deps
+            pip install conan && pip install wheel && make deps
 
           CIBW_BEFORE_ALL_MACOS: |
-            pip install conan && make deps
+            pip install conan && pip install wheel && make deps
 
           CIBW_BEFORE_ALL_WINDOWS: |
-            pip install conan && make deps
+            pip install conan && pip install wheel && make deps
 
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
