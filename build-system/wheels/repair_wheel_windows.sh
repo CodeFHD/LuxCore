@@ -43,5 +43,5 @@ files=$(ls -1 ${dest_dir2}/*.whl)
 # There should be only one wheel, but strictly speaking, we need a loop
 for filename in $files;
 do
-  python $GITHUB_WORKSPACE/build-system/wheels/recompose_wheel_windows.py -- ${filename}
+  make win-recompose filename
 done
