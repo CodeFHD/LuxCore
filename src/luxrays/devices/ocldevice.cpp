@@ -172,6 +172,8 @@ void OpenCLDevice::CompileProgram(HardwareDeviceProgram **program,
 
 	LR_LOG(deviceContext, "[" << programName << "] Compiler options: " << oclKernelPersistentCache::ToOptsString(oclProgramParameters));
 	LR_LOG(deviceContext, "[" << programName << "] Compiling kernels ");
+	LR_LOG(deviceContext, "[" << programName << "] Cache directory: " << oclKernelPersistentCache::GetCacheDir(dynamic_cast<oclKernelPersistentCache*>(kernelCache)->GetApplicationName()));
+        
 
 	const string oclProgramSource =
 		luxrays::ocl::KernelSource_ocldevice_funcs +
