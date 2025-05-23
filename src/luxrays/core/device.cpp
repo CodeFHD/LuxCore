@@ -114,3 +114,4 @@ void Device::Stop() {
 	assert (started);
 	started = false;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

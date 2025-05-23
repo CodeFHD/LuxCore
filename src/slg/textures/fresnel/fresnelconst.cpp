@@ -56,3 +56,4 @@ Properties FresnelConstTexture::ToProperties(const ImageMapCache &imgMapCache, c
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

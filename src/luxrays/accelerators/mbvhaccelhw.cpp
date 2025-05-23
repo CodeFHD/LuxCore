@@ -510,3 +510,4 @@ HardwareIntersectionKernel *MBVHAccel::NewHardwareIntersectionKernel(HardwareInt
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

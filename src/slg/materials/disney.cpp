@@ -606,3 +606,4 @@ void DisneyMaterial::AddReferencedTextures(std::unordered_set<const Texture *> &
 	if (filmIor)
 		filmIor->AddReferencedTextures(referencedTexs);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

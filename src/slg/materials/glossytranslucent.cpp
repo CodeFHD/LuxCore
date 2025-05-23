@@ -441,3 +441,4 @@ Properties GlossyTranslucentMaterial::ToProperties(const ImageMapCache &imgMapCa
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

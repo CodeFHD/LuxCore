@@ -157,3 +157,4 @@ void ImageMapResizeMinMemPolicy::Preprocess(ImageMapCache &imc, const Scene *sce
 	SDL_LOG("Applying resize policy " << ImageMapResizePolicyType2String(GetType()) << " time: " <<
 			(boost::format("%.1f") % (WallClockTime() - startTime)) << "secs");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

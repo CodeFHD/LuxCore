@@ -3706,3 +3706,4 @@ yyreturn:
 }
 #line 1877 "/home/david/projects/luxcorerender/LuxCore/src/luxcore/luxparser/luxparse.y" /* yacc.c:1906  */
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -167,3 +167,4 @@ SAMPLER_OBJECTSTATICREGISTRY_REGISTER(SamplerRegistry, MetropolisSampler);
 SAMPLER_OBJECTSTATICREGISTRY_REGISTER(SamplerRegistry, RTPathCPUSampler);
 SAMPLER_OBJECTSTATICREGISTRY_REGISTER(SamplerRegistry, TilePathSampler);
 // Just add here any new Sampler (don't forget in the .h too)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

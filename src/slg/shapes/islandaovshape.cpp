@@ -124,3 +124,4 @@ IslandAOVShape::~IslandAOVShape() {
 ExtTriangleMesh *IslandAOVShape::RefineImpl(const Scene *scene) {
 	return mesh;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

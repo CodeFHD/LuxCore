@@ -82,3 +82,4 @@ void GenericFrameBuffer<3, 0, float>::SaveHDR(const string &fileName,
 		throw runtime_error("Error while writing an output type in GenericFrameBuffer<4, 1, float>::SaveHDR(): " +
 				fileName + " (error = " + buffer.geterror() + ")");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

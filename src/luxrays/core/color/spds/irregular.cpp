@@ -139,3 +139,4 @@ void IrregularSPD::calc_spline_data(const float* const wavelengths,
 		spline_data[n - k - 1] = spline_data[n - k - 1] *
 			spline_data[n - k] + u[k];
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

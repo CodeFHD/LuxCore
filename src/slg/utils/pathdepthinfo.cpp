@@ -54,3 +54,4 @@ bool PathDepthInfo::IsLastPathVertex(const PathDepthInfo &maxPathDepth, const BS
 u_int PathDepthInfo::GetRRDepth() const {
 	return diffuseDepth + glossyDepth;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

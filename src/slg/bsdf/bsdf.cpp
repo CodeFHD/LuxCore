@@ -423,3 +423,4 @@ const string slg::AlbedoSpecularSetting2String(const AlbedoSpecularSetting type)
 			throw runtime_error("Unknown albedo specular setting in AlbedoSpecularSetting2String(): " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -153,3 +153,4 @@ bool LightPathInfo::IsCausticPath(const BSDFEvent event,
 	return isNearlyS && (depth.depth + 1 > 1) &&
 			!IsNearlySpecular(event, glossiness, glossinessThreshold);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

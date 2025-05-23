@@ -356,3 +356,4 @@ bool MBVHAccel::Intersect(const Ray *ray, RayHit *rayHit) const {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

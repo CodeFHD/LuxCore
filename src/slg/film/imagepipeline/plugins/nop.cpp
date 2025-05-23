@@ -46,3 +46,4 @@ void NopPlugin::AddHWChannelsUsed(unordered_set<Film::FilmChannelType, hash<int>
 
 void NopPlugin::ApplyHW(Film &film, const u_int index) {
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

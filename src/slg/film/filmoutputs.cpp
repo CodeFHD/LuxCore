@@ -560,3 +560,4 @@ const string FilmOutputs::FilmOutputType2String(const FilmOutputs::FilmOutputTyp
 			throw runtime_error("Unknown film output type: " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

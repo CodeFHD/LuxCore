@@ -60,3 +60,4 @@ ToneMapType slg::String2ToneMapType(const std::string &type) {
 	else
 		throw runtime_error("Unknown tone mapping type: " + type);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

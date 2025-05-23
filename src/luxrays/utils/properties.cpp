@@ -1126,3 +1126,4 @@ Properties luxrays::operator<<(const Property &prop0, const Property &prop1) {
 Properties luxrays::operator<<(const Property &prop0, const Properties &props) {
 	return Properties() << prop0 << props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -190,3 +190,4 @@ std::ostream &operator<<(std::ostream &os, const Transform &t) {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

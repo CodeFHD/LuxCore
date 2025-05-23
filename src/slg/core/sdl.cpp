@@ -21,3 +21,4 @@
 #include "slg/core/sdl.h"
 
 void (*slg::SLG_SDLDebugHandler)(const char *msg) = NULL;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

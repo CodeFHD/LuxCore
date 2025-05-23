@@ -326,3 +326,4 @@ Properties CPUTileRenderEngine::ToProperties(const Properties &cfg) {
 const Properties &CPUTileRenderEngine::GetDefaultProps() {
 	return TileRepository::GetDefaultProps();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

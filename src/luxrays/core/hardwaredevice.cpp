@@ -48,3 +48,4 @@ template <>
 void HardwareDevice::SetKernelArg<HardwareDeviceBufferPtr>(HardwareDeviceKernel *kernel, const u_int index, const HardwareDeviceBufferPtr &buff) {
 	SetKernelArgBuffer(kernel, index, buff);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

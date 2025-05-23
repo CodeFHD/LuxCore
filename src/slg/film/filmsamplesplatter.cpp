@@ -99,3 +99,4 @@ void FilmSampleSplatter::AtomicSplatSample(Film &film, const SampleResult &sampl
 		}
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

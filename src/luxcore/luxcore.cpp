@@ -575,3 +575,4 @@ RenderSession::~RenderSession() {
 	API_BEGIN_NOARGS();
 	API_END();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -314,3 +314,4 @@ void FilmDenoiser::AddSample(const u_int x, const u_int y,
 		CheckIfWarmUpDone();
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -493,3 +493,4 @@ SubdivShape::~SubdivShape() {
 ExtTriangleMesh *SubdivShape::RefineImpl(const Scene *scene) {
 	return mesh;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

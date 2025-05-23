@@ -99,3 +99,4 @@ template class IndexBvh<ELVCacheEntry>;
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::IndexBvh<Photon>)
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::IndexBvh<RadiancePhoton>)
 // Serialization for DLSCacheEntry is still TODO
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

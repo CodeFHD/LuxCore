@@ -242,3 +242,4 @@ Properties SunLight::ToProperties(const ImageMapCache &imgMapCache, const bool u
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

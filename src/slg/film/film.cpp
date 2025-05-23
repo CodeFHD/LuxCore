@@ -1410,3 +1410,4 @@ void Film::RunTests() {
 		noiseEstimation->Test();
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

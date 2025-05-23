@@ -111,3 +111,4 @@ string CompiledScene::ToOCLString(const slg::ocl::Spectrum &v) {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

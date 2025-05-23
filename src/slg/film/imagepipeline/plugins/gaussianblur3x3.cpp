@@ -286,3 +286,4 @@ void GaussianBlur3x3FilterPlugin::ApplyHW(Film &film, const u_int index) {
 			HardwareDeviceRange(256));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

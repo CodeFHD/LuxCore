@@ -2512,3 +2512,4 @@ int luxcore_parserlxs_yywrap(void)
 	return 0;
 }
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -245,3 +245,4 @@ Properties RoughMatteTranslucentMaterial::ToProperties(const ImageMapCache &imgM
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

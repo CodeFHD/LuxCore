@@ -179,3 +179,4 @@ string ExtMeshCache::GetSequenceFileName(const ExtMesh *m) const {
 
 	return "mesh-" + (boost::format("%05d") % meshIndex).str() + ".ply";
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

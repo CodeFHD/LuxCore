@@ -168,3 +168,4 @@ namespace slg {
 template void TileRepository::save(LuxOutputArchive &ar, const u_int version) const;
 template void TileRepository::load(LuxInputArchive &ar, const unsigned int version);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

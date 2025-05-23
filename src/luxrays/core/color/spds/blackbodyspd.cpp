@@ -42,3 +42,4 @@ void BlackbodySPD::init(float t) {
 	Normalize();
 	Clamp();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

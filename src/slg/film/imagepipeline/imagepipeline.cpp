@@ -194,3 +194,4 @@ const ImagePipelinePlugin *ImagePipeline::GetPlugin(const std::type_info &type) 
 
 	return NULL;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

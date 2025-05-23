@@ -56,3 +56,4 @@ void NativeIntersectionDevice::SetDataSet(DataSet *newDataSet) {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

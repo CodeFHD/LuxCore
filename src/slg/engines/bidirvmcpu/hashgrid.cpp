@@ -192,3 +192,4 @@ void HashGrid::Process(const BiDirVMCPURenderThread *thread,
 				mergeHitsV2S % (100.0 * mergeHitsV2S / mergeTotal) %
 				mergeHitsS2S % (100.0 * mergeHitsS2S / mergeTotal) << "\n";
 }*/
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

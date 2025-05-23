@@ -271,3 +271,4 @@ bool EmbreeAccel::Intersect(const Ray *ray, RayHit *hit) const {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

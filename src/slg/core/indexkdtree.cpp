@@ -139,3 +139,4 @@ template class IndexKdTree<PGICVisibilityParticle>;
 }
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::IndexKdTree<PGICVisibilityParticle>)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

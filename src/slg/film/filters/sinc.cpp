@@ -70,3 +70,4 @@ const Properties &SincFilter::GetDefaultProps() {
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -74,3 +74,4 @@ void RGBIllumSPD::init(const RGBColor &s) {
 	Scale(illumrgb2spect_scale);
 	Clamp();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

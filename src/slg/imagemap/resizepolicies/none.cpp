@@ -32,3 +32,4 @@ ImageMap *ImageMapResizeNonePolicy::ApplyResizePolicy(const std::string &fileNam
 	
 	return new ImageMap(fileName, imgCfg);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

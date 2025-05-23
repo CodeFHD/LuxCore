@@ -98,3 +98,4 @@ void PhotonGICache::FinishUpdate(const u_int threadIndex) {
 		threadsSyncBarrier->arrive_and_wait();
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

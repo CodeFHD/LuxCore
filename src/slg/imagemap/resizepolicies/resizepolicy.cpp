@@ -91,3 +91,4 @@ string ImageMapResizePolicy::ImageMapResizePolicyType2String(const ImageMapResiz
 			throw runtime_error("Unknown image map resize policy type in ImageMapResizePolicy::ImageMapResizePolicyType2String(): " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

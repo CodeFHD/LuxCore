@@ -134,3 +134,4 @@ bool SampleResult::IsAllValid(const vector<SampleResult> &sampleResults) {
 	
 	return true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

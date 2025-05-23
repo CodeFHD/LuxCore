@@ -144,3 +144,4 @@ template class IndexOctree<DLSCVisibilityParticle>;
 template class IndexOctree<PGICVisibilityParticle>;
 template class IndexOctree<ELVCVisibilityParticle>;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

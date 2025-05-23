@@ -388,3 +388,4 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 
 	return mesh;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

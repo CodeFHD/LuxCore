@@ -74,3 +74,4 @@ void RenderState::SaveSerialized(const std::string &fileName) {
 		SLG_LOG("Render state saved: " << (size / 1024) << " Kbytes");
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

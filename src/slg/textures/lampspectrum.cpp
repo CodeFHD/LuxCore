@@ -249,3 +249,4 @@ Texture *slg::AllocLampSpectrumTex(const Properties &props, const string &propNa
 
 	return new IrregularDataTexture(wlCount, wl, data, .1f, true);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

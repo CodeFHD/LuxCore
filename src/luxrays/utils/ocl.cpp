@@ -388,3 +388,4 @@ cl_program oclKernelPersistentCache::Compile(cl_context context, cl_device_id de
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

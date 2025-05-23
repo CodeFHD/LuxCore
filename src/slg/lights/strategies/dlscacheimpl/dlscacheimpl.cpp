@@ -636,3 +636,4 @@ void DirectLightSamplingCache::SavePersistentCache(const std::string &fileName) 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::DLSCacheEntry)
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::DLSCBvh)
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::DLSCParams)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

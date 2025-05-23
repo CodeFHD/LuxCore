@@ -148,3 +148,4 @@ void BakeMapMarginPlugin::Apply(Film &film, const u_int index,
 		copy(dstPixelsMask.begin(), dstPixelsMask.end(), srcPixelsMask.begin());
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

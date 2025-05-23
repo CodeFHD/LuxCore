@@ -82,3 +82,4 @@ void Scene::UpdateObjectMaterial(const string &objName, const string &matName) {
 
 	editActions.AddActions(MATERIALS_EDIT | MATERIAL_TYPES_EDIT);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

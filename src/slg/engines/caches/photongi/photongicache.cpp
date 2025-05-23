@@ -599,3 +599,4 @@ string PhotonGICache::DebugType2String(const PhotonGIDebugType type) {
 			throw runtime_error("Unsupported wrap type in PhotonGICache::DebugType2String(): " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

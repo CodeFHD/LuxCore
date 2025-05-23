@@ -169,3 +169,4 @@ const RadiancePhoton *PGICRadiancePhotonBvh::GetNearestEntry(const Point &p, con
 
 	return nearestEntry;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

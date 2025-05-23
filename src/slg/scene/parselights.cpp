@@ -469,3 +469,4 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 
 	return lightSource;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -38,3 +38,4 @@ void EqualSPD::init(float p) {
 
 	Clamp();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

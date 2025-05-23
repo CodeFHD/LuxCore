@@ -331,3 +331,4 @@ void Scene::DuplicateObject(const std::string &srcObjName, const std::string &ds
 
 	editActions.AddActions(GEOMETRY_EDIT);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

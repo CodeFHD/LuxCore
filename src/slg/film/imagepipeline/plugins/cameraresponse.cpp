@@ -1027,3 +1027,4 @@ bool CameraResponsePlugin::LoadPreset(const string &filmName) {
 
 	return true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

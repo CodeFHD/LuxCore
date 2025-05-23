@@ -60,3 +60,4 @@ float PhotonGICache::EvaluateBestRadius() {
 			params.photon.timeStart, params.photon.timeEnd,
 			&validator);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -48,3 +48,4 @@ void MeshShape::ApplyTransform(const Transform &trans) {
 ExtTriangleMesh *MeshShape::RefineImpl(const Scene *scene) {
 	return mesh;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

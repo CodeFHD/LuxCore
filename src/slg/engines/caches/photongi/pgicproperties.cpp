@@ -148,3 +148,4 @@ PhotonGICache *PhotonGICache::FromProperties(const Scene *scn, const Properties 
 	} else
 		return nullptr;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

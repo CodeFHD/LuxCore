@@ -2093,3 +2093,4 @@ bool Scene_DefineBlenderCurveStrands(luxcore::detail::SceneImpl* scene,
 
 }  // namespace blender
 }  // namespace luxcore
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

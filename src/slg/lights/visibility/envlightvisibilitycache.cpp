@@ -919,3 +919,4 @@ void EnvLightVisibilityCache::SavePersistentCache(const std::string &fileName) {
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::ELVCacheEntry)
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::ELVCBvh)
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::ELVCParams)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

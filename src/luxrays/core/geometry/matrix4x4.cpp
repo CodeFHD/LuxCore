@@ -175,3 +175,4 @@ Matrix4x4 Matrix4x4::Inverse() const {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

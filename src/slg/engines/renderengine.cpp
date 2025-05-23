@@ -332,3 +332,4 @@ OBJECTSTATICREGISTRY_REGISTER(RenderEngineRegistry, TilePathOCLRenderEngine);
 OBJECTSTATICREGISTRY_REGISTER(RenderEngineRegistry, RTPathCPURenderEngine);
 OBJECTSTATICREGISTRY_REGISTER(RenderEngineRegistry, BakeCPURenderEngine);
 // Just add here any new RenderEngine (don't forget in the .h too)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

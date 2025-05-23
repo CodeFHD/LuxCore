@@ -67,3 +67,4 @@ float SobolSequence::GetSample(const u_int pass, const u_int index) {
 
 	return val - floorf(val);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

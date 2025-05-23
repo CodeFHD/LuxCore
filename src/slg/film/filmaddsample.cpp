@@ -469,3 +469,4 @@ void Film::AtomicAddSample(const u_int x, const u_int y,
 	if (hasDataChannel)
 		AtomicAddSampleResultData(x, y, sampleResult);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

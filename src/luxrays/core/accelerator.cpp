@@ -53,3 +53,4 @@ AcceleratorType Accelerator::String2AcceleratorType(const string &type) {
 	else
 		throw runtime_error("Unknown accelerator type in String2AcceleratorType(): " + type);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

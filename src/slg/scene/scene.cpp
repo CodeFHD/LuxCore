@@ -697,3 +697,4 @@ string Scene::EncodeTriangleLightNamePrefix(const string &objectName) {
 
 	return (boost::format("TL%0zx_") % robin_hood::hash_bytes(prefix.data(), sizeof(char) * prefix.size())).str();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

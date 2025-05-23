@@ -327,3 +327,4 @@ void LightSourceDefinitions::UpdateVisibilityMaps(const Scene *scene, const bool
 	for (EnvLightSource *envLight : GetEnvLightSources())
 		envLight->UpdateVisibilityMap(scene, useRTMode);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

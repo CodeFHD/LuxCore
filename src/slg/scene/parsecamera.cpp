@@ -244,3 +244,4 @@ Camera *Scene::CreateCamera(const Properties &props) {
 
 	return camera.release();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -42,3 +42,4 @@ void slg::Init() {
 	
 	SLG_FileNameResolver.Clear();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

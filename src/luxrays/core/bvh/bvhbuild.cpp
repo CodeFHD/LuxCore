@@ -61,3 +61,4 @@ void PrintBVHNodes(ostream &stream, BVHTreeNode *node) {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

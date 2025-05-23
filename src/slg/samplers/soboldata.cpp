@@ -21314,3 +21314,4 @@ void slg::SobolSequence::GenerateDirectionVectors(u_int *vectors, const u_int di
 		}
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

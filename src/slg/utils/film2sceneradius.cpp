@@ -309,3 +309,4 @@ float Film2SceneRadius(const Scene *scene,
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

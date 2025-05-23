@@ -34,3 +34,4 @@ GroupShape::~GroupShape() {
 ExtTriangleMesh *GroupShape::RefineImpl(const Scene *scene) {
 	return ExtTriangleMesh::Merge(meshes, &trans);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -1521,3 +1521,4 @@ Properties ImageMap::ToProperties(const string &prefix, const bool includeBlobIm
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

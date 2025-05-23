@@ -136,3 +136,4 @@ OBJECTSTATICREGISTRY_REGISTER(FilterRegistry, BlackmanHarrisFilter);
 OBJECTSTATICREGISTRY_REGISTER(FilterRegistry, SincFilter);
 OBJECTSTATICREGISTRY_REGISTER(FilterRegistry, CatmullRomFilter);
 // Just add here any new Filter (don't forget in the .h too)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

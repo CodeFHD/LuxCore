@@ -81,3 +81,4 @@ template void TilePathOCLRenderState::load(LuxInputArchive &ar, const u_int vers
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

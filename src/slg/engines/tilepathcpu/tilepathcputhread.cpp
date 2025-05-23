@@ -143,3 +143,4 @@ void TilePathCPURenderThread::RenderFunc(std::stop_token stop_token) {
 
 	//SLG_LOG("[TilePathCPURenderEngine::" << threadIndex << "] Rendering thread halted");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

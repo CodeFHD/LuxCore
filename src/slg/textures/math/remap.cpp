@@ -96,3 +96,4 @@ Spectrum RemapTexture::ClampedRemap(Spectrum value,
 		value.c[i] = Remap(value.c[i], sourceMin, sourceMax, targetMin, targetMax);
 	return value.Clamp(targetMin, targetMax);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

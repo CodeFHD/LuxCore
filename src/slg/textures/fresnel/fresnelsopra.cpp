@@ -138,3 +138,4 @@ FresnelTexture *slg::AllocFresnelSopraTex(const Properties &props, const string 
 
 	return new FresnelConstTexture(Nrgb, Krgb);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

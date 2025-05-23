@@ -1156,3 +1156,4 @@ template<> void Film::GetOutput<u_int>(const FilmOutputs::FilmOutputType type, u
 			throw runtime_error("Unknown film output type in Film::GetOutput<u_int>(): " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

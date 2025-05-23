@@ -742,3 +742,4 @@ StrendsShape::~StrendsShape() {
 ExtTriangleMesh *StrendsShape::RefineImpl(const Scene *scene) {
 	return mesh;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

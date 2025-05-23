@@ -172,3 +172,4 @@ bool BBox::IntersectP(const Ray &ray, float *hitt0, float *hitt1) const {
 #endif
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

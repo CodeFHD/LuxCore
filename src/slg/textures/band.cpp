@@ -143,3 +143,4 @@ string BandTexture::InterpolationType2String(const BandTexture::InterpolationTyp
 			throw runtime_error("Unknown BandTexture interpolation type: " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

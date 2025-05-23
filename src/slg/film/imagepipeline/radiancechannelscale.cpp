@@ -47,3 +47,4 @@ void RadianceChannelScale::Init() {
 		scale = scale.Clamp(0.f);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

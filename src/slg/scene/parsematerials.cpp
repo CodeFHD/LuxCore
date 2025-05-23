@@ -581,3 +581,4 @@ Material *Scene::CreateMaterial(const u_int defaultMatID, const string &matName,
 
 	return mat;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

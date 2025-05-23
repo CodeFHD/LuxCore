@@ -61,3 +61,4 @@ void SafeSave::Process() const {
 	// Rename the temporary file to file name
 	std::filesystem::rename(fileNameTmp, fileName);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

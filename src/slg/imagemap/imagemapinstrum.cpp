@@ -144,3 +144,4 @@ void ImageMap::InstrumentationInfo::ThreadAccumulateSamples() {
 	ti->samples[1].clear();
 	ti->samples[2].clear();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -153,3 +153,4 @@ Volume *Scene::CreateVolume(const u_int defaultVolID, const string &volName, con
 
 	return vol;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

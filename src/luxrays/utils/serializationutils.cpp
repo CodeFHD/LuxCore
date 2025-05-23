@@ -99,3 +99,4 @@ LuxInputArchive &SerializationInputFile::GetArchive() {
 bool SerializationInputFile::IsGood() {
 	return inStream.good();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

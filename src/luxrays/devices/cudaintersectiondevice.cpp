@@ -88,3 +88,4 @@ void CUDAIntersectionDevice::EnqueueTraceRayBuffer(HardwareDeviceBuffer *rayBuff
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

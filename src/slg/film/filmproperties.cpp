@@ -160,4 +160,4 @@ Film *Film::FromProperties(const Properties &cfg) {
 	film->Parse(cfg);
 
 	return film.release();
-}
+}// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -118,3 +118,4 @@ std::ostream &operator<<(std::ostream &stream, const SWCSpectrum &spectrum) {
 	stream << "})";
 	return stream;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -135,3 +135,4 @@ void Camera::UpdateVolumeReferences(const Volume *oldVol, const Volume *newVol) 
 	if (volume == oldVol)
 		volume = (const Volume *)newVol;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

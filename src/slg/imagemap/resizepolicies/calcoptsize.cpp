@@ -285,3 +285,4 @@ void ImageMapResizePolicy::CalcOptimalImageMapSizes(ImageMapCache &imc, const Sc
 				optimalWidth << "x" << optimalHeigth);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

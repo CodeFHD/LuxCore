@@ -958,3 +958,4 @@ void Film::Parse(const Properties &props) {
 				noiseEstimationTestStep, noiseEstimationFilterScale, noiseEstimationImagePipelineIndex);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

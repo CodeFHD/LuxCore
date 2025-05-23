@@ -402,3 +402,4 @@ void Film::MergeSampleBuffersHW(const u_int imagePipelineIndex) {
 
 	hardwareDevice->FinishQueue();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

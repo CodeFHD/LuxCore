@@ -64,3 +64,4 @@ namespace slg {
 template void PathCPURenderState::save(LuxOutputArchive &ar, const u_int version) const;
 template void PathCPURenderState::load(LuxInputArchive &ar, const u_int version);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

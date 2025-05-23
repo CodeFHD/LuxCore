@@ -84,3 +84,4 @@ Properties CheckerBoard3DTexture::ToProperties(const ImageMapCache &imgMapCache,
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

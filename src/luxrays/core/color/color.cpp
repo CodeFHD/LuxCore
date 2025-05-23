@@ -367,3 +367,4 @@ Spectrum luxrays::TemperatureToWhitePoint(const float temperature, const bool no
 
     return scale;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -127,3 +127,4 @@ void ColorSpaceConverters::ConvertFromOpenColorIO(const string &configFileName,
 		throw runtime_error("OpenColorIO Error in ColorSpaceConverters::ConvertFromOpenColorIO(): " + string(exception.what()));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

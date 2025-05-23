@@ -939,3 +939,4 @@ TextureMapping3D *Scene::CreateTextureMapping3D(const string &prefixName, const 
 	} else
 		throw runtime_error("Unknown 3D texture coordinate mapping type: " + mapType);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

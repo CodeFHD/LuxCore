@@ -314,3 +314,4 @@ void RenderSession::SaveResumeFile(const string &fileName) {
 
 	SLG_LOG("Render configuration saved: " << (fileSize / 1024) << " Kbytes");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

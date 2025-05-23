@@ -68,3 +68,4 @@ Properties DotsTexture::ToProperties(const ImageMapCache &imgMapCache, const boo
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

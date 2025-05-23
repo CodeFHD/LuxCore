@@ -71,3 +71,4 @@ void TextureDefinitions::GetTextureSortedNamesImpl(const Texture *tex,
 	names.push_back(texName);
 	doneNames.insert(texName);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -293,3 +293,4 @@ bool PhotometricDataIES::BuildLightData(istream &is) {
 
 	return true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

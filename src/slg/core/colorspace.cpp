@@ -119,3 +119,4 @@ string ColorSpaceConfig::ColorSpaceType2String(const ColorSpaceConfig::ColorSpac
 			throw runtime_error("Unsupported wrap type in ColorSpaceConfig::ColorSpaceType2String(): " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

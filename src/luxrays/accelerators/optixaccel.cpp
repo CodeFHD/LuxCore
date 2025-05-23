@@ -61,3 +61,4 @@ bool OptixAccel::Intersect(const Ray *initialRay, RayHit *rayHit) const {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

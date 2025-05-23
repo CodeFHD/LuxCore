@@ -68,3 +68,4 @@ template void PathOCLRenderState::load(LuxInputArchive &ar, const u_int version)
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

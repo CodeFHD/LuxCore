@@ -27,3 +27,4 @@ BOOST_CLASS_EXPORT_IMPLEMENT(luxrays::Point)
 BOOST_CLASS_EXPORT_IMPLEMENT(luxrays::Normal)
 BOOST_CLASS_EXPORT_IMPLEMENT(luxrays::UV)
 BOOST_CLASS_EXPORT_IMPLEMENT(luxrays::Triangle)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

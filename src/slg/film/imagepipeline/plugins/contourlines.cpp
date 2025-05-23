@@ -143,3 +143,4 @@ void ContourLinesPlugin::Apply(Film &film, const u_int index) {
 		}
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -113,3 +113,4 @@ void SceneObjectDefinitions::UpdateMeshReferences(const ExtMesh* oldMesh, ExtMes
 }
 
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

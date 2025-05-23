@@ -77,3 +77,4 @@ namespace slg {
 template void TilePathCPURenderState::save(LuxOutputArchive &ar, const u_int version) const;
 template void TilePathCPURenderState::load(LuxInputArchive &ar, const u_int version);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

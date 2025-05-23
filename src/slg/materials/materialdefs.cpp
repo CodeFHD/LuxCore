@@ -80,3 +80,4 @@ void MaterialDefinitions::GetMaterialSortedNamesImpl(const Material *mat,
 	names.push_back(matName);
 	doneNames.insert(matName);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

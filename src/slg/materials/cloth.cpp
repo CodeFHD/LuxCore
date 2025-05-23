@@ -697,3 +697,4 @@ void ClothMaterial::SetPreset() {
 		specularNormalization = 0;
 //	printf("********************** specularNormalization = %f\n", specularNormalization);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -63,3 +63,4 @@ ImageMap *ImageMapResizeFixedPolicy::ApplyResizePolicy(const std::string &fileNa
 
 	return im;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -518,3 +518,4 @@ const struct CarPaintMaterial::CarPaintData CarPaintMaterial::data[8] = {
     1.0000f, 0.0460f, 0.1700f,
     0.1600f, 0.0750f, 0.0340f}
 };
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

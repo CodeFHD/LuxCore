@@ -669,3 +669,4 @@ const string Film::FilmChannelType2String(const Film::FilmChannelType type) {
 			throw runtime_error("Unknown film output type in Film::FilmChannelType2String(): " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

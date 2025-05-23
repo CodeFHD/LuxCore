@@ -171,3 +171,4 @@ void PGICKdTree::GetAllNearEntries(vector<u_int> &allNearEntryIndices,
 		}
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

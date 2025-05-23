@@ -268,3 +268,4 @@ void VarianceClamping::Clamp(const Film &film, SampleResult &sampleResult) const
 			sampleResult.radiance[radianceGroupIndex] = sampleResult.radiance[radianceGroupIndex].ScaledClamp(minRadiance, maxRadiance);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

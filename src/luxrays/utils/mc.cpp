@@ -482,3 +482,4 @@ float Distribution2D::Pdf(float u, float v,
 	return pConditionalV[ov]->Pdf(u, du) *
 		pMarginal->Pdf(v, dv);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

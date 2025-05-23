@@ -113,3 +113,4 @@ void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeig
 
 	editActions.Reset();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

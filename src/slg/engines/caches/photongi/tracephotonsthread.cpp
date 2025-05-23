@@ -504,3 +504,4 @@ void TracePhotonsThread::RenderFunc(std::stop_token stop_token) {
 		globalCausticSize += causticPhotons.size() - causticPhotonsStart;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -1834,3 +1834,4 @@ auto std::formatter<luxcore::Camera::CameraType>::format(
   }
     return formatter<string_view>::format(name, ctx);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

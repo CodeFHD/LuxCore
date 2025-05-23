@@ -45,3 +45,4 @@ Properties ClampTexture::ToProperties(const ImageMapCache &imgMapCache, const bo
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -52,3 +52,4 @@ Properties SubtractTexture::ToProperties(const ImageMapCache &imgMapCache, const
 	
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

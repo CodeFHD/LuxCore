@@ -99,3 +99,4 @@ FresnelTexture *slg::AllocFresnelAbbeTex(const luxrays::Properties &props, const
 
 	return MakeCauchy(a, b);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -105,3 +105,4 @@ double FilmSamplesCounts::GetSampleCount_RADIANCE_PER_SCREEN_NORMALIZED() const 
 		result += RADIANCE_PER_SCREEN_NORMALIZED_SampleCount[i];
 	return result;	
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -113,3 +113,4 @@ void PGICOctree::GetAllNearEntriesImpl(vector<u_int> &allNearEntryIndices,
 		}
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

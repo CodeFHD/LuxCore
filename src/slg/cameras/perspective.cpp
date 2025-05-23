@@ -382,3 +382,4 @@ void PerspectiveCamera::OculusRiftBarrelPostprocess(const float x, const float y
 	*barrelX = (ex + 1.f) * .5f;
 	*barrelY = (ey + 1.f) * .5f;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

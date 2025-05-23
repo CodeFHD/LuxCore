@@ -41,3 +41,4 @@ void FrequencySPD::init(float freq, float phase, float refl) {
 
 	Clamp();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -103,3 +103,4 @@ void LightCPURenderThread::RenderFunc(std::stop_token stop_token) {
 
 	//SLG_LOG("[LightCPURenderThread::" << threadIndex << "] Rendering thread halted");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

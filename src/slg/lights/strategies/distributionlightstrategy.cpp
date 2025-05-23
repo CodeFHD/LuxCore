@@ -60,3 +60,4 @@ Properties DistributionLightStrategy::ToProperties() const {
 	return Properties() <<
 			Property("lightstrategy.type")(LightStrategyType2String(GetType()));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

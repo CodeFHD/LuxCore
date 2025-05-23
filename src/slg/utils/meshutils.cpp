@@ -72,3 +72,4 @@ ExtTriangleMesh *ExtTriangleMeshBuilder::GetExtTriangleMesh() const {
 
 	return new ExtTriangleMesh(vertCount, triCount, newVertices, newTris);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

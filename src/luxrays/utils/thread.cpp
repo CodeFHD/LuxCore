@@ -81,3 +81,4 @@ bool luxrays::SetThreadRRPriority(std::jthread *thread, int pri) {
 	}
 #endif
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -225,3 +225,4 @@ void OpenColorIOToneMap::Apply(Film &film, const u_int index) {
 		throw runtime_error("OpenColorIO Error in OpenColorIOToneMap::Apply(): " + string(exception.what()));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

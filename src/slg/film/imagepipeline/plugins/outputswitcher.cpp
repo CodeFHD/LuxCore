@@ -459,3 +459,4 @@ void OutputSwitcherPlugin::Apply(Film &film, const u_int piepelineIndex) {
 		}
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

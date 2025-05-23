@@ -145,3 +145,4 @@ void ObjectIDMaskFilterPlugin::ApplyHW(Film &film, const u_int index) {
 	hardwareDevice->EnqueueKernel(applyKernel, HardwareDeviceRange(RoundUp(film.GetWidth() * film.GetHeight(), 256u)),
 			HardwareDeviceRange(256));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

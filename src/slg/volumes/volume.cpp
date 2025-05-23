@@ -167,3 +167,4 @@ void SchlickScatter::Pdf(const HitPoint &hitPoint,
 	if (reversePdfW)
 		*reversePdfW = pdf;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

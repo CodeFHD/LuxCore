@@ -579,3 +579,4 @@ bool ExtInstanceTriangleMesh::IntersectBevel(const Ray &ray, const RayHit &rayHi
 	} else
 		return false;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

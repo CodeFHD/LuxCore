@@ -165,3 +165,4 @@ Spectrum HsvTexture::HsvToRgb(const Spectrum &hsv) const {
 	} else
 		return Spectrum(v, v, v);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

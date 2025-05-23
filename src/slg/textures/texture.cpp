@@ -214,3 +214,4 @@ float slg::tex_tri(float a) {
 
     return a;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

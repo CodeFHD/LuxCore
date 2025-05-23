@@ -428,3 +428,4 @@ void OpenCLDevice::FreeBuffer(HardwareDeviceBuffer **buff) {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

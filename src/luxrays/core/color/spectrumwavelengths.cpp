@@ -58,3 +58,4 @@ const RegularSPD SpectrumWavelengths::spd_ciey(CIE_Y, CIEstart, CIEend, nCIE,
 
 const RegularSPD SpectrumWavelengths::spd_ciez(CIE_Z, CIEstart, CIEend, nCIE,
 	683.f * float(WAVELENGTH_END - WAVELENGTH_START) / WAVELENGTH_SAMPLES);
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

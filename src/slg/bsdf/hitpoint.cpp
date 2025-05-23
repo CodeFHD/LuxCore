@@ -84,3 +84,4 @@ void HitPoint::Init() {
 	intoObject = true;
 	throughShadowTransparency = false;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -179,3 +179,4 @@ void luxcore::PrintLogMsg(const std::string &msg) {
 
 	//API_END();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

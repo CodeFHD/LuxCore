@@ -453,3 +453,4 @@ namespace slg {
 template void RenderConfig::save(LuxOutputArchive &ar, const u_int version) const;
 template void RenderConfig::load(LuxInputArchive &ar, const u_int version);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

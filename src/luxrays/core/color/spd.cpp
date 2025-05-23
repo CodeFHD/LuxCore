@@ -122,3 +122,4 @@ XYZColor SPD::ToNormalizedXYZ() const {
 	}
 	return c / yint;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

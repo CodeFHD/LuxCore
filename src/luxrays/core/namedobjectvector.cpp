@@ -225,3 +225,4 @@ string NamedObjectVector::ToString() const {
 
 	return ss.str();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

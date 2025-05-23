@@ -33,3 +33,4 @@ void RegularSPD::init(float lMin, float lMax, const float* const s, u_int n) {
 	for (u_int i = 0; i < n; ++i)
 		samples[i] = s[i];
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

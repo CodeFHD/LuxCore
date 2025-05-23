@@ -255,3 +255,4 @@ Spectrum slg::CalcFilmColor(const Vector &localFixedDir, const float filmThickne
 	
 // 	return Spectrum(0.5f, 0.f, 0.f);
 // }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

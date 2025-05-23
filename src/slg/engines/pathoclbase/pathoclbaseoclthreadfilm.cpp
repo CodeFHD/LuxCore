@@ -1225,3 +1225,4 @@ void PathOCLBaseOCLRenderThread::ThreadFilm::ClearFilm(HardwareIntersectionDevic
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

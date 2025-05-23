@@ -48,3 +48,4 @@ Properties FBMTexture::ToProperties(const ImageMapCache &imgMapCache, const bool
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

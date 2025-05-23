@@ -264,3 +264,4 @@ Properties ArchGlassMaterial::ToProperties(const ImageMapCache &imgMapCache, con
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -217,3 +217,4 @@ void ColorAberrationPlugin::ApplyHW(Film &film, const u_int index) {
 	hardwareDevice->EnqueueKernel(copyKernel, HardwareDeviceRange(RoundUp(width * height, 256u)),
 			HardwareDeviceRange(256));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

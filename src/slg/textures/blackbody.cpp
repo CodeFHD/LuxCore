@@ -41,3 +41,4 @@ Properties BlackBodyTexture::ToProperties(const ImageMapCache &imgMapCache, cons
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

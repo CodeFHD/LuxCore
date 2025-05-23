@@ -256,3 +256,4 @@ ImageMap *IESSphericalFunction::IES2ImageMap(const PhotometricDataIES &data, con
 	imgMap->Preprocess();
 	return imgMap;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

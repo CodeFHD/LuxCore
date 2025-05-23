@@ -398,3 +398,4 @@ template class SceneVisibility<DLSCVisibilityParticle>;
 template class SceneVisibility<PGICVisibilityParticle>;
 template class SceneVisibility<ELVCVisibilityParticle>;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -557,3 +557,4 @@ MotionTransform MotionTransform::GetInverse() const {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

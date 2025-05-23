@@ -89,3 +89,4 @@ void CompiledScene::CompileFilm(const Film &film, slg::ocl::Film &oclFilm) {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

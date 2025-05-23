@@ -318,3 +318,4 @@ Properties GlassMaterial::ToProperties(const ImageMapCache &imgMapCache, const b
 
 	return props;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

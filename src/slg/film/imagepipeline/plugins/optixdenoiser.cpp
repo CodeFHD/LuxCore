@@ -246,3 +246,4 @@ void OptixDenoiserPlugin::ApplyHW(Film &film, const u_int index) {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

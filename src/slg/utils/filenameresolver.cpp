@@ -99,3 +99,4 @@ void FileNameResolver::AddFileNamePath(const std::string &fileName) {
 	
 	AddPath(path.parent_path().generic_string());
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

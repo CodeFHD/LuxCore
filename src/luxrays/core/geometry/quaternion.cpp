@@ -175,3 +175,4 @@ Quaternion GetRotationBetween(const Vector &u, const Vector &v) {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

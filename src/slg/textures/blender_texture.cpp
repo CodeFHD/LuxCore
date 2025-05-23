@@ -1262,3 +1262,4 @@ Properties BlenderWoodTexture::ToProperties(const ImageMapCache &imgMapCache, co
 	return props;
 }
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

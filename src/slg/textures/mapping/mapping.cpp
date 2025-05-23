@@ -366,3 +366,4 @@ Properties LocalRandomMapping3D::ToProperties(const string &name) const {
 			Property(name + ".ytranslate")(yTranslateMin, yTranslateMax) <<
 			Property(name + ".ztranslate")(zTranslateMin, zTranslateMax);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

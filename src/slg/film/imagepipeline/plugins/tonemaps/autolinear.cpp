@@ -183,3 +183,4 @@ void AutoLinearToneMap::ApplyHW(Film &film, const u_int index) {
 	hardwareDevice->EnqueueKernel(applyKernel, HardwareDeviceRange(RoundUp(pixelCount, 256u)),
 			HardwareDeviceRange(256));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

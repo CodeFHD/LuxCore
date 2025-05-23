@@ -323,3 +323,4 @@ Spectrum TriangleLight::GetRadiance(const HitPoint &hitPoint,
 
 	return lightMaterial->GetEmittedRadiance(hitPoint, invMeshArea) * emissionColor;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

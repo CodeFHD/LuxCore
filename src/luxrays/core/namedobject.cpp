@@ -47,3 +47,4 @@ Properties NamedObject::ToProperties() const {
 string NamedObject::GetUniqueName(const string &prefix) {
 	return prefix + "-" + ToString(boost::uuids::random_generator()());
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

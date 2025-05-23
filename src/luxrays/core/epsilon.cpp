@@ -25,3 +25,4 @@ float MachineEpsilon::maxEpsilon = DEFAULT_EPSILON_MAX;
 
 }
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

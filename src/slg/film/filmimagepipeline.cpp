@@ -200,3 +200,4 @@ void Film::ExecuteImagePipelineImpl(const u_int index) {
 	//const double p2 = WallClockTime();
 	//SLG_LOG("Image pipeline " << index << " time: " << int((p2 - p1) * 1000.0) << "ms");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -285,3 +285,4 @@ void BCDDenoiserPlugin::Apply(Film &film, const u_int index) {
 
 	SLG_LOG("BCD Apply took: " << (boost::format("%.1f") % (WallClockTime() - startTime)) << "secs");
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -600,3 +600,4 @@ void ExtMotionTriangleMesh::UpdateMeshReferences(ExtTriangleMesh *oldMesh, ExtTr
 		cachedArea = false;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

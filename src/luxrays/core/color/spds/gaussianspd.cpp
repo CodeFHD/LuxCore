@@ -44,3 +44,4 @@ void GaussianSPD::init(float mean, float width, float refl) {
 
 	Clamp();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

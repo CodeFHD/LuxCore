@@ -243,3 +243,4 @@ const Properties &RTPathOCLRenderEngine::GetDefaultProps() {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

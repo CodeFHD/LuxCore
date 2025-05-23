@@ -129,3 +129,4 @@ void EnvLightSource::FromLatLongMapping(const float s, const float t, Vector *w,
 		assert (!isnan(*pdf) && !isinf(*pdf) && (*pdf >= 0.f));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

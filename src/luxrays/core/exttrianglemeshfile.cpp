@@ -561,3 +561,4 @@ void ExtTriangleMesh::SavePly(const string &fileName) const {
 
 	plyFile.close();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

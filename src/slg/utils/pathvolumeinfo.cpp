@@ -240,3 +240,4 @@ ostream &operator<<(ostream &os, const PathVolumeInfo &pvi) {
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -79,3 +79,4 @@ namespace slg {
 template void ImageMap::serialize(LuxOutputArchive &ar, const u_int version);
 template void ImageMap::serialize(LuxInputArchive &ar, const u_int version);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -235,3 +235,4 @@ luxrays::ocl::BVHArrayNode *BuildBVH(const BVHParams &params,
 }
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

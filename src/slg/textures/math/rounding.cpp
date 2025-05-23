@@ -56,3 +56,4 @@ float RoundingTexture::round(float value, float increment) const {
                 innerBound : outerBound);
     }
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -75,3 +75,4 @@ void PatternsPlugin::Apply(Film &film, const u_int index) {
 			throw runtime_error("Unknown pattern type in PatternsPlugin: " + ToString(type));
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

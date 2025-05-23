@@ -354,3 +354,4 @@ vector<HardwareDevice *> Context::AddHardwareDevices(vector<DeviceDescription *>
 
 	return newDevices;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

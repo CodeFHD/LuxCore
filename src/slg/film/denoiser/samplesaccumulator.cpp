@@ -344,3 +344,4 @@ namespace slg {
 template void SamplesAccumulator::save(LuxOutputArchive &ar, const u_int version) const;
 template void SamplesAccumulator::load(LuxInputArchive &ar, const u_int version);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

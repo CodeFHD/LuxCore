@@ -74,3 +74,4 @@ void RGBReflSPD::init(const RGBColor &s) {
 	Scale(refrgb2spect_scale);
 	// Don't clamp the values as negative values are needed for scattering
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -313,3 +313,4 @@ void luxcore::KernelCacheFill(const Properties &config, void (*ProgressHandler)(
 	
 	API_END();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

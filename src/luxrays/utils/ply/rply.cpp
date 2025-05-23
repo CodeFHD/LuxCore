@@ -1509,3 +1509,4 @@ t_ply_odriver ply_odriver_binary_reverse = {
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * ---------------------------------------------------------------------- */
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

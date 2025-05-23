@@ -1854,3 +1854,4 @@ float mg_VLNoise(float x, float y, float z, float distortion, BlenderNoiseBasis 
 } // namespace blender
 
 } // namespace slg
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -536,3 +536,4 @@ float slg::SchlickBSDF_CoatingPdf(const float roughness, const float anisotropy,
 	const Vector wh(Normalize(localFixedDir + localSampledDir));
 	return SchlickDistribution_Pdf(roughness, wh, anisotropy) / (4.f * AbsDot(localFixedDir, wh));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4
