@@ -655,3 +655,4 @@ __kernel void Film_Clear(
 				filmDenoiserHistoImage[gid * filmDenoiserNbOfBins * 3 + channelIndex * filmDenoiserNbOfBins + i] = 0.f;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

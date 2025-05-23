@@ -144,3 +144,4 @@ OPENCL_FORCE_INLINE void Ray_ReadAligned4_Private(__global const Ray* restrict r
 	dstRay->time = ray->time;
 	dstRay->flags = ray->flags;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

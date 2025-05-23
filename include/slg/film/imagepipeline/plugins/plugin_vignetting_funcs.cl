@@ -50,3 +50,4 @@ __kernel void VignettingPlugin_Apply(
 		pixel[2] *= vWeight;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

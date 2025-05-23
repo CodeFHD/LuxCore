@@ -886,3 +886,4 @@ OPENCL_FORCE_INLINE float3 BrightContrastTexture_ConstEvaluateSpectrum(const flo
 
 	return clamp(tex * a + b, 0.f, INFINITY);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

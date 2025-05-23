@@ -68,3 +68,4 @@ OPENCL_FORCE_INLINE unsigned long Rnd_UintValue(Seed *s) {
 OPENCL_FORCE_INLINE float Rnd_FloatValue(Seed *s) {
 	return (Rnd_UintValue(s) & FLOATMASK) * (1.f / (FLOATMASK + 1UL));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

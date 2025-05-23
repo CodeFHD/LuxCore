@@ -143,3 +143,4 @@ __kernel void GaussianBlur3x3FilterPlugin_FilterY(
 	GaussianBlur3x3FilterPlugin_ApplyBlurFilterYR1(filmWidth, filmHeight,
 			&src[index], &dst[index], aF, bF, cF);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

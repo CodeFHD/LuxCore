@@ -143,3 +143,4 @@ OPENCL_FORCE_INLINE float DensityGridTexture_ConstEvaluateFloat(__global const H
 			imageMapIndex, mapping
 			TEXTURES_PARAM));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

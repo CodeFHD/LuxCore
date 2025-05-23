@@ -124,3 +124,4 @@ OPENCL_FORCE_NOT_INLINE float Turbulence(const float3 P, const float omega, cons
 	}
 	return sum;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

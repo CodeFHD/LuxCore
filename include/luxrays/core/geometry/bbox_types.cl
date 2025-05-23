@@ -21,3 +21,4 @@
 typedef struct {
 	Point pMin, pMax;
 } BBox;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -35,3 +35,4 @@ typedef struct {
 	// Specular, Specular+ Diffuse and Specular+ Diffuse Specular+ paths
 	int isNearlyS, isNearlySD, isNearlySDS;
 } EyePathInfo;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

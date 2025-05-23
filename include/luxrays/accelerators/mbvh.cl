@@ -381,3 +381,4 @@ __kernel void Accelerator_Intersect_RayBuffer(
 	memRayHit->meshIndex = rayHit.meshIndex;
 	memRayHit->triangleIndex = rayHit.triangleIndex;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -610,3 +610,4 @@ OPENCL_FORCE_NOT_INLINE float BLI_gTurbulence(float noisesize, float x, float y,
 	return sum;
 
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

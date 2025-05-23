@@ -204,3 +204,4 @@ OPENCL_FORCE_NOT_INLINE void TriplanarTexture_EvalOp(
 			break;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

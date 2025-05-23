@@ -53,3 +53,4 @@ OPENCL_FORCE_INLINE uint DecodeMorton2X(const uint code) {
 OPENCL_FORCE_INLINE uint DecodeMorton2Y(const uint code) {
 	return Compact1By1(code >> 1);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -414,3 +414,4 @@ OPENCL_FORCE_NOT_INLINE uint Material_GetExteriorVolume(const uint matIndex,
 
 	return result;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

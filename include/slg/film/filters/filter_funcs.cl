@@ -46,3 +46,4 @@ void PixelIndex2XY(const uint filmWidth, const uint index, uint *x, uint *y) {
 uint XY2PixelIndex(const uint filmWidth, const uint x, const uint y) {
 	return x + y * filmWidth;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

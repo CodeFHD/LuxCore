@@ -163,3 +163,4 @@ OPENCL_FORCE_NOT_INLINE bool Sampler_Init(
 			return true;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

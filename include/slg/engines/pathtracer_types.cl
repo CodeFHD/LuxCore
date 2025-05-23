@@ -57,3 +57,4 @@ typedef struct {
 		float specularGlossinessThreshold;
 	} albedo;
 } PathTracer;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

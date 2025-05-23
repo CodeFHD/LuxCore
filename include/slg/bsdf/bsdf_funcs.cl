@@ -371,3 +371,4 @@ OPENCL_FORCE_INLINE float3 BSDF_GetBakeMapValue(__global const BSDF *bsdf
 			uv.x, uv.y
 			IMAGEMAPS_PARAM);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -252,3 +252,4 @@ OPENCL_FORCE_INLINE bool PhotonGICache_ConnectWithCausticPaths(__global const BS
 			MATERIALS_PARAM) :
 		true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -110,3 +110,4 @@ __kernel void CameraResponsePlugin_Apply(
 		pixel[2] = newPixelValue.z;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -1102,3 +1102,4 @@ __kernel void AdvancePaths_MK_GENERATE_CAMERA_RAY(
 #endif
 }
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

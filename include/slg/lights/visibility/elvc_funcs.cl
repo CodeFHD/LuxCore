@@ -157,3 +157,4 @@ OPENCL_FORCE_INLINE float EnvLightVisibilityCache_Pdf(__global const BSDF *bsdf,
 
 	return pdf;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

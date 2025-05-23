@@ -35,3 +35,4 @@ OPENCL_FORCE_INLINE float MachineEpsilon_E(const float value) {
 OPENCL_FORCE_INLINE float MachineEpsilon_E_Float3(const float3 v) {
 	return fmax(MachineEpsilon_E(v.x), fmax(MachineEpsilon_E(v.y), MachineEpsilon_E(v.z)));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

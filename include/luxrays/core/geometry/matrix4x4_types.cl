@@ -21,3 +21,4 @@
 typedef struct {
 	float m[4][4];
 } Matrix4x4;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

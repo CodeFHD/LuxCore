@@ -102,3 +102,4 @@ __kernel void ColorAberrationPlugin_Copy(
 		channel_IMAGEPIPELINE[index + 2] = tmpBuffer[index + 2];
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

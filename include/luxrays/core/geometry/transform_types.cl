@@ -21,3 +21,4 @@
 typedef struct {
 	Matrix4x4 m, mInv;
 } Transform;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

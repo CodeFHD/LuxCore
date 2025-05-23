@@ -135,3 +135,4 @@ typedef struct {
 typedef struct {
 	unsigned int sampleCount;
 } GPUTaskStats;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

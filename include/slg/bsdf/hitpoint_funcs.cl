@@ -163,3 +163,4 @@ OPENCL_FORCE_INLINE float HitPoint_GetTriAOV(__global const HitPoint *hitPoint, 
 	else
 		return 0.f;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

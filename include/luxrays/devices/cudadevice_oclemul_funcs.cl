@@ -507,3 +507,4 @@ uint atomic_dec(uint *p) {
 int atomic_dec(int *p) {
 	return atomicSub(p, 1);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

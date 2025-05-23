@@ -21,3 +21,4 @@
 // NOTE: check VolumeParam in material_type.cl for volume definitions
 
 typedef Material Volume;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

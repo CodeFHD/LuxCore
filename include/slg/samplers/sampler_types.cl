@@ -158,3 +158,4 @@ typedef struct {
 		, samplesBuff \
 		, samplesDataBuff \
 		, sampleResultsBuff
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

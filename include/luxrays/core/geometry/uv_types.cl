@@ -23,3 +23,4 @@
 typedef struct {
 	float u,v;
 } UV;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

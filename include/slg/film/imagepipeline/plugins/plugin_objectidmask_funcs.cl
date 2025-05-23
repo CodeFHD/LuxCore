@@ -41,3 +41,4 @@ __kernel void ObjectIDMaskFilterPlugin_Apply(
 	pixel[1] = value;
 	pixel[2] = value;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -44,3 +44,4 @@ __kernel void PremultiplyAlphaPlugin_Apply(
 		pixel[2] *= alpha;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

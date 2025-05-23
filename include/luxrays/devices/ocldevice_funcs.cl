@@ -33,3 +33,4 @@
 #define TO_FLOAT2(x) ((float2)x)
 #define TO_FLOAT3(x) ((float3)x)
 #define TO_FLOAT4(x) ((float4)x)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

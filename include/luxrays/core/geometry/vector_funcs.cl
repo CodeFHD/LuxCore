@@ -40,3 +40,4 @@ OPENCL_FORCE_INLINE void CoordinateSystem(const float3 v1, float3 *v2, float3 *v
 	}
 	*v2 = cross(v1, *v3);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

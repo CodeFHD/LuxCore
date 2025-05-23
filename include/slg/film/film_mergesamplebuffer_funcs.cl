@@ -136,3 +136,4 @@ __kernel void Film_MergeBufferFinalize(
 	if (isinf(pixelB))
 		channelBufferPixel[2] = 0.f;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

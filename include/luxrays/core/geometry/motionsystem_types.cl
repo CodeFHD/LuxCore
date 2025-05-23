@@ -52,3 +52,4 @@ typedef struct {
 	unsigned int interpolatedInverseTransformFirstIndex;
 	unsigned int interpolatedInverseTransformLastIndex;
 } MotionSystem;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -99,3 +99,4 @@ typedef struct {
 		LocalRandomMapping3DParam localRandomMapping;
 	};
 } TextureMapping3D;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

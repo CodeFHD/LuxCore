@@ -96,3 +96,4 @@ OPENCL_FORCE_INLINE float3 Frame_ToLocal_Private(const Frame *frame, const float
 			MAKE_FLOAT3(frame->Y.x, frame->Y.y, frame->Y.z),
 			MAKE_FLOAT3(frame->Z.x, frame->Z.y, frame->Z.z), v);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

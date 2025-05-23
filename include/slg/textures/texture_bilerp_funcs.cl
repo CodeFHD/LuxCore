@@ -40,3 +40,4 @@ OPENCL_FORCE_INLINE float3 BilerpTexture_ConstEvaluateSpectrum(__global const Hi
 	return lerp(uv.x, lerp(uv.y, v00, v01), lerp(uv.y, v10, v11));
 }
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

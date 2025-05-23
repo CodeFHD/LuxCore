@@ -27,3 +27,4 @@ typedef struct {
 
 	int scatteredStart;
 } PathVolumeInfo;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

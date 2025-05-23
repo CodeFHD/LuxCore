@@ -72,3 +72,4 @@ typedef struct {
 typedef struct {
 	float widthX, widthY;
 } Filter;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

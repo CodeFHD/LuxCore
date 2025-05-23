@@ -152,3 +152,4 @@ __kernel void BloomFilterPlugin_Merge(
 		src[2] = mix(src[2], dst[2], bloomWeight);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

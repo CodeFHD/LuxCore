@@ -637,3 +637,4 @@ __kernel void Init(
 	__global GPUTaskStats *taskStat = &taskStats[gid];
 	taskStat->sampleCount = 0;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

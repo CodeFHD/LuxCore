@@ -139,3 +139,4 @@ OPENCL_FORCE_INLINE float3 HsvTexture_ConstEvaluateSpectrum(const float3 colorHi
 		const float valHitpoint) {
 	return HsvTexture_ApplyTransformation(colorHitpoint, hueHitpoint, satHitpoint, valHitpoint);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

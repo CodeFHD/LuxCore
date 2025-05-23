@@ -111,3 +111,4 @@ typedef struct {
 		EnvironmentCamera env;
 	};
 } Camera;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

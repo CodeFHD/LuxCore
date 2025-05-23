@@ -29,3 +29,4 @@ OPENCL_FORCE_INLINE float IrregularDataTexture_ConstEvaluateFloat(const float3 r
 OPENCL_FORCE_INLINE float3 IrregularDataTexture_ConstEvaluateSpectrum(const float3 rgb) {
 	return rgb;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

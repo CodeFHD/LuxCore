@@ -146,3 +146,4 @@ OPENCL_FORCE_INLINE void VarianceClamping_Clamp(
 	else if (film->hasChannelIndirectSpecular)
 		VarianceClamping_Clamp3(sqrtVarianceClampMaxValue, &filmIndirectSpecular[index4], sampleResult->indirectSpecularTransmit.c);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -37,3 +37,4 @@ typedef enum {
 	PGIC_DEBUG_NONE, PGIC_DEBUG_SHOWINDIRECT, PGIC_DEBUG_SHOWCAUSTIC,
 	PGIC_DEBUG_SHOWINDIRECTPATHMIX
 } PhotonGIDebugType;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

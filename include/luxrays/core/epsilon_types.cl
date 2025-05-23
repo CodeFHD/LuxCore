@@ -28,3 +28,4 @@
 
 // This is about 1e-5f for values near 1.f
 #define DEFAULT_EPSILON_DISTANCE_FROM_VALUE 0x80u
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

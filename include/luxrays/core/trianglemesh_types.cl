@@ -23,3 +23,4 @@ typedef enum {
 	//TYPE_TRIANGLE, TYPE_TRIANGLE_INSTANCE, TYPE_TRIANGLE_MOTION,
 	TYPE_EXT_TRIANGLE, TYPE_EXT_TRIANGLE_INSTANCE, TYPE_EXT_TRIANGLE_MOTION
 } MeshType;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

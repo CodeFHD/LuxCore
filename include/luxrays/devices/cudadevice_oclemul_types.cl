@@ -36,3 +36,4 @@ typedef unsigned long long ulong;
 #define INFINITY __int_as_float(0x7f800000)
 #define M_PI_F 3.141592654f
 #define M_1_PI_F (1.f / 3.141592654f)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

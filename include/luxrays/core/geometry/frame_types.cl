@@ -21,3 +21,4 @@
 typedef struct {
 	Vector X, Y, Z;
 } Frame;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

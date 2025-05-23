@@ -21,3 +21,4 @@
 typedef struct {
 	unsigned int v[3];
 } Triangle;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

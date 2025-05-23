@@ -146,3 +146,4 @@ OPENCL_FORCE_INLINE void FilmDenoiser_AddSample(
 					FILM_DENOISER_PARAM);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

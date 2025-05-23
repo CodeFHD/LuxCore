@@ -437,3 +437,4 @@ OPENCL_FORCE_INLINE void Distribution2D_SampleDiscrete(__global const float* res
 
 	*pdf = pdfs[0] * pdfs[1];
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

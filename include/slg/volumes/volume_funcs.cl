@@ -342,3 +342,4 @@ OPENCL_FORCE_NOT_INLINE float Volume_Scatter(__global const Volume *vol,
 			return -1.f;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

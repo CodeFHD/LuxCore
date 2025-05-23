@@ -39,3 +39,4 @@ __kernel void LuxLinearToneMap_Apply(
 		pixel[2] *= scale;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -29,3 +29,4 @@ OPENCL_FORCE_INLINE float ColorDepthTexture_ConstEvaluateFloat(const float d, co
 OPENCL_FORCE_INLINE float3 ColorDepthTexture_ConstEvaluateSpectrum(const float d, const float3 kt) {
 	return log(clamp(kt, 1e-9f, 1.f)) / d;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

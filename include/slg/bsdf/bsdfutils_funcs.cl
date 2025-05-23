@@ -119,3 +119,4 @@ OPENCL_FORCE_INLINE bool BSDF_IsAlbedoEndPoint(__global const BSDF *bsdf,
 			return true;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

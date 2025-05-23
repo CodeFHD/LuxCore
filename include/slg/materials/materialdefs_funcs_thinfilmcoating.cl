@@ -310,3 +310,4 @@ OPENCL_FORCE_NOT_INLINE float3 CalcFilmColor(const float3 localFixedDir, const f
 	float3 rgb = ThinFilmCoating_ConvertXYZToRGB(normalizedXYZ);
 	return ThinFilmCoating_Constrain(normalizedXYZ, rgb);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

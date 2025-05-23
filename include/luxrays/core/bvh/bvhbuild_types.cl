@@ -60,3 +60,4 @@ typedef struct {
 
 #define IndexBVHNodeData_IsLeaf(nodeData) ((nodeData) & 0x80000000u)
 #define IndexBVHNodeData_GetSkipIndex(nodeData) ((nodeData) & 0x7fffffffu)
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

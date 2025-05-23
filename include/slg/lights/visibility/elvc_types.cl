@@ -27,3 +27,4 @@ typedef struct {
 	// Cache information
 	unsigned int distributionOffset;
 } ELVCacheEntry;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

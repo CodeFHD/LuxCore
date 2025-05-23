@@ -39,3 +39,4 @@ __kernel void WhiteBalance_Apply(
 		pixel[2] *= scaleB;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

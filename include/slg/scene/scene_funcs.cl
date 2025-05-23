@@ -149,3 +149,4 @@ OPENCL_FORCE_NOT_INLINE bool Scene_Intersect(
 		return false;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

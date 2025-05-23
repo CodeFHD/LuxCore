@@ -41,3 +41,4 @@ __kernel void OptixDenoiserPlugin_BufferSetUp(
 	dst[index3 + 1] = y * w;
 	dst[index3 + 2] = z * w;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

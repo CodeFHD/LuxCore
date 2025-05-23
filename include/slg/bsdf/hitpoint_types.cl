@@ -56,3 +56,4 @@ typedef struct {
 
 	int intoObject, throughShadowTransparency;
 } HitPoint;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

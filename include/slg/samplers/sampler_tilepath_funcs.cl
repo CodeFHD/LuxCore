@@ -197,3 +197,4 @@ OPENCL_FORCE_INLINE bool TilePathSampler_Init(
 
 	return true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -57,3 +57,4 @@ typedef struct {
 
 	int firstPathVertex, lastPathVertex;
 } SampleResult;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

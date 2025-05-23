@@ -334,3 +334,4 @@ OPENCL_FORCE_INLINE float FresnelCauchy_Evaluate(const float eta, const float co
 		return FrDiel2(fabs(cosi), sqrt(fmax(0.f, 1.f - sint2)),
 			entering ? eta : 1.f / eta);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

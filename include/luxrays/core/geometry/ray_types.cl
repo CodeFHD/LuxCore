@@ -34,3 +34,4 @@ typedef struct {
 	float t, b1, b2;
 	unsigned int meshIndex, triangleIndex;
 } RayHit;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -494,3 +494,4 @@ OPENCL_FORCE_NOT_INLINE float2 ImageMap_GetDuv(__global const ImageMap *imageMap
 
 	return duv;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -31,3 +31,4 @@ OPENCL_FORCE_INLINE int BBox_IntersectP(const float3 pMin, const float3 pMax,
 
 	return (t1 > t0);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

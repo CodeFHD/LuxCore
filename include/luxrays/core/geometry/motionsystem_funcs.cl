@@ -130,3 +130,4 @@ OPENCL_FORCE_INLINE void MotionSystem_SampleInverse(__global const MotionSystem*
 
 	InterpolatedTransform_Sample(&interpolatedTransforms[index], time, result);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

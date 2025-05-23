@@ -21,3 +21,4 @@
 typedef struct {
 	unsigned int depth, diffuseDepth, glossyDepth, specularDepth;
 } PathDepthInfo;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

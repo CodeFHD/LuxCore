@@ -210,3 +210,4 @@ OPENCL_FORCE_NOT_INLINE float3 Texture_Bump(const uint texIndex,
 
 	return result;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -1111,3 +1111,4 @@ OPENCL_FORCE_NOT_INLINE void BlenderVoronoiTexture_EvalOp(
 			break;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -196,3 +196,4 @@ typedef struct {
 	FILM_DENOISER_PARAM
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

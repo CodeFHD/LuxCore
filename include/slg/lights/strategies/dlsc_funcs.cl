@@ -88,3 +88,4 @@ uint DirectLightSamplingCache_GetLightDistribution(
 	
 	return NULL_INDEX;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

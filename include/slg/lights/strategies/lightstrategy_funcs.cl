@@ -95,3 +95,4 @@ OPENCL_FORCE_INLINE float LightStrategy_SampleLightPdf(
 			return NULL_INDEX;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

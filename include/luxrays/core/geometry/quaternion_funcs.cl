@@ -68,3 +68,4 @@ OPENCL_FORCE_INLINE float4 Quaternion_Slerp(float t, const float4 q1, const floa
 
 	return f1 * q1 + (sign * f2) * q2;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -336,3 +336,4 @@ OPENCL_FORCE_NOT_INLINE void Texture_EvalOpGenericBump(
 			evalFloatTexBase, evalFloatTexOffsetU, evalFloatTexOffsetV);
 	EvalStack_PushFloat3(shadeN);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -60,3 +60,4 @@ OPENCL_FORCE_INLINE float FresnelColorTexture_ConstEvaluateFloat() {
 OPENCL_FORCE_INLINE float3 FresnelColorTexture_ConstEvaluateSpectrum() {
 	return BLACK;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

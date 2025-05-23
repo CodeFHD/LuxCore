@@ -71,3 +71,4 @@ OPENCL_FORCE_INLINE uint AtomicAddMod(__global uint *val, const uint delta, cons
 
 	return oldVal;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -518,3 +518,4 @@ OPENCL_FORCE_NOT_INLINE void Camera_GenerateRay(
 			break;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -171,3 +171,4 @@ extern "C" __global__ void __miss__OptixAccel() {
 	rayHit->meshIndex = NULL_INDEX;
 	rayHit->triangleIndex = NULL_INDEX;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -352,3 +352,4 @@ OPENCL_FORCE_INLINE void ExtMesh_GetLocal2World(const float time,
 			break;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -138,3 +138,4 @@ OPENCL_FORCE_INLINE float DistanceSquared(const float3 a, const float3 b) {
 OPENCL_FORCE_INLINE float Sqr(const float a) {
 	return a * a;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

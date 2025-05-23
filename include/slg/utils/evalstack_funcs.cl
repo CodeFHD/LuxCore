@@ -38,3 +38,4 @@
 
 #define EvalStack_PushBSDFEvent(a) { ((__global BSDFEvent *)evalStack)[*evalStackOffset] = a; *evalStackOffset = *evalStackOffset + 1; }
 #define EvalStack_PopBSDFEvent(a) { *evalStackOffset = *evalStackOffset - 1; a = ((__global BSDFEvent *)evalStack)[*evalStackOffset]; }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -145,3 +145,4 @@ OPENCL_FORCE_INLINE void Triangle_Intersect(
 	*hitMeshIndex = currentMeshIndex;
 	*hitTriangleIndex = currentTriangleIndex;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

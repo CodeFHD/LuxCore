@@ -121,3 +121,4 @@ OPENCL_FORCE_INLINE bool EyePathInfo_IsCausticPathWithEvent(__global EyePathInfo
 	return pathInfo->isNearlyCaustic && (pathInfo->depth.depth + 1 > 1) &&
 			EyePathInfo_IsNearlySpecular(pathInfo, event, glossiness, glossinessThreshold);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

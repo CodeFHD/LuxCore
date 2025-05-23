@@ -106,3 +106,4 @@ OPENCL_FORCE_INLINE void DefaultMaterial_GetEmittedRadiance(__global const Mater
 
 	EvalStack_PushFloat3(emittedRadiance);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

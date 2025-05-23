@@ -313,3 +313,4 @@ OPENCL_FORCE_INLINE bool SobolSampler_Init(__constant const GPUTaskConfiguration
 
 	return true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

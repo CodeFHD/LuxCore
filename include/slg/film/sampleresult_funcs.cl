@@ -158,3 +158,4 @@ OPENCL_FORCE_INLINE float SampleResult_GetRadianceY(__constant const Film* restr
 
 	return y;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

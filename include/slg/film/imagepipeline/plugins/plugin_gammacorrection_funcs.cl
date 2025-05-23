@@ -46,3 +46,4 @@ __kernel void GammaCorrectionPlugin_Apply(
 		pixel[2] = Radiance2PixelFloat(gammaTable, tableSize, pixel[2]);
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -204,3 +204,4 @@ OPENCL_FORCE_NOT_INLINE uint Material_EvalOp(
 
 	return 0;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

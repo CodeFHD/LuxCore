@@ -58,3 +58,4 @@ OPENCL_FORCE_INLINE bool PathDepthInfo_CheckComponentDepths(
 OPENCL_FORCE_INLINE uint PathDepthInfo_GetRRDepth(__global PathDepthInfo *depthInfo) {
 	return depthInfo->diffuseDepth + depthInfo->glossyDepth;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

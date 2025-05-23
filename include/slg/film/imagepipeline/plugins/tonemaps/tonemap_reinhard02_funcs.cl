@@ -77,3 +77,4 @@ OPENCL_FORCE_INLINE float3 REDUCE_OP(const float3 a, const float3 b) {
 OPENCL_FORCE_INLINE float3 ACCUM_OP(const float3 a, const float3 b) {
 	return a + b;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

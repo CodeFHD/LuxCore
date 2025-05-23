@@ -80,3 +80,4 @@ OPENCL_FORCE_INLINE float3 Spectrum_ScaledClamp(const float3 c, const float low,
 
 	return ret;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

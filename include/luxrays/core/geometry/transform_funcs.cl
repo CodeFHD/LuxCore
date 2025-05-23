@@ -56,3 +56,4 @@ OPENCL_FORCE_INLINE bool Transform_SwapsHandedness(__global const Transform* res
 		(trans->m.m[1][0] * trans->m.m[2][1] - trans->m.m[1][1] * trans->m.m[2][0])));
 	return det < 0.f;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

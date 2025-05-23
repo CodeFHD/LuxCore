@@ -21,3 +21,4 @@
 typedef struct {
 	unsigned int s1, s2, s3;
 } Seed;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

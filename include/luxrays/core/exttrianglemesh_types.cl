@@ -88,3 +88,4 @@ typedef struct {
 		interpolatedTransforms
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

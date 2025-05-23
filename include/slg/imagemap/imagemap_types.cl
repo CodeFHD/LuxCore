@@ -72,3 +72,4 @@ typedef struct {
 #define IMAGEMAPS_PARAM , imageMapDescs, imageMapBuff
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

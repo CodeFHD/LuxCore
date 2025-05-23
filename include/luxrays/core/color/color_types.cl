@@ -31,3 +31,4 @@ typedef struct {
 } RGBColor;
 
 typedef RGBColor Spectrum;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

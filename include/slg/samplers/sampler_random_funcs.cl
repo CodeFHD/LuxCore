@@ -209,3 +209,4 @@ OPENCL_FORCE_INLINE bool RandomSampler_Init(
 
 	return true;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

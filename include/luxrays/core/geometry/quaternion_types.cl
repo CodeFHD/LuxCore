@@ -22,3 +22,4 @@ typedef struct {
 	float w;
 	Vector v;
 } Quaternion;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

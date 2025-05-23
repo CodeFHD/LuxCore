@@ -962,3 +962,4 @@ OPENCL_FORCE_NOT_INLINE float turbulencep(float noisesize, float x, float y, flo
 	nr++;
 	return turbulence_perlin(vec, 1.f, (float)(1<<nr));
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

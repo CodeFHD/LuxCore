@@ -1135,3 +1135,4 @@ OPENCL_FORCE_INLINE float Light_GetAvgPassThroughTransparency(
 	} else
 		return 1.f;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

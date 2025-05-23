@@ -296,3 +296,4 @@ OPENCL_FORCE_NOT_INLINE float3 TextureMapping3D_Map(__global const TextureMappin
 			return BLACK;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

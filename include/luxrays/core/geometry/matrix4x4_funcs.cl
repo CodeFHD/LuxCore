@@ -374,3 +374,4 @@ OPENCL_FORCE_INLINE Matrix4x4 Matrix4x4_RotateZ(const float angle) {
 
 	return m;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

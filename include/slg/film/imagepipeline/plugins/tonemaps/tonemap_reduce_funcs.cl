@@ -89,3 +89,4 @@ __kernel void OpRGBValueAccumulate(
 		accumBuffer[2] = totalRGBValue.z;
 	}
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

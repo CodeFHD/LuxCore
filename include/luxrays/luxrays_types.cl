@@ -76,3 +76,4 @@ OPENCL_FORCE_INLINE void VADD3F(__global float *p, const float3 v) {
 }
 
 #endif
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

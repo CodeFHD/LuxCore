@@ -28,3 +28,4 @@ typedef struct {
 	unsigned int lightsDistributionOffset;
 	int pad[2]; // To align to float4
 } DLSCacheEntry;
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4
