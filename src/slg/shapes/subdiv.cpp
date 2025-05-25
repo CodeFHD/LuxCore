@@ -42,6 +42,10 @@ using namespace luxrays;
 using namespace slg;
 using namespace OpenSubdiv;
 
+using BufferPtr = std::unique_ptr<Osd::CpuVertexBuffer>;
+using StencilTablePtr = std::unique_ptr<const Far::StencilTable>;
+using PatchTablePtr = std::unique_ptr<Far::PatchTable>;
+
 struct Edge {
 	Edge(const u_int v0Index, const u_int v1Index) {
 		if (v0Index <= v1Index) {
@@ -67,14 +71,17 @@ public:
 	}
 };
 
-template <int DIMENSIONS> static Osd::CpuVertexBuffer *BuildBuffer(
-		const Far::StencilTable *stencilTable,  // Stencil table
+template <int DIMENSIONS> static BufferPtr
+BuildBuffer(
+		StencilTablePtr& stencilTable,  // Stencil table
 		const float *data,  // Primvar data
 		const int nCoarse,  // Coarse vertex count
 		const int nRefined  // Refined vertex count
 	)
 {
-    auto *buffer = Osd::CpuVertexBuffer::Create(DIMENSIONS, nCoarse + nRefined);
+    BufferPtr buffer(
+		Osd::CpuVertexBuffer::Create(DIMENSIONS, nCoarse + nRefined)
+	);
 
 	// Pack the primvar data at the start of the vertex buffer
 	// and update every time primvar data changes
@@ -85,11 +92,11 @@ template <int DIMENSIONS> static Osd::CpuVertexBuffer *BuildBuffer(
 
 	// Refine points (coarsePoints -> refinedPoints)
 	OSD_EVALUATOR::EvalStencils(
-		buffer,
+		buffer.get(),
 		desc,
-		buffer,
+		buffer.get(),
 		newDesc,
-		stencilTable
+		stencilTable.get()
 	);
 
 	return buffer;
@@ -151,25 +158,24 @@ static Far::TopologyRefiner * createFarTopologyRefiner(const ExtTriangleMesh*);
 
 ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int maxLevel) {
 	//--------------------------------------------------------------------------
-	// Define the mesh
+	// Check data
 	//--------------------------------------------------------------------------
 
-
-	// OSD topology is indexed by int whereas Lux' one is indexed by uint...
+	// OSD topology is indexed by int whereas Lux's one is indexed by uint...
 	assert(srcMesh->GetTotalVertexCount() <= std::numeric_limits<int>::max());
 	assert(srcMesh->GetTotalTriangleCount() <= std::numeric_limits<int>::max());
 
 
 	//--------------------------------------------------------------------------
-	// Setup a factory and create StencilTable
+	// Refine topology
 	//--------------------------------------------------------------------------
 	// https://graphics.pixar.com/opensubdiv/docs/osd_tutorial_0.html
 
-	// Set-up
-	auto* refiner = createFarTopologyRefiner(srcMesh);
+	// Set-up refiner
+	std::unique_ptr<Far::TopologyRefiner> refiner(createFarTopologyRefiner(srcMesh));
 
 	// Uniformly refine the topology up to 'maxlevel'
-	auto refiner_options = Far::TopologyRefiner::UniformOptions(maxLevel);
+	Far::TopologyRefiner::UniformOptions refiner_options(maxLevel);
 	refiner_options.fullTopologyInLastLevel = true;
 	refiner->RefineUniform(refiner_options);
 	if (refiner->GetMaxLevel() < maxLevel) {
@@ -178,42 +184,46 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 		return srcMesh;
 	}
 
+	//--------------------------------------------------------------------------
 	// Create stencil and patch tables
-	Far::StencilTable const * stencilTable = nullptr;
-	Far::PatchTable const * patchTable = nullptr;
+	//--------------------------------------------------------------------------
+
+	StencilTablePtr stencilTable;
+	PatchTablePtr patchTable;
 
 	{
-
+		// Create stencil table
 		Far::StencilTableFactory::Options stencilOptions;
 		stencilOptions.generateOffsets = true;
-		stencilOptions.generateIntermediateLevels = false;
+		stencilOptions.generateIntermediateLevels = false;  // TODO
 
-		stencilTable = Far::StencilTableFactory::Create(*refiner, stencilOptions);
+		stencilTable = StencilTablePtr(
+			Far::StencilTableFactory::Create(*refiner, stencilOptions)
+		);
 
-		//--------------------------------------------------------------------------
-		// Setup a factory to create PatchTable
-		//--------------------------------------------------------------------------
-
+		// Create patch table
 		Far::PatchTableFactory::Options patchOptions;
 		patchOptions.SetEndCapType(
-				Far::PatchTableFactory::Options::ENDCAP_BSPLINE_BASIS);
+				Far::PatchTableFactory::Options::ENDCAP_BSPLINE_BASIS
+		);
 
-		patchTable = Far::PatchTableFactory::Create(*refiner, patchOptions);
+		patchTable = PatchTablePtr(Far::PatchTableFactory::Create(*refiner, patchOptions));
 
 		// Append local point stencils
-		if (const Far::StencilTable *localPointStencilTable =
-				patchTable->GetLocalPointStencilTable()) {
-			if (const Far::StencilTable *combinedTable =
-					Far::StencilTableFactory::AppendLocalPointStencilTable(
-					*refiner, stencilTable, localPointStencilTable)) {
-				delete stencilTable;
-				stencilTable = combinedTable;
+		const auto *localPointStencilTable = patchTable->GetLocalPointStencilTable();
+		if (localPointStencilTable) {
+			const auto *combinedTable =
+				Far::StencilTableFactory::AppendLocalPointStencilTable(
+					*refiner, stencilTable.get(), localPointStencilTable
+				);
+			if (combinedTable) {
+				stencilTable.reset(combinedTable);
 			}
 		}
 	}
 
 	//--------------------------------------------------------------------------
-	// Set buffers and evaluate the stencil
+	// Set buffers and evaluate primvar from stencils
 	//--------------------------------------------------------------------------
 
 	// Setup buffers for vertex primvar data
@@ -229,7 +239,7 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 	SDL_LOG("Subdiv - Refined triangles: " << nRefinedFaces);
 
 	// Vertices
-	Osd::CpuVertexBuffer *vertsBuffer = BuildBuffer<3>(
+	auto vertsBuffer = BuildBuffer<3>(
 		stencilTable,
 		(const float *)srcMesh->GetVertices(),
 		nCoarseVerts,
@@ -237,7 +247,7 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 	);
 
 	// Normals
-    Osd::CpuVertexBuffer *normsBuffer = nullptr;
+    BufferPtr normsBuffer;
 	if (srcMesh->HasNormals()) {
         normsBuffer = BuildBuffer<3>(
 			stencilTable,
@@ -248,7 +258,7 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 	}
 
 	// UVs
-    vector<Osd::CpuVertexBuffer *> uvsBuffers(EXTMESH_MAX_DATA_COUNT, nullptr);
+	std::vector<BufferPtr> uvsBuffers(EXTMESH_MAX_DATA_COUNT);
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
 		if (srcMesh->HasUVs(i)) {
 			uvsBuffers[i] = BuildBuffer<2>(
@@ -261,7 +271,7 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 	}
 
 	// Colors
-	vector<Osd::CpuVertexBuffer *> colsBuffers(EXTMESH_MAX_DATA_COUNT, nullptr);
+	std::vector<BufferPtr> colsBuffers(EXTMESH_MAX_DATA_COUNT);
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
 		if (srcMesh->HasColors(i)) {
 			colsBuffers[i] = BuildBuffer<3>(
@@ -274,7 +284,7 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 	}
 
 	// Alphas
-	vector<Osd::CpuVertexBuffer *> alphasBuffers(EXTMESH_MAX_DATA_COUNT, nullptr);
+	std::vector<BufferPtr> alphasBuffers(EXTMESH_MAX_DATA_COUNT);
 	if (srcMesh->HasAlphas(0)) {
 		for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
 			alphasBuffers[i] = BuildBuffer<1>(
@@ -287,7 +297,7 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 	}
 
 	// VertAOVs
-	vector<Osd::CpuVertexBuffer *> vertAOVSsBuffers(EXTMESH_MAX_DATA_COUNT, nullptr);
+	std::vector<BufferPtr> vertAOVSsBuffers(EXTMESH_MAX_DATA_COUNT);
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
 		if (srcMesh->HasVertexAOV(i)) {
 			for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
@@ -377,29 +387,16 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int 
 			newVertAOVs[i] = nullptr;
 	}
 
-	// Free memory
-	delete refiner;
-	delete stencilTable;
-	delete patchTable;
-    delete vertsBuffer;
-	delete normsBuffer;
-	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++)
-		delete uvsBuffers[i];
-	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++)
-		delete colsBuffers[i];
-	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++)
-		delete alphasBuffers[i];
-	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++)
-		delete alphasBuffers[i];
-
 	// Allocate the new mesh
 	ExtTriangleMesh *newMesh =  new ExtTriangleMesh(
 		nRefinedVerts, nRefinedFaces,
-		newVerts, newTris, newNorms, &newUVs, &newCols, &newAlphas
+		newVerts, newTris, newNorms,
+		&newUVs, &newCols, &newAlphas
 	);
 
-	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++)
+	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
 		newMesh->SetVertexAOV(i, newVertAOVs[i]);
+	}
 
 	return newMesh;
 }
@@ -480,22 +477,22 @@ static Far::TopologyRefiner* createFarTopologyRefiner(const ExtTriangleMesh* src
 	for (u_int i = 0; i < triCount; ++i) {
 		const Triangle &tri = tris[i];
 
-		 const Edge edge0(tri.v[0], tri.v[1]);
-		 if (edgesMap.find(edge0) != edgesMap.end())
+		const Edge edge0(tri.v[0], tri.v[1]);
+		if (edgesMap.find(edge0) != edgesMap.end())
 			edgesMap[edge0] += 1;
-		 else
+		else
 			edgesMap[edge0] = 1;
 
-		 const Edge edge1(tri.v[1], tri.v[2]);
-		 if (edgesMap.find(edge1) != edgesMap.end())
+		const Edge edge1(tri.v[1], tri.v[2]);
+		if (edgesMap.find(edge1) != edgesMap.end())
 			edgesMap[edge1] += 1;
-		 else
-			edgesMap[edge1] = 1;
+		else
+		   edgesMap[edge1] = 1;
 
-		 const Edge edge2(tri.v[2], tri.v[0]);
-		 if (edgesMap.find(edge2) != edgesMap.end())
-			edgesMap[edge2] += 1;
-		 else
+		const Edge edge2(tri.v[2], tri.v[0]);
+		if (edgesMap.find(edge2) != edgesMap.end())
+		   edgesMap[edge2] += 1;
+		else
 			edgesMap[edge2] = 1;
 	}
 
