@@ -29,6 +29,9 @@
 #include <opensubdiv/osd/cpuPatchTable.h>
 #include <opensubdiv/osd/cpuVertexBuffer.h>
 #include <opensubdiv/far/ptexIndices.h>
+#include <opensubdiv/bfr/refinerSurfaceFactory.h>
+#include <opensubdiv/bfr/surface.h>
+#include <opensubdiv/bfr/tessellation.h>
 #include <opensubdiv/osd/tbbEvaluator.h>
 #define OSD_EVALUATOR Osd::TbbEvaluator
 
@@ -49,6 +52,7 @@ using StencilTablePtr = std::unique_ptr<const Far::StencilTable>;
 using PatchTablePtr = std::unique_ptr<Far::PatchTable>;
 using PatchMapPtr = std::unique_ptr<Far::PatchMap>;
 using TopologyRefinerPtr = std::unique_ptr<Far::TopologyRefiner>;
+using SurfaceFactoryPtr = std::unique_ptr< Bfr::RefinerSurfaceFactory<> >;
 
 struct Edge {
 	Edge(const u_int v0Index, const u_int v1Index) {
@@ -172,13 +176,8 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(
 
 	if (adaptive) {
 		SDL_LOG("Subdiv - Refining (adaptive)");
-		ExtTriangleMesh* dstMesh = nullptr;
-		for (level = 0; level < maxLevel; ++level) {
-			auto tmpMesh = ApplySubdivAdaptive(srcMesh, 2);
-			delete outMesh
-			outMesh = tmpMesh;
-		}
-		return outMesh;
+		ExtTriangleMesh* dstMesh = ApplySubdivAdaptive(srcMesh, maxLevel);
+		return dstMesh;
 	}
 
 	//--------------------------------------------------------------------------
@@ -628,8 +627,11 @@ struct SubdivBuffer: std::vector< SubdivVec<DIMENSION> > {
 	operator SubdivVec<DIMENSION>*() {
 		return &(*this)[0];
 	}
-	operator const float * () {
+	operator float * () {
 		return reinterpret_cast<float *>(&(*this)[0]);
+	}
+	operator const float * () const {
+		return reinterpret_cast<const float *>(&(*this)[0]);
 	}
 	void pack_front(const float * src, size_t count) {
 		assert(count <= this->size());
@@ -642,6 +644,10 @@ struct SubdivBuffer: std::vector< SubdivVec<DIMENSION> > {
 			(*this)[i] = src[i];
 		}
 	}
+	SubdivBuffer<DIMENSION> operator += (const SubdivBuffer<DIMENSION>& v) {
+		this->insert(this->end(), v.begin(), v.end());
+		return *this;
+	}
 };
 
 using PosVector = SubdivBuffer<3>;
@@ -652,21 +658,24 @@ struct Tri: std::array<int, 3> {
 	Tri(int a, int b, int c) { (*this)[0] = a, (*this)[1] = b, (*this)[2] = c; }
 
 };
-typedef std::vector<Tri> TriVector;
+
+struct TriVector : std::vector<Tri> {
+	TriVector() {}
+	TriVector(std::vector<int> v) {
+		assert(v.size() % 3 == 0);
+		for (size_t i = 0; i < v.size() / 3; ++i) {
+			Tri tri = Tri(v[i], v[i+1], v[i+2]);
+			this->push_back(tri);
+		}
+	}
+	TriVector& operator +=(const TriVector& v) {
+		this->insert(this->end(), v.begin(), v.end());
+		return *this;
+	}
+};
 
 
 
-
-static void TessellateBaseFace(
-	const Far::Index face,
-	const TopologyRefinerPtr& refiner,
-	const PatchTablePtr& patchTable,
-	const PatchMapPtr& patchMap,
-	const SubdivBuffer<3>& basePositions,
-	const SubdivBuffer<3>& localPositions,
-	SubdivBuffer<3>& tessPoints,  // Output
-	TriVector& tessTris  // Output
-);
 
 
 //  The PatchGroup bundles objects used to create and evaluate a sparse set
@@ -680,6 +689,13 @@ static void TessellateBaseFace(
 //  of a potentially large mesh), that patch evaluation needs to account
 //  for the separation when combining control points.
 //
+// TODO Rename TessArgs
+struct Args {
+    Sdc::SchemeType schemeType = Sdc::SCHEME_LOOP;
+    int             tessUniformRate = 5;
+    bool            tessQuadsFlag = false;
+};
+
 struct PatchGroup {
     PatchGroup(Far::PatchTableFactory::Options patchOptions,
                TopologyRefinerPtr const &      baseRefinerArg,
@@ -687,11 +703,18 @@ struct PatchGroup {
                PosVector const &               basePositionsArg,
                std::vector<Far::Index> const &      baseFacesArg);
 
-    void TessellateBaseFace(int face, PosVector & tessPoints,
-                                      TriVector & tessTris) const;
+    void TessellateBaseFace(
+		int face,
+		std::vector<float>  const & meshVertexPositions,
+		PosVector & tessPoints,
+        TriVector & tessTris
+	) const;
+
+	using SurfaceFactory = Bfr::RefinerSurfaceFactory<>;
 
     //  Const reference members:
     TopologyRefinerPtr const &   baseRefiner;
+    TopologyRefinerPtr           localRefiner;
     Far::PtexIndices const &     basePtexIndices;
     std::vector<Pos> const &     basePositions;
     std::vector<Far::Index> const &   baseFaces;
@@ -701,6 +724,11 @@ struct PatchGroup {
     PatchMapPtr         patchMap;
     int                 patchFaceSize;
     PosVector           localPositions;
+
+	// Members for tessellation
+	SurfaceFactoryPtr meshSurfaceFactory;
+    Bfr::Tessellation::Options tessOptions;
+    int tessFacetSize;
 };
 
 PatchGroup::PatchGroup(Far::PatchTableFactory::Options patchOptions,
@@ -720,12 +748,14 @@ PatchGroup::PatchGroup(Far::PatchTableFactory::Options patchOptions,
     //
     Far::ConstIndexArray groupFaces(&baseFaces[0], (int)baseFaces.size());
 
-    TopologyRefinerPtr localRefiner(
+#if 0
+    localRefiner.reset(
         Far::TopologyRefinerFactory<Far::TopologyDescriptor>::Create(*baseRefiner)
 	);
 
     localRefiner->RefineAdaptive(
-        patchOptions.GetRefineAdaptiveOptions(), groupFaces);
+        patchOptions.GetRefineAdaptiveOptions(), groupFaces
+	);
 
     patchTable.reset(
 		Far::PatchTableFactory::Create(*localRefiner, patchOptions, groupFaces)
@@ -764,42 +794,218 @@ PatchGroup::PatchGroup(Far::PatchTableFactory::Options patchOptions,
                 &basePositions[0], nBaseVertices, &localPositions[0],
                 &localPositions[nRefinedVertices]);
     }
+#endif
+
+    //
+    //  Initialize the SurfaceFactory for the given base mesh (very low
+    //  cost in terms of both time and space) and tessellate each face
+    //  independently (i.e. no shared vertices):
+    //
+    //  Note that the SurfaceFactory is not thread-safe by default due to
+    //  use of an internal cache.  Creating a separate instance of the
+    //  SurfaceFactory for each thread is one way to safely parallelize
+    //  this loop.  Another (preferred) is to assign a thread-safe cache
+    //  to the single instance.
+    //
+    //  First declare any evaluation options when initializing (though
+    //  none are used in this simple case):
+    //
+    SurfaceFactory::Options surfaceOptions;
+
+    meshSurfaceFactory.reset(new SurfaceFactory(*baseRefiner, surfaceOptions));
+	SDL_LOG("Surface factory scheme type: " << meshSurfaceFactory->GetSchemeType());
+
+    //
+    //  The Surface to be constructed and evaluated for each face -- as
+    //  well as the intermediate and output data associated with it -- can
+    //  be declared in the scope local to each face. But since dynamic
+    //  memory is involved with these variables, it is preferred to declare
+    //  them outside that loop to preserve and reuse that dynamic memory.
+    //
+
+	// Previous args initialization  TODO
+	Args const options;
+    //
+    //  Assign Tessellation Options applied for all faces.  Tessellations
+    //  allow the creating of either 3- or 4-sided faces -- both of which
+    //  are supported here via a command line option:
+    //
+    tessFacetSize = 3 + options.tessQuadsFlag;
+
+    tessOptions.SetFacetSize(tessFacetSize);
+    tessOptions.PreserveQuads(options.tessQuadsFlag);
 
 }
 
 void
+PatchGroup::TessellateBaseFace(
+	int face,
+	std::vector<float>   const & meshVertexPositions,
+	PosVector & tessPositions,
+	TriVector & tessTris
+) const {
+	// Previous args initialization TODO
+	Args const options;
+
+    //  Use simpler local type names for the Surface and its factory:
+    typedef Bfr::RefinerSurfaceFactory<> SurfaceFactory;
+    typedef Bfr::Surface<float>          Surface;
+
+    std::vector<float> facePatchPoints;
+
+    std::vector<float> outCoords;
+    std::vector<float> outPos, outDu, outDv;
+    std::vector<int>   outFacets;
+
+
+    //
+    //  Process each face, writing the output of each in Obj format:
+    //
+    //tutorial::ObjWriter objWriter(options.outputObjFile);
+
+    Surface				faceSurface;
+	int numFaces = meshSurfaceFactory->GetNumFaces();
+	SDL_LOG("Surface face count in SurfaceFactory: " << numFaces);
+    //for (int faceIndex = 0; faceIndex < numFaces; ++faceIndex) {
+	//TODO
+        //
+        //  Initialize the Surface for this face -- if valid (skipping
+        //  holes and boundary faces in some rare cases):
+        //
+		if (!meshSurfaceFactory->InitVertexSurface(face, &faceSurface)) {
+			SDL_LOG("WARNING - Vertex Surface not initialized");
+			return;
+		}
+
+        //
+        //  Declare a simple uniform Tessellation for the Parameterization
+        //  of this face and identify coordinates of the points to evaluate:
+        //
+        Bfr::Tessellation tessPattern(faceSurface.GetParameterization(),
+                                      options.tessUniformRate, tessOptions);
+
+        int numOutCoords = tessPattern.GetNumCoords();
+		assert(numOutCoords);
+
+        outCoords.resize(numOutCoords * 2);
+
+        tessPattern.GetCoords(outCoords.data());
+
+        //
+        //  Prepare the patch points for the Surface, then use them to
+        //  evaluate output points for all identified coordinates:
+        //
+        //  Resize patch point and output arrays:
+        int pointSize = 3;
+
+        facePatchPoints.resize(faceSurface.GetNumPatchPoints() * pointSize);
+
+        outPos.resize(numOutCoords * pointSize);
+        outDu.resize(numOutCoords * pointSize);
+        outDv.resize(numOutCoords * pointSize);
+
+        //  Populate patch point and output arrays:
+        faceSurface.PreparePatchPoints(
+			meshVertexPositions.data(),
+			pointSize,
+            facePatchPoints.data(),
+			pointSize
+		);
+
+        for (int i = 0, j = 0; i < numOutCoords; ++i, j += pointSize) {
+            faceSurface.Evaluate(&outCoords[i*2],
+                                 facePatchPoints.data(), pointSize,
+                                 &outPos[j], &outDu[j], &outDv[j]);
+        }
+
+        //
+        //  Identify the faces of the Tessellation:
+        //
+        //  Note the need to offset vertex indices for the output faces --
+        //  using the number of vertices generated prior to this face. One
+        //  of several Tessellation methods to transform the facet indices
+        //  simply translates all indices by the desired offset.
+        //
+        int objVertexIndexOffset = tessPositions.size();
+
+        int numFacets = tessPattern.GetNumFacets();
+        outFacets.resize(numFacets * tessFacetSize);
+        tessPattern.GetFacets(outFacets.data());
+
+        tessPattern.TransformFacetCoordIndices(
+			outFacets.data(),
+            objVertexIndexOffset
+		);
+
+		tessPositions += PosVector(outPos.data(), size_t(numOutCoords));
+		tessTris += TriVector(outFacets);
+
+		for (auto& pnt : tessPositions) {
+			SDL_LOG("Subdiv - Tessellate - Points: " << pnt[0] << " " << pnt[1] << " " << pnt[2]);
+		}
+		for (auto& tri : tessTris) {
+			SDL_LOG("Subdiv - Tessellate - Triangles: " << tri[0] << " " << tri[1] << " " << tri[2]);
+		}
+
+
+        //
+        //  Write the evaluated points and faces connecting them as Obj:
+        //
+        //objWriter.WriteGroupName("baseFace_", faceIndex);
+
+        //objWriter.WriteVertexPositions(outPos);
+        //objWriter.WriteVertexNormals(outDu, outDv);
+
+        //objWriter.WriteFaces(outFacets, tessFacetSize, true, false);
+    //} TODO
+}
+
+
+#if 0
+void
 PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
                                          TriVector & tessTris) const {
 
-    //  Tesselate the face with points at the midpoint of the face and at
-    //  each corner, and triangles connecting the midpoint to each edge.
-    //  Irregular faces require an aribrary number of corners points, but
-    //  all are at the origin of the child face of the irregular base face:
-    //
-    float const quadPoints[5][2] = { { 0.5f, 0.5f },
-                                     { 0.0f, 0.0f },
-                                     { 1.0f, 0.0f },
-                                     { 1.0f, 1.0f },
-                                     { 0.0f, 1.0f } };
 
-    float const triPoints[4][2] = { { 0.5f, 0.5f },
-                                    { 0.0f, 0.0f },
-                                    { 1.0f, 0.0f },
-                                    { 0.0f, 1.0f } };
+    float const addPoints[3][2] = { { 0.5f, 0.0f },
+                                    { 0.5f, 0.5f },
+                                    { 0.0f, 0.5f }, };
 
-    float const irregPoints[4][2] = { { 1.0f, 1.0f },
-                                      { 0.0f, 0.0f } };
+	Tri const triangles[4] = { Tri{ 0, 3, 5 },
+								   Tri{ 3, 4, 5 },
+								   Tri{ 3, 1, 4 },
+								   Tri{ 5, 4, 2 }, };
+
 
     //  Determine the topology of the given base face and the resulting
     //  tessellation points and faces to generate:
     //
     int baseFace = baseFaces[face];
-    int faceSize = baseRefiner->GetLevel(0).GetFaceVertices(baseFace).size();
+	auto faceVertices = baseRefiner->GetLevel(0).GetFaceVertices(baseFace);
+    int faceSize = faceVertices.size();
+	assert(faceSize == 3);
+
+    float const addPoints[3][2] = { { 0.5f, 0.0f },
+                                    { 0.5f, 0.5f },
+                                    { 0.0f, 0.5f }, };
+
+	Tri const triangles[4] = { Tri{ 0, 3, 5 },
+								   Tri{ 3, 4, 5 },
+								   Tri{ 3, 1, 4 },
+								   Tri{ 5, 4, 2 }, };
+	SDL_LOG("faceSize " << faceSize << "/" << patchFaceSize);  // TODO
 
     bool faceIsIrregular = (faceSize != patchFaceSize);
 
-    int nTessPoints = faceSize + 1;
-    int nTessFaces  = faceSize;
+	int nTessPoints;
+	int nTessFaces;
+	if (faceSize == 3) {
+		nTessPoints = 6;
+		nTessFaces = 4;
+	} else {
+		int nTessPoints = faceSize + 1;
+		int nTessFaces  = faceSize;
+	}
 
     tessPoints.resize(nTessPoints);
     tessTris.resize(nTessFaces);
@@ -813,15 +1019,11 @@ PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
 
     for (int i = 0; i < nTessPoints; ++i) {
         //  Choose the (s,t) coordinate from the fixed tessellation:
-        float const * st = faceIsIrregular ? irregPoints[i != 0]
-                         : ((faceSize == 4) ? quadPoints[i] : triPoints[i]);
+        float const * st = triPoints[i];
 
         //  Locate the patch corresponding to the face ptex idx and (s,t)
         //  and evaluate:
         int patchFace = ptexFace;
-        if (faceIsIrregular && (i > 0)) {
-            patchFace += i - 1;
-        }
         Far::PatchTable::PatchHandle const * handle =
             patchMap->FindPatch(patchFace, st[0], st[1]);
         assert(handle);
@@ -850,25 +1052,20 @@ PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
     //  Assign triangles connecting the midpoint of the base face to the
     //  points computed at the ends of each of its edges:
     //
-    for (int i = 0; i < nTessFaces; ++i) {
-        tessTris[i] = Tri(0, 1 + i, 1 + ((i + 1) % faceSize));
-    }
+	if (faceSize != 3) {
+		for (int i = 0; i < nTessFaces; ++i) {
+			tessTris[i] = Tri(0, 1 + i, 1 + ((i + 1) % faceSize));
+		}
+	} else {
+		for (int i = 0; i < nTessFaces; ++i) {
+			tessTris[i] = triangles[i];
+		}
+	}
+
 }
+#endif
 
-
-static TopologyRefinerPtr createTopologyRefinerFromMesh(
-		const ExtTriangleMesh* srcMesh,
-		const Far::PatchTableFactory::Options& patchOptions,
-		PosVector & posVector
-) {
-
-	// Initialize corresponding options for adaptive refinement
-	Far::TopologyRefiner::AdaptiveOptions adaptiveOptions(0);  // TODO
-
-	// Be sure patch options were intialized with the desired max level
-	adaptiveOptions = patchOptions.GetRefineAdaptiveOptions();
-	assert(adaptiveOptions.useInfSharpPatch == patchOptions.useInfSharpPatch);
-
+static TopologyRefinerPtr createTopologyRefinerFromMesh(const ExtTriangleMesh* srcMesh) {
 
 	// Set topology refiner factory's type & options
 	Sdc::SchemeType scheme_type = Sdc::SCHEME_LOOP;
@@ -880,10 +1077,20 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 	Far::TopologyDescriptor desc;
 	desc.numVertices = srcMesh->GetTotalVertexCount();
 	desc.numFaces = srcMesh->GetTotalTriangleCount();
+
 	vector<int> vertPerFace(desc.numFaces, 3);
 	desc.numVertsPerFace = &vertPerFace[0];
-	desc.vertIndicesPerFace = reinterpret_cast<const int *>(srcMesh->GetTriangles());
+	desc.vertIndicesPerFace = (const int *)srcMesh->GetTriangles();
 
+	//// Debug
+	//for (int i = 0, int * face; i < desc.numFaces ; face += desc.numVertsPerFace(i++)) {
+		//int faceSize = desc.numVertsPerFace
+		//if (faceSize == 3) {
+			//SDL_LOG("Triangle: " << );
+	//}
+
+
+#if 0
 	// Look for mesh boundary edges
 	unordered_map<Edge, u_int, EdgeHashFunction> edgesMap;
 	const u_int triCount = srcMesh->GetTotalTriangleCount();
@@ -941,6 +1148,7 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 		desc.cornerVertexIndices = &cornerVertexIndices[0];
 		desc.cornerWeights = &cornerWeights[0];
 	}
+#endif
 
 	// Create refiner
 	using RefinerFactory = Far::TopologyRefinerFactory<Far::TopologyDescriptor>;
@@ -952,15 +1160,7 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 	);
 	assert(refiner);
 
-	// Copy mesh vertices into posVector
-	int numVertices = refiner->GetNumVerticesTotal();
-	posVector.resize(numVertices);
-	auto meshVertices = srcMesh->GetVertices();
-	for (int i = 0; i < numVertices; ++i) {
-		posVector[i][0] = meshVertices[i].x;
-		posVector[i][1] = meshVertices[i].y;
-		posVector[i][2] = meshVertices[i].z;
-	}
+	refiner->GetLevel(0).PrintTopology();
 
 	return refiner;
 
@@ -974,29 +1174,28 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 	typedef float Real;
 
 	// https://graphics.pixar.com/opensubdiv/docs/far_tutorial_5_2.html
-	PosVector basePositions;
-
-	// Initialize patch table options
-	Far::PatchTableFactory::Options patchOptions(maxLevel);
-	//patchOptions.SetPatchPrecision<Real>();
-	//patchOptions.useInfSharpPatch = true;
-	patchOptions.generateVaryingTables = false;
-	patchOptions.shareEndCapPatchPoints = true;
-	patchOptions.endCapType =
-		Far::PatchTableFactory::Options::ENDCAP_GREGORY_BASIS;
 
 	// Construct base refiner
+
 	TopologyRefinerPtr baseRefiner(
-		createTopologyRefinerFromMesh(srcMesh, patchOptions, basePositions)
+		createTopologyRefinerFromMesh(srcMesh)
 	);
+
+	// Initialize Ptex
 	Far::PtexIndices basePtexIndices(*baseRefiner);
 
-    // Construct the associated PatchTable to evaluate the limit surface:
-	PatchTablePtr patchTable(Far::PatchTableFactory::Create(*baseRefiner, patchOptions));
-	PatchMapPtr patchMap(new Far::PatchMap(*patchTable));
+	// Copy mesh positions into posVector
+	//int numVertices = refiner->GetNumVerticesTotal();  // TODO
+	PosVector basePositions;
+	int numVertices = srcMesh->GetTotalVertexCount();
+	basePositions.resize(numVertices);
+	auto meshVertices = srcMesh->GetVertices();
+	for (int i = 0; i < numVertices; ++i) {
+		basePositions[i][0] = meshVertices[i].x;
+		basePositions[i][1] = meshVertices[i].y;
+		basePositions[i][2] = meshVertices[i].z;
+	}
 
-	// Refinement output constants
-	const int nLocalPoints = patchTable->GetNumLocalPoints();
 
     //
     //  Determine the sizes of the patch groups specified -- there will be
@@ -1008,14 +1207,32 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
     int lesserGroupSize = numBaseFaces / numPatchGroups;
     int numLargerGroups = numBaseFaces - (numPatchGroups * lesserGroupSize);
 
+	//
+    //  Define the options used to construct the patches for each group.
+	//
+	Far::PatchTableFactory::Options patchOptions(maxLevel);
+	patchOptions.generateVaryingTables = false;
+	patchOptions.shareEndCapPatchPoints = false;
+	patchOptions.endCapType =
+		Far::PatchTableFactory::Options::ENDCAP_GREGORY_BASIS;
+
+    // Construct the associated PatchTable to evaluate the limit surface:
+	PatchTablePtr patchTable(Far::PatchTableFactory::Create(*baseRefiner, patchOptions));
+	PatchMapPtr patchMap(new Far::PatchMap(*patchTable));
 
     int objVertCount = 0;
 
-    PosVector tessAllPoints;
-    TriVector tessAllFaces;
+	// Final tessellation result
+	// TODO
+    //PosVector tessNewPoints(
+		//(float *) srcMesh->GetVertices(),
+		//srcMesh->GetTotalVertexCount()
+	//);
+    PosVector tessNewPoints;
+    TriVector tessNewFaces;
 
+	// TODO This could be parallelized
     for (int i = 0; i < numPatchGroups; ++i) {
-		SDL_LOG("Subdiv - Adaptive - Starting patch group " << i);
 
         //
         //  Initialize a vector with a group of base faces from which to
@@ -1024,14 +1241,15 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 		Far::Index minFace = i * lesserGroupSize + std::min(i, numLargerGroups);
 		Far::Index maxFace = minFace + lesserGroupSize + (i < numLargerGroups);
 
+		SDL_LOG("Subdiv - Adaptive - Starting patch group " << i << " (" << minFace << "-" << maxFace << ")");
+
         std::vector<Far::Index> baseFaces(maxFace - minFace);
         for (int face = minFace; face < maxFace; ++face) {
             baseFaces[face - minFace] = face;
         }
 
         //
-        //  Declare a PatchGroup and tessellate its base faces -- generating
-        //  vertices and faces in Obj format to standard output:
+        //  Declare a PatchGroup and tessellate its base faces
         //
         PatchGroup patchGroup(
 			patchOptions,
@@ -1041,51 +1259,51 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 			baseFaces
 		);
 
-		PosVector tessPoints;
-		TriVector tessFaces;
+		std::vector<float>     meshVtxPositions;
+
+		for (auto pos: basePositions) {
+			meshVtxPositions.push_back(pos[0]);
+			meshVtxPositions.push_back(pos[1]);
+			meshVtxPositions.push_back(pos[2]);
+		}
+
 
 		for (int j = 0; j < (int) baseFaces.size(); ++j) {
 			// Tessellate
-			patchGroup.TessellateBaseFace(j, tessPoints, tessFaces);
-
-
-			// Append vertices
-			tessAllPoints.insert(
-				tessAllPoints.end(), tessPoints.begin(), tessPoints.end()
-			);
-
-			// Append faces
-			int nFaces = (int) tessFaces.size();
-			int nVerts = (int) tessPoints.size();
-			size_t vBase = objVertCount;
-			for (int k = 0; k < nFaces; ++k) {
-				auto v = tessFaces[k];
-				tessAllFaces.push_back(Tri(vBase + v[0], vBase + v[1], vBase + v[2]));
-			}
-			objVertCount += nVerts;
+			patchGroup.TessellateBaseFace(j, meshVtxPositions, tessNewPoints, tessNewFaces);
+			SDL_LOG("New points: " << tessNewPoints.size());
+			SDL_LOG("New triangles: " << tessNewFaces.size());
 		}
 
     }
 
+	// Debug
+	for (auto& pnt : tessNewPoints) {
+		SDL_LOG("Subdiv - Points: " << pnt[0] << " " << pnt[1] << " " << pnt[2]);
+	}
+	for (auto& tri : tessNewFaces) {
+		SDL_LOG("Subdiv - Triangles: " << tri[0] << " " << tri[1] << " " << tri[2]);
+	}
+
 	SDL_LOG("Subdiv - Adaptive - Building new mesh");
 
 	// New vertices and triangles
-	size_t pointCount = tessAllPoints.size();
+	size_t pointCount = tessNewPoints.size();
 	SDL_LOG("Subdiv - Adaptive - " << pointCount << " points");
 	Point *newVerts = TriangleMesh::AllocVerticesBuffer(pointCount);
 	for (size_t i = 0; i < pointCount; ++i) {
 		Point* vert = newVerts + i;
-		vert->x = tessAllPoints[i][0];
-		vert->y = tessAllPoints[i][1];
-		vert->z = tessAllPoints[i][2];
+		vert->x = tessNewPoints[i][0];
+		vert->y = tessNewPoints[i][1];
+		vert->z = tessNewPoints[i][2];
 	}
 
 	// New triangles
-	size_t triCount = tessAllFaces.size();
+	size_t triCount = tessNewFaces.size();
 	SDL_LOG("Subdiv - Adaptive - " << triCount << " triangles");
 	Triangle *newTris = TriangleMesh::AllocTrianglesBuffer(triCount);
 	for (size_t face = 0; face < triCount; ++face) {
-		auto tri = tessAllFaces[face];
+		auto tri = tessNewFaces[face];
 		for (u_int vertex = 0; vertex < 3; ++vertex) {
 			newTris[face].v[vertex] = tri[vertex];
 			assert(tri[vertex] <= pointCount);
