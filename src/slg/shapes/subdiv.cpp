@@ -580,13 +580,19 @@ static Far::TopologyRefiner* createFarTopologyRefiner(const ExtTriangleMesh* src
 // Adaptive
 
 
-template <size_t DIMENSION> struct SubdivVec: std::array<float, 3> {
+template <size_t DIMENSION> struct SubdivVec: std::array<float, DIMENSION> {
 	// Minimal required interface
 	SubdivVec() {}
 
 	SubdivVec(const float * src) {
 		for (size_t i = 0; i < DIMENSION; ++i) {
 			(*this)[i] = *(src + i);
+		}
+	}
+	SubdivVec(std::initializer_list<float> src) {
+		assert(src.size() == DIMENSION);
+		for (int i=0; auto e: src) {
+			(*this)[i++] = e;
 		}
 	}
 
@@ -681,8 +687,10 @@ struct PatchGroup {
                PosVector const &               basePositionsArg,
                std::vector<Far::Index> const &      baseFacesArg);
 
-    void TessellateBaseFace(int face, PosVector & tessPoints,
-                                      TriVector & tessTris) const;
+    void Tessellate(
+		PosVector & tessPoints,
+        TriVector & tessTris
+	) const;
 
     //  Const reference members:
     TopologyRefinerPtr const &   baseRefiner;
@@ -728,7 +736,7 @@ PatchGroup::PatchGroup(Far::PatchTableFactory::Options patchOptions,
     patchMap.reset(new Far::PatchMap(*patchTable));
 
     patchFaceSize =
-        Sdc::SchemeTypeTraits::GetRegularFaceSize(baseRefiner->GetSchemeType());
+        Sdc::SchemeTypeTraits::GetRegularFaceSize(localRefiner->GetSchemeType());
 
     //  Compute the number of refined and local points needed to evaluate the
     //  patches, allocate and interpolate.  This varies from tutorial_5_1 in
@@ -761,6 +769,7 @@ PatchGroup::PatchGroup(Far::PatchTableFactory::Options patchOptions,
 
 }
 
+#if 0
 void
 PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
                                          TriVector & tessTris) const {
@@ -798,6 +807,8 @@ PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
     tessPoints.resize(nTessPoints);
     tessTris.resize(nTessFaces);
 
+
+
     //  Compute the mid and corner points -- remember that for an irregular
     //  face, we must reference the individual ptex faces for each corner:
     //
@@ -805,6 +816,49 @@ PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
 
     int numBaseVerts = (int) basePositions.size();
 
+	// Butterfly tessellation (triangles)
+	auto& topology = refiner->GetLevel(0);
+	for (auto edge: topology.GetFaceEdges(baseFace)) {
+		// TODO Boundary edge: take midpoint
+
+
+		// Gather vertices of the edge
+
+		// v0, v1: endpoints of the edge
+		auto v0_v1 = topology.GetEdgeVertices(edge);
+		int v0 = v0_v1[0], v1 = v0_v1[1];
+
+		// v2, v3: "opposite" vertices in triangles sharing the edge
+		std::vector<int> v2_v3;
+		for (int f: topology.GetEdgeFaces(edge)) {
+			for (int v: topolevel.GetFaceVertices(f) {
+				if (v != v0 && vert != v1) {
+					v2_v3.push_back(v);
+				}
+			}
+		}
+		assert(v2_v3.size() == 2);
+		int v2 = v2_v3[0], v3 = v2_v3[1];
+
+		// v4, v5, v6, v7: vertices opposite v0 and v1 in adjacent triangles to v2 and v3
+		std::vector<int> v4_v5_v6_v7;
+		for (int v: v0_v1) {
+			for (int w: v2_v3) {
+				int e = topology.FindEdge(v, w);
+				for (int f: topology.GetEdgeFaces(e)) {
+					for (int x: topology.GetFaceVertices(f) {
+						if ( x != v && x != w) {
+							v4_v5_v6_v7.push_back(x);
+						}
+					}
+				}
+			}
+		}
+		int v4 = v4_v5_v6_v7[0], v5 = v4_v5_v6_v7[1], v6 = v4_v5_v6_v7[2], v7 = v4_v5_v6_v7[3];
+
+		// v_new = 0.5*(v0 + v1) + 0.125*(v2 + v3) - 0.0625*(v4 + v5 + v6 + v7)
+
+#if 0
     for (int i = 0; i < nTessPoints; ++i) {
         //  Choose the (s,t) coordinate from the fixed tessellation:
         float const * st = faceIsIrregular ? irregPoints[i != 0]
@@ -847,7 +901,179 @@ PatchGroup::TessellateBaseFace(int face, PosVector & tessPoints,
     for (int i = 0; i < nTessFaces; ++i) {
         tessTris[i] = Tri(0, 1 + i, 1 + ((i + 1) % faceSize));
     }
+#endif
 }
+#endif
+
+void PatchGroup::Tessellate(
+	PosVector & tessPos,
+	TriVector & tessTris) const {
+
+	// This tessellation splits edges at their midpoints
+	// and generates 4 resulting triangles per input triangle.
+	//
+	// Input:
+	//           V2
+	//          / \
+	//		   /  \
+	//        /   \
+	//      V0----V1
+	//
+	//
+	//           V2
+	//          / \
+	//        M1--M0
+	//       / \ / \
+	//      V0-M2-V1
+
+	// Some constants
+	const auto& topology = baseRefiner->GetLevel(0);
+	const int FACE_COUNT = topology.GetNumFaces();
+	const int FACE_SIZE = 3;  // Of course (triangles)...
+	const int MIDPOINT_COUNT = 3;  // We split each edge of a triangle
+	const int RESULTING_TRIANGLES = 4;  // This gives four resulting triangles
+
+	const char* trianglePatterns[RESULTING_TRIANGLES][FACE_SIZE] = {
+		{ "V0", "M2", "M1"},
+		{ "V1", "M0", "M2"},
+		{ "V2", "M1", "M0"},
+		{ "M0", "M1", "M2"},
+	};
+
+	// Coordinates of each symbolic point in face local (u,v)
+	std::map<const char*, std::array<float, 2> > stMap;
+	stMap["V0"] = {0.0f, 0.0f};
+	stMap["V1"] = {1.0f, 0.0f};
+	stMap["V2"] = {0.0f, 1.0f};
+	stMap["M0"] = {0.5f, 0.5f};
+	stMap["M1"] = {0.0f, 0.5f};
+	stMap["M2"] = {0.5f, 0.0f};
+
+	// Local indices of symbolic points, when they are vertex
+	std::map<const char*, int> liMap;
+	liMap["V0"] = 0;
+	liMap["V1"] = 1;
+	liMap["V2"] = 2;
+
+	// Extremities of the edge where the midpoint is set
+	std::map<const char*, std::array<int, 2> > eeMap;
+	eeMap["M0"] = {1, 2};
+	eeMap["M1"] = {2, 0};
+	eeMap["M2"] = {0, 1};
+
+	// Offset
+	int offset = topology.GetNumVertices();
+
+	// Resize tessPos and tessTris
+	tessTris.clear();
+	tessPos.resize(offset + topology.GetNumEdges());
+
+	const auto& ptex = basePtexIndices;
+    int numBaseVerts = (int) basePositions.size();
+
+	// Tessellate faces
+	for (int f = 0; f < FACE_COUNT; ++f) {  // for each face
+		const auto faceVertices = topology.GetFaceVertices(f);
+
+		int ptexFace = basePtexIndices.GetFaceId(f);
+
+		for (int t = 0; t < RESULTING_TRIANGLES; ++t) {  // for each triangle to build
+			auto pattern = trianglePatterns[t];
+
+			Tri topotriangle;  // Resulting triangle, to be built
+			for (int p = 0; p < FACE_SIZE; ++p) {  // for each point in the triangle
+				auto sname = pattern[p];  // Point symbolic name
+
+				// Topology
+				int vertex;
+				if (sname[0] == 'V') {
+					// Vertex
+					vertex = faceVertices[liMap[sname]];
+				} else {
+					// Edge midpoint (reminder: indexed with edge number)
+					std::array<int, 2> edgeExtremities(eeMap[sname]);
+
+					vertex = topology.FindEdge(
+						faceVertices[edgeExtremities[0]],
+						faceVertices[edgeExtremities[1]]
+					) + offset;  // First elements are reserved for existing vertices
+				}
+				// Update output
+				topotriangle[p] = vertex;
+
+				// Coordinates
+				std::array<float, 2> st(stMap[sname]);
+				//  Locate the patch corresponding to the face ptex idx and (s,t)
+				//  and evaluate:
+				Far::PatchTable::PatchHandle const * handle =
+					patchMap->FindPatch(ptexFace, st[0], st[1]);
+				assert(handle);
+
+				float pWeights[20];
+				patchTable->EvaluateBasis(*handle, st[0], st[1], pWeights);
+
+				//  Identify the patch cvs and combine with the evaluated weights --
+				//  remember to distinguish cvs in the base level:
+				Far::ConstIndexArray cvIndices = patchTable->GetPatchVertices(*handle);
+
+				// Evaluate position
+				Pos pos{0.0f, 0.0f, 0.0f};
+				for (int cv = 0; cv < cvIndices.size(); ++cv) {
+					int cvIndex = cvIndices[cv];
+					if (cvIndex < numBaseVerts) {
+						pos.AddWithWeight(basePositions[cvIndex],
+							pWeights[cv]);
+					} else {
+						pos.AddWithWeight(localPositions[cvIndex - numBaseVerts],
+							pWeights[cv]);
+					}
+				}
+
+				// Update output
+				tessPos[vertex] = pos;
+
+			} // ~points
+
+			tessTris.push_back(topotriangle);
+
+		}  // ~triangles
+
+	}  // ~faces
+
+}  // ~Tessellate
+
+
+
+
+
+
+#if 0
+		auto faceVertices = topology.GetFaceVertices(f);
+		assert(faceVertices.size() == 3);
+		for (int triTemplate
+
+		// Add vertex triangles (one per vertex)
+		for (int v: faceVertices) {  // for each vertex of the face
+			vector<int> triangle;
+			for (int w: topology->GetFaceVertices(f)) {  // for each vertex of the face
+				if (w == v) {
+					triangle.push_back(w);  // We keep the current vertex
+				} else {
+					triangle.push_back(topology.FindEdge(v, w) + offset);  // We take the middle of the edge
+				}
+			tessTris.push_back(triangle);
+		// Add interior triangle
+		tessTris.emplace_back(topology.GetFaceEdges());
+
+		// Evaluate points
+		int faceId = ptex.GetFaceId(f);
+		
+
+#endif
+
+
+
+
 
 
 static TopologyRefinerPtr createTopologyRefinerFromMesh(
@@ -857,7 +1083,7 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 ) {
 
 	// Initialize corresponding options for adaptive refinement
-	Far::TopologyRefiner::AdaptiveOptions adaptiveOptions(0);  // TODO
+	Far::TopologyRefiner::AdaptiveOptions adaptiveOptions(8);  // TODO
 
 	// Be sure patch options were intialized with the desired max level
 	adaptiveOptions = patchOptions.GetRefineAdaptiveOptions();
@@ -865,7 +1091,7 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 
 
 	// Set topology refiner factory's type & options
-	Sdc::SchemeType scheme_type = Sdc::SCHEME_CATMARK;
+	Sdc::SchemeType scheme_type = Sdc::SCHEME_LOOP;
 
 	Sdc::Options sdc_options;
 	sdc_options.SetVtxBoundaryInterpolation(Sdc::Options::VTX_BOUNDARY_EDGE_AND_CORNER);
@@ -877,7 +1103,9 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 	vector<int> vertPerFace(desc.numFaces, 3);
 	desc.numVertsPerFace = &vertPerFace[0];
 	desc.vertIndicesPerFace = reinterpret_cast<const int *>(srcMesh->GetTriangles());
+	//desc.isLeftHanded = true;
 
+#if 0
 	// Look for mesh boundary edges
 	unordered_map<Edge, u_int, EdgeHashFunction> edgesMap;
 	const u_int triCount = srcMesh->GetTotalTriangleCount();
@@ -906,7 +1134,6 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 			edgesMap[edge2] = 1;
 	}
 
-#if 0
 	vector<bool> isBoundaryVertex(srcMesh->GetTotalVertexCount(), false);
 	vector<Far::Index> cornerVertexIndices;
 	vector<float> cornerWeights;
@@ -958,6 +1185,7 @@ static TopologyRefinerPtr createTopologyRefinerFromMesh(
 		posVector[i][2] = meshVertices[i].z;
 	}
 
+
 	// TODO
 	refiner->GetLevel(0).PrintTopology();
 
@@ -1003,7 +1231,7 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
     //
     int numBaseFaces = baseRefiner->GetNumFacesTotal();
 
-    int numPatchGroups = 2;
+    int numPatchGroups = 1;
     int lesserGroupSize = numBaseFaces / numPatchGroups;
     int numLargerGroups = numBaseFaces - (numPatchGroups * lesserGroupSize);
 
@@ -1043,9 +1271,17 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 		PosVector tessPoints;
 		TriVector tessFaces;
 
+		patchGroup.Tessellate(tessAllPoints, tessAllFaces);
+
+		for (auto t: tessAllFaces) {
+			SDL_LOG("Tris: " << t[0] << " " << t[1] << " " << t[2]);
+		}
+	}
+
+#if 0
 		for (int j = 0; j < (int) baseFaces.size(); ++j) {
 			// Tessellate
-			patchGroup.TessellateBaseFace(j, tessPoints, tessFaces);
+			patchGroup.Tessellate(j, tessPoints, tessFaces);
 
 
 			// Append vertices
@@ -1065,8 +1301,11 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 		}
 
     }
+#endif
 
 	SDL_LOG("Subdiv - Adaptive - Building new mesh");
+	std::ofstream objfile; // TODO
+	objfile.open("test.obj");
 
 	// New vertices and triangles
 	size_t pointCount = tessAllPoints.size();
@@ -1077,6 +1316,7 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 		vert->x = tessAllPoints[i][0];
 		vert->y = tessAllPoints[i][1];
 		vert->z = tessAllPoints[i][2];
+		objfile << "v " << vert->x << " " << vert->y << " " << vert->z << "\n";
 	}
 
 	// New triangles
@@ -1090,6 +1330,9 @@ static ExtTriangleMesh *ApplySubdivAdaptive(
 			assert(tri[vertex] <= pointCount);
 			assert(tri[vertex] >= 0);
 		}
+		// Debug
+		objfile << "f " << tri[0] + 1 << " " << tri[1] + 1 << " " << tri[2] + 1 << "\n";
+		// SDL_LOG("Triangle: " << tri[0] << " " << tri[1] << " " << tri[2]);
 	}
 
 	// Allocate the new mesh
