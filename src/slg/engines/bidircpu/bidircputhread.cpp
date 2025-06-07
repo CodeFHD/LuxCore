@@ -534,7 +534,7 @@ void BiDirCPURenderThread::DirectHitLight(const bool finiteLightSource,
 }
 
 bool BiDirCPURenderThread::TraceLightPath(const float time,
-		Sampler *sampler, const Point &lensPoint,
+		Sampler *sampler, Camera *camera,
 		vector<PathVertexVM> &lightPathVertices,
 		vector<SampleResult> &sampleResults) const {
 	BiDirCPURenderEngine *engine = (BiDirCPURenderEngine *)renderEngine;
@@ -618,6 +618,10 @@ bool BiDirCPURenderThread::TraceLightPath(const float time,
 					//----------------------------------------------------------
 					// Try to connect the light path vertex with the eye
 					//----------------------------------------------------------
+
+					// Sample a point on the camera lens
+					Point lensPoint;
+					camera->SampleLens(time, sampler->GetSample(3), sampler->GetSample(4), &lensPoint);
 
 					ConnectToEye(time, lightVertex, sampler->GetSample(sampleOffset + 1),
 							lensPoint, sampleResults);
@@ -768,6 +772,7 @@ void BiDirCPURenderThread::RenderFunc(std::stop_token stop_token) {
 		const float timeSample = sampler->GetSample(12);
 		const float time = scene->camera->GenerateRayTime(timeSample);
 
+		/*
 		// Sample a point on the camera lens
 		Point lensPoint;
 		if (!camera->SampleLens(time, sampler->GetSample(3), sampler->GetSample(4),
@@ -777,12 +782,13 @@ void BiDirCPURenderThread::RenderFunc(std::stop_token stop_token) {
 			sampler->NextSample(sampleResults);
 			continue;
 		}
+		*/
 
 		//----------------------------------------------------------------------
 		// Trace light path
 		//----------------------------------------------------------------------
 
-		const bool validLightPath = TraceLightPath(time, sampler, lensPoint, lightPathVertices, sampleResults);
+		const bool validLightPath = TraceLightPath(time, sampler, camera, lightPathVertices, sampleResults);
 		assert (SampleResult::IsAllValid(sampleResults));
 
 		if (validLightPath) {
