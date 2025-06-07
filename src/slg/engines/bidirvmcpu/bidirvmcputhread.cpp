@@ -125,7 +125,7 @@ void BiDirVMCPURenderThread::RenderFuncVM(std::stop_token stop_token) {
 					&lensPoints[samplerIndex]))
 				continue;
 
-			if (!TraceLightPath(time, sampler, lensPoints[samplerIndex],
+			if (!TraceLightPath(time, sampler, camera, //lensPoints[samplerIndex],
 					lightPathsVertices[samplerIndex], samplesResults[samplerIndex]))
 				continue;
 		}

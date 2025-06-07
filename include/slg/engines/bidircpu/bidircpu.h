@@ -97,7 +97,7 @@ protected:
 		const luxrays::Point &lensPoint, std::vector<SampleResult> &sampleResults) const;
 
 	bool TraceLightPath(const float time,
-		Sampler *sampler, const luxrays::Point &lensPoint,
+		Sampler *sampler, Camera *camera,
 		std::vector<PathVertexVM> &lightPathVertices,
 		std::vector<SampleResult> &sampleResults) const;
 	bool Bounce(const float time, Sampler *sampler, const u_int sampleOffset,
