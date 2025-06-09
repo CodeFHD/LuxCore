@@ -674,7 +674,7 @@ struct Surface {
 			Far::PatchTableFactory::Options::ENDCAP_GREGORY_BASIS;
 
 		// Construct refiner and associated ptex
-		TopologyRefinerPtr refiner(
+		refiner = std::move(
 			createTopologyAdaptiveRefiner(basePositions, baseTriangles, patchOptions)
 		);
 		ptexIndices.reset(new Far::PtexIndices(*refiner));
@@ -687,7 +687,7 @@ struct Surface {
 		patchTable.reset(Far::PatchTableFactory::Create(*refiner, patchOptions));
 
 		// Construct patch map
-		PatchMapPtr patchMap(new Far::PatchMap(*patchTable));
+		patchMap.reset(new Far::PatchMap(*patchTable));
 
 		SDL_LOG("Subdiv - Adaptive - Starting");
 
@@ -719,10 +719,7 @@ struct Surface {
 
 
 void Tessellate (
-	const TopologyRefinerPtr& refiner,
-	const PatchTablePtr& patchTable,
-	const PosVector& basePositions,
-	const PosVector& localPositions,
+	const Surface& surface,
 	const size_t N,
 	PosVector & tessPos,
 	TriVector & tessTris,
@@ -758,7 +755,7 @@ void Tessellate (
 	//	Ix - internal vertex (to be created)
 
 	// Some constants
-	const auto& topology = refiner->GetLevel(0);
+	const auto& topology = surface.refiner->GetLevel(0);
 	const size_t FACE_COUNT = topology.GetNumFaces();
 	const int FACE_SIZE = 3;  // Of course (triangles)...
 
@@ -780,17 +777,6 @@ void Tessellate (
 	tessNormals.clear();
 	tessPos.resize(tessPosCount);
 	tessNormals.resize(tessPosCount);
-
-	// To avoid redundancy...
-	std::vector<bool> done(tessPosCount, false);
-
-	// Set mappers
-	Far::PtexIndices ptexIndices(*refiner);
-	PatchMapPtr patchMap(new Far::PatchMap(*patchTable));
-
-
-    int numBaseVerts = (int) basePositions.size();
-
 
 	// Get vertex local coordinates in given face
 	auto getVertexLocalCoords = [N, &topology](int vertex, int face) {
@@ -924,10 +910,13 @@ void Tessellate (
 
 	}  // ~for face
 
-	SDL_LOG("Subdiv - Adaptive - Compute varying data");
+
+	SDL_LOG("Subdiv - Adaptive - Evaluate");
 
 	tessPos.resize(localCoords.size());
 	tessNormals.resize(localCoords.size());
+
+    int numBaseVerts = (int) surface.basePositions.size();
 
 	// Evaluate positions and derivatives
 	#pragma omp parallel for
@@ -939,22 +928,22 @@ void Tessellate (
 		std::array<float, 2> st;
 		st[0] = float(coords.i) / float(N);
 		st[1] = float(coords.j) / float(N);
-		int ptexFace = ptexIndices.GetFaceId(coords.face);
+		int ptexFace = surface.ptexIndices->GetFaceId(coords.face);
 
 		//  Locate the patch corresponding to the face ptex idx and (s,t)
 		//  and evaluate:
 		Far::PatchTable::PatchHandle const * handle =
-			patchMap->FindPatch(ptexFace, st[0], st[1]);
+			surface.patchMap->FindPatch(ptexFace, st[0], st[1]);
 		assert(handle);
 
 		float pWeights[20];
 		float duWeights[20];
 		float dvWeights[20];
-		patchTable->EvaluateBasis(*handle, st[0], st[1], pWeights, duWeights, dvWeights);
+		surface.patchTable->EvaluateBasis(*handle, st[0], st[1], pWeights, duWeights, dvWeights);
 
 		//  Identify the patch cvs and combine with the evaluated weights --
 		//  remember to distinguish cvs in the base level:
-		Far::ConstIndexArray cvIndices = patchTable->GetPatchVertices(*handle);
+		Far::ConstIndexArray cvIndices = surface.patchTable->GetPatchVertices(*handle);
 
 		// Evaluate position and derivatives
 		Pos pos{0.0f, 0.0f, 0.0f};
@@ -962,14 +951,15 @@ void Tessellate (
 		Pos dv{0.0f, 0.0f, 0.0f};
 		for (int cv = 0; cv < cvIndices.size(); ++cv) {
 			int cvIndex = cvIndices[cv];
+			// TODO Simplify
 			if (cvIndex < numBaseVerts) {
-				pos.AddWithWeight(basePositions[cvIndex], pWeights[cv]);
-				du.AddWithWeight(basePositions[cvIndex], duWeights[cv]);
-				dv.AddWithWeight(basePositions[cvIndex], dvWeights[cv]);
+				pos.AddWithWeight(surface.basePositions[cvIndex], pWeights[cv]);
+				du.AddWithWeight(surface.basePositions[cvIndex], duWeights[cv]);
+				dv.AddWithWeight(surface.basePositions[cvIndex], dvWeights[cv]);
 			} else {
-				pos.AddWithWeight(localPositions[cvIndex - numBaseVerts], pWeights[cv]);
-				du.AddWithWeight(localPositions[cvIndex - numBaseVerts], duWeights[cv]);
-				dv.AddWithWeight(localPositions[cvIndex - numBaseVerts], dvWeights[cv]);
+				pos.AddWithWeight(surface.localPositions[cvIndex - numBaseVerts], pWeights[cv]);
+				du.AddWithWeight(surface.localPositions[cvIndex - numBaseVerts], duWeights[cv]);
+				dv.AddWithWeight(surface.localPositions[cvIndex - numBaseVerts], dvWeights[cv]);
 			}
 		}
 
@@ -992,69 +982,16 @@ void AdaptiveSubdivImpl(
 	TriVector& tessTriangles
 ) {
 
-	typedef float Real;
-
 	// Clear output structures
 	tessPositions.clear();
 	tessNormals.clear();
 	tessTriangles.clear();
 
-
-	// Initialize patch table options
-	Far::PatchTableFactory::Options patchOptions(maxLevel);
-	//patchOptions.useInfSharpPatch = true;
-	patchOptions.generateVaryingTables = false;
-	patchOptions.shareEndCapPatchPoints = true;
-	patchOptions.endCapType =
-		Far::PatchTableFactory::Options::ENDCAP_GREGORY_BASIS;
-
-	// Construct refiner and associated ptex
-	TopologyRefinerPtr refiner(
-		createTopologyAdaptiveRefiner(basePositions, baseTriangles, patchOptions)
-	);
-	Far::PtexIndices basePtexIndices(*refiner);
-
-    // Apply adaptive refinement and construct the associated PatchTable to
-    // evaluate the limit surface:
-    refiner->RefineAdaptive(patchOptions.GetRefineAdaptiveOptions());
-
-    // Construct the associated PatchTable to evaluate the limit surface:
-	PatchTablePtr patchTable(Far::PatchTableFactory::Create(*refiner, patchOptions));
-
-	SDL_LOG("Subdiv - Adaptive - Starting");
-
-	// Set localPositions
-    PosVector localPositions;
-    int nBaseVertices    = refiner->GetLevel(0).GetNumVertices();
-    int nRefinedVertices = refiner->GetNumVerticesTotal() - nBaseVertices;
-    int nLocalPoints     = patchTable->GetNumLocalPoints();
-
-    localPositions.resize(nRefinedVertices + nLocalPoints);
-
-    if (nRefinedVertices) {
-        Far::PrimvarRefiner primvarRefiner(*refiner);
-
-        Pos const * src = &basePositions[0];
-        Pos * dst = &localPositions[0];
-        for (int level = 1; level < refiner->GetNumLevels(); ++level) {
-            primvarRefiner.Interpolate(level, src, dst);
-            src = dst;
-            dst += refiner->GetLevel(level).GetNumVertices();
-        }
-    }
-	if (nLocalPoints) {
-        patchTable->GetLocalPointStencilTable()->UpdateValues(
-                &basePositions[0], nBaseVertices, &localPositions[0],
-                &localPositions[nRefinedVertices]);
-    }
-
 	// Create limit surface (subdivided) from base geometry
 	Surface surface(basePositions, baseTriangles, maxLevel);
 
 	// Tessellate
-	Tessellate(refiner, patchTable, basePositions, localPositions, 2 << maxLevel, tessPositions, tessTriangles, tessNormals);
-
-	// Subdivide
+	Tessellate(surface, 2 << maxLevel, tessPositions, tessTriangles, tessNormals);
 
 }
 
