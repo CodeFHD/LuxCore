@@ -566,6 +566,44 @@ struct Tri: std::array<int, 3> {
 typedef std::vector<Tri> TriVector;
 
 
+// Storage of local coordinates (coordinates in a given face) during
+// tessellation.
+// We temporarily store new positions as (face, i, j), with
+// i <= N and j <= N (N being tessellation rate)
+
+struct LocalCoords {
+	int face;
+	int i;
+	int j;
+	LocalCoords(int p_face=0, int p_i=0, int p_j=0):
+		face(p_face), i(p_i), j(p_j)
+	{ }
+
+	static LocalCoords interpolate(LocalCoords p0, LocalCoords p1, u_int weight, u_int total) {
+		assert(p0.face == p1.face);
+		assert(weight <= total);
+
+		LocalCoords res;
+		res.face = p0.face;
+		res.i = (weight * p1.i + (total - weight) * p0.i) / total;
+		res.j = (weight * p1.j + (total - weight) * p0.j) / total;
+		return res;
+	}
+};
+
+typedef std::vector<LocalCoords> CoordVector;
+
+// Storage of local coordinates in a given edge (for points belonging to an edge)
+struct EdgeCoords {
+	int edge;  // Edge number in opensubdiv topology
+	int v0;  // First edge vertex in osd topology
+	int v1;  // Second edge vertex in osd topology
+	int x;  // Point coordinate on the segment
+	EdgeCoords(int p_edge, int p_v0, int p_v1, int p_x):
+		edge(p_edge), v0(p_v0), v1(p_v1), x(p_x)
+	{ }
+};
+
 TopologyRefinerPtr createTopologyAdaptiveRefiner(
 		const PosVector& positions,
 		const TriVector& triangles,
@@ -677,26 +715,6 @@ void Tessellate (
 
     int numBaseVerts = (int) basePositions.size();
 
-	// Storage of local coordinates (coordinates in a given face)
-	struct LocalCoords {
-		int face;
-		int i;
-		int j;
-		LocalCoords(int p_face=0, int p_i=0, int p_j=0):
-			face(p_face), i(p_i), j(p_j)
-		{ }
-
-		static LocalCoords interpolate(LocalCoords p0, LocalCoords p1, u_int weight, u_int total) {
-			assert(p0.face == p1.face);
-			assert(weight <= total);
-
-			LocalCoords res;
-			res.face = p0.face;
-			res.i = (weight * p1.i + (total - weight) * p0.i) / total;
-			res.j = (weight * p1.j + (total - weight) * p0.j) / total;
-			return res;
-		}
-	};
 
 	// Get vertex local coordinates in given face
 	auto getVertexLocalCoords = [N, &topology](int vertex, int face) {
@@ -712,21 +730,7 @@ void Tessellate (
 		throw std::runtime_error("Error in getVertexLocalCoords");
 	};
 
-
-	// Storage of local coordinates in a given edge (for points belonging to an edge)
-	struct EdgeCoords {
-		int edge;  // Edge number in opensubdiv topology
-		int v0;  // First edge vertex in osd topology
-		int v1;  // Second edge vertex in osd topology
-		int x;  // Point coordinate on the segment
-		EdgeCoords(int p_edge, int p_v0, int p_v1, int p_x):
-			edge(p_edge), v0(p_v0), v1(p_v1), x(p_x)
-		{ }
-	};
-
-
 	std::vector<LocalCoords> localCoords;  // We temporarily store new positions as (face, i, j)
-
 
 	// Step #1 - Initialize with initial (coarse) vertices
 	for (int vertex = 0; vertex < topology.GetNumVertices(); ++vertex) {
