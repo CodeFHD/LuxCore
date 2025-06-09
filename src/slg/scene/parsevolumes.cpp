@@ -135,7 +135,7 @@ Volume *Scene::CreateVolume(const u_int defaultVolID, const string &volName, con
 		const Texture *absorption = GetTexture(props.Get(Property(propName + ".absorption")(0.f, 0.f, 0.f)));
 		const Texture *scattering = GetTexture(props.Get(Property(propName + ".scattering")(0.f, 0.f, 0.f)));
 		const Texture *asymmetry = GetTexture(props.Get(Property(propName + ".asymmetry")(0.f, 0.f, 0.f)));
-		const float stepSize =  props.Get(Property(propName + ".steps.size")(1.f)).Get<float>();
+		const float stepSize =  props.Get(Property(propName + ".steps.size")(1.f)).Get<double>();
 		const u_int maxStepsCount =  props.Get(Property(propName + ".steps.maxcount")(32u)).Get<u_int>();
 		const bool multiScattering =  props.Get(Property(propName + ".multiscattering")(false)).Get<bool>();
 

@@ -37,8 +37,8 @@ void BiDirVMCPURenderEngine::StartLockLess() {
 	//--------------------------------------------------------------------------
 
 	lightPathsCount = Max(1024u, cfg.Get(GetDefaultProps().Get("bidirvm.lightpath.count")).Get<u_int>());
-	baseRadius = cfg.Get(GetDefaultProps().Get("bidirvm.startradius.scale")).Get<float>() * renderConfig->scene->dataSet->GetBSphere().rad;
-	radiusAlpha = cfg.Get(GetDefaultProps().Get("bidirvm.alpha")).Get<float>();
+	baseRadius = cfg.Get(GetDefaultProps().Get("bidirvm.startradius.scale")).Get<double>() * renderConfig->scene->dataSet->GetBSphere().rad;
+	radiusAlpha = cfg.Get(GetDefaultProps().Get("bidirvm.alpha")).Get<double>();
 
 	BiDirCPURenderEngine::StartLockLess();
 }

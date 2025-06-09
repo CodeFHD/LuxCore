@@ -63,9 +63,9 @@ ImageMap *DensityGridTexture::ParseData(const luxrays::Property &dataProp,
 		for (u_int z = 0, i = 0; z < nz; ++z)
 			for (u_int y = 0; y < ny; ++y)
 				for (u_int x = 0; x < nx; ++x, ++i) {
-					const float r = dataProp.Get<float>(i * 3 + 0);
-					const float g = dataProp.Get<float>(i * 3 + 1);
-					const float b = dataProp.Get<float>(i * 3 + 2);
+					const float r = dataProp.Get<double>(i * 3 + 0);
+					const float g = dataProp.Get<double>(i * 3 + 1);
+					const float b = dataProp.Get<double>(i * 3 + 2);
 
 					imgStorage->SetSpectrum((z * ny + y) * nx + x, Spectrum(r, g, b));
 				}
@@ -73,7 +73,7 @@ ImageMap *DensityGridTexture::ParseData(const luxrays::Property &dataProp,
 		for (u_int z = 0, i = 0; z < nz; ++z)
 			for (u_int y = 0; y < ny; ++y)
 				for (u_int x = 0; x < nx; ++x, ++i)
-					imgStorage->SetFloat((z * ny + y) * nx + x, dataProp.Get<float>(i));
+					imgStorage->SetFloat((z * ny + y) * nx + x, dataProp.Get<double>(i));
 	}
 
 	return imgMap.release();

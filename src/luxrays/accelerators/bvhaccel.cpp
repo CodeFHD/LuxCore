@@ -53,7 +53,7 @@ BVHParams BVHAccel::ToBVHParams(const Properties &props) {
 	const int costSamples = props.Get(Property("accelerator.bvh.costsamples")(0)).Get<int>();
 	const int isectCost = props.Get(Property("accelerator.bvh.isectcost")(80)).Get<int>();
 	const int travCost = props.Get(Property("accelerator.bvh.travcost")(10)).Get<int>();
-	const float emptyBonus = props.Get(Property("accelerator.bvh.emptybonus")(.5)).Get<float>();
+	const float emptyBonus = props.Get(Property("accelerator.bvh.emptybonus")(.5)).Get<double>();
 	
 	BVHParams params;
 	// Make sure treeType is 2, 4 or 8

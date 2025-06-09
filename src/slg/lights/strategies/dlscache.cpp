@@ -124,14 +124,14 @@ LightStrategy *LightStrategyDLSCache::FromProperties(const Properties &cfg) {
 	DLSCParams params;
 
 	params.entry.maxPasses = cfg.Get(GetDefaultProps().Get("lightstrategy.entry.maxpasses")).Get<u_int>();
-	params.entry.convergenceThreshold = Clamp(cfg.Get(GetDefaultProps().Get("lightstrategy.entry.convergencethreshold")).Get<float>(), 0.f, 1.f);
+	params.entry.convergenceThreshold = Clamp(cfg.Get(GetDefaultProps().Get("lightstrategy.entry.convergencethreshold")).Get<double>(), 0.0, 1.0);
 	params.entry.warmUpSamples = Max<u_int>(1, cfg.Get(GetDefaultProps().Get("lightstrategy.entry.warmupsamples")).Get<u_int>());
 
 	params.visibility.maxSampleCount = cfg.Get(GetDefaultProps().Get("lightstrategy.maxsamplescount")).Get<u_int>();
 	params.visibility.maxPathDepth = cfg.Get(GetDefaultProps().Get("lightstrategy.maxdepth")).Get<u_int>();
-	params.visibility.lookUpRadius = Max(0.f, cfg.Get(GetDefaultProps().Get("lightstrategy.entry.radius")).Get<float>());
-	params.visibility.lookUpNormalAngle = Max(0.f, cfg.Get(GetDefaultProps().Get("lightstrategy.entry.normalangle")).Get<float>());
-	params.visibility.targetHitRate = Clamp(cfg.Get(GetDefaultProps().Get("lightstrategy.targetcachehitratio")).Get<float>(), 0.f, 1.f);
+	params.visibility.lookUpRadius = Max(0.0, cfg.Get(GetDefaultProps().Get("lightstrategy.entry.radius")).Get<double>());
+	params.visibility.lookUpNormalAngle = Max(0.0, cfg.Get(GetDefaultProps().Get("lightstrategy.entry.normalangle")).Get<double>());
+	params.visibility.targetHitRate = Clamp(cfg.Get(GetDefaultProps().Get("lightstrategy.targetcachehitratio")).Get<double>(), 0.0, 1.0);
 
 	params.persistent.fileName = cfg.Get(GetDefaultProps().Get("lightstrategy.persistent.file")).Get<string>();
 	params.persistent.safeSave = cfg.Get(GetDefaultProps().Get("lightstrategy.persistent.safesave")).Get<bool>();

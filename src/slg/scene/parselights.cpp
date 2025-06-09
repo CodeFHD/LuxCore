@@ -231,8 +231,8 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 
 		SkyLight2 *sl = new SkyLight2();
 		sl->lightToWorld = light2World;
-		sl->turbidity = Max(0.f, props.Get(Property(propName + ".turbidity")(2.2f)).Get<float>());
-		sl->groundAlbedo = GetColor(props.Get(Property(propName + ".groundalbedo")(Spectrum()))).Clamp(0.f);
+		sl->turbidity = Max(0.0, props.Get(Property(propName + ".turbidity")(2.2)).Get<double>());
+		sl->groundAlbedo = GetColor(props.Get(Property(propName + ".groundalbedo")(Spectrum()))).Clamp(0.0);
 		sl->hasGround = props.Get(Property(propName + ".ground.enable")(false)).Get<bool>();
 		sl->hasGroundAutoScale = props.Get(Property(propName + ".ground.autoscale")(true)).Get<bool>();
 		sl->groundColor = GetColor(props.Get(Property(propName + ".ground.color")(Spectrum(.75f, .75f, .75f)))).Clamp(0.f);
@@ -281,8 +281,8 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 
 		SunLight *sl = new SunLight();
 		sl->lightToWorld = light2World;
-		sl->turbidity = Max(0.f, props.Get(Property(propName + ".turbidity")(2.2f)).Get<float>());
-		sl->relSize = Max(1.f, props.Get(Property(propName + ".relsize")(1.f)).Get<float>());
+		sl->turbidity = Max(0.0, props.Get(Property(propName + ".turbidity")(2.2)).Get<double>());
+		sl->relSize = Max(1.0, props.Get(Property(propName + ".relsize")(1.0)).Get<double>());
 		sl->localSunDir = Normalize(props.Get(Property(propName + ".dir")(0.f, 0.f, 1.f)).Get<Vector>());
 
 		sl->SetIndirectDiffuseVisibility(props.Get(Property(propName + ".visibility.indirect.diffuse.enable")(true)).Get<bool>());
@@ -298,9 +298,9 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		pl->lightToWorld = light2World;
 		pl->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
 		pl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
-		pl->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		pl->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		pl->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		pl->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		pl->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 
 		lightSource = pl;
 	} else if (lightType == "mappoint") {
@@ -316,9 +316,9 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		mpl->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
 		mpl->imageMap = map;
 		mpl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
-		mpl->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		mpl->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		mpl->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		mpl->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		mpl->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 
 		lightSource = mpl;
 	} else if (lightType == "sphere") {
@@ -328,11 +328,11 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		SphereLight *sl = new SphereLight();
 		sl->lightToWorld = light2World;
 		sl->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
-		sl->radius = Max(0.f, props.Get(Property(propName + ".radius")(1.f)).Get<float>());
+		sl->radius = Max(0.0, props.Get(Property(propName + ".radius")(1.0)).Get<double>());
 		sl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
-		sl->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		sl->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		sl->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		sl->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		sl->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 
 		lightSource = sl;
 	} else if (lightType == "mapsphere") {
@@ -346,12 +346,12 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		MapSphereLight *msl = new MapSphereLight();
 		msl->lightToWorld = light2World;
 		msl->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
-		msl->radius = Max(0.f, props.Get(Property(propName + ".radius")(1.f)).Get<float>());
+		msl->radius = Max(0.0, props.Get(Property(propName + ".radius")(1.0)).Get<double>());
 		msl->imageMap = map;
-		msl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
-		msl->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		msl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.0))));
+		msl->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		msl->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		msl->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		msl->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 
 		lightSource = msl;
 	} else if (lightType == "spot") {
@@ -362,12 +362,12 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		sl->lightToWorld = light2World;
 		sl->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
 		sl->localTarget = props.Get(Property(propName + ".target")(Point(0.f, 0.f, 1.f))).Get<Point>();
-		sl->coneAngle = Max(0.f, props.Get(Property(propName + ".coneangle")(30.f)).Get<float>());
-		sl->coneDeltaAngle = Max(0.f, props.Get(Property(propName + ".conedeltaangle")(5.f)).Get<float>());
+		sl->coneAngle = Max(0.0, props.Get(Property(propName + ".coneangle")(30.0)).Get<double>());
+		sl->coneDeltaAngle = Max(0.0, props.Get(Property(propName + ".conedeltaangle")(5.0)).Get<double>());
 		sl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
-		sl->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		sl->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		sl->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		sl->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		sl->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 
 		lightSource = sl;
 	} else if (lightType == "projection") {
@@ -384,11 +384,11 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		pl->lightToWorld = light2World;
 		pl->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
 		pl->localTarget = props.Get(Property(propName + ".target")(Point(0.f, 0.f, 1.f))).Get<Point>();
-		pl->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		pl->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		pl->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		pl->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		pl->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 		pl->imageMap = imgMap;
-		pl->fov = Max(0.f, props.Get(Property(propName + ".fov")(45.f)).Get<float>());
+		pl->fov = Max(0.0, props.Get(Property(propName + ".fov")(45.0)).Get<double>());
 
 		lightSource = pl;
 	} else if (lightType == "laser") {
@@ -399,11 +399,11 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		ll->lightToWorld = light2World;
 		ll->localPos = props.Get(Property(propName + ".position")(Point())).Get<Point>();
 		ll->localTarget = props.Get(Property(propName + ".target")(Point(0.f, 0.f, 1.f))).Get<Point>();
-		ll->radius = Max(0.f, props.Get(Property(propName + ".radius")(.01f)).Get<float>());
+		ll->radius = Max(0.0, props.Get(Property(propName + ".radius")(.01)).Get<double>());
 		ll->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
-		ll->power = Max(0.f, props.Get(Property(propName + ".power")(0.f)).Get<float>());
+		ll->power = Max(0.0, props.Get(Property(propName + ".power")(0.0)).Get<double>());
 		ll->emittedPowerNormalize = props.Get(Property(propName + ".normalizebycolor")(true)).Get<bool>();
-		ll->efficiency = Max(0.f, props.Get(Property(propName + ".efficiency")(0.f), propName + ".efficency").Get<float>());
+		ll->efficiency = Max(0.0, props.Get(Property(propName + ".efficiency")(0.0), propName + ".efficency").Get<double>());
 
 		lightSource = ll;
 	} else if (lightType == "constantinfinite") {
@@ -438,7 +438,7 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 		dl->lightToWorld = light2World;
 		dl->color = GetColor(props.Get(Property(propName + ".color")(Spectrum(1.f))));
 		dl->localLightDir = Normalize(props.Get(Property(propName + ".direction")(Vector(0.f, 0.f, 1.f))).Get<Vector>());
-		dl->theta = props.Get(Property(propName + ".theta")(10.f)).Get<float>();
+		dl->theta = props.Get(Property(propName + ".theta")(10.0)).Get<double>();
 
 		lightSource = dl;
 	} else
@@ -448,12 +448,12 @@ LightSource *Scene::CreateLightSource(const string &name, const luxrays::Propert
 	// Gain is not really a color so I avoid to use GetColor()
 	lightSource->gain = props.Get(Property(propName + ".gain")(Spectrum(1.f))).Get<Spectrum>();
 	lightSource->SetID(props.Get(Property(propName + ".id")(0)).Get<int>());
-	lightSource->SetImportance(props.Get(Property(propName + ".importance")(1.f)).Get<float>());
+	lightSource->SetImportance(props.Get(Property(propName + ".importance")(1.0)).Get<double>());
 
 	if (!lightSource->IsIntersectable()) {
 		NotIntersectableLightSource *nils = (NotIntersectableLightSource *)lightSource;
 
-		nils->temperature = props.Get(Property(propName + ".temperature")(-1.f)).Get<float>();
+		nils->temperature = props.Get(Property(propName + ".temperature")(-1.0)).Get<double>();
 		nils->normalizeTemperature = props.Get(Property(propName + ".temperature.normalize")(false)).Get<bool>();
 	}
 

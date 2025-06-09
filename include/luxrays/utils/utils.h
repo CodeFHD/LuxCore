@@ -89,6 +89,10 @@ int isinf(T a) { return std::isinf(a); }
 #define INFINITY (std::numeric_limits<float>::infinity())
 #endif
 
+#ifndef INFINITY_DBL
+#define INFINITY_DBL (std::numeric_limits<double>::infinity())
+#endif
+
 #ifndef INV_PI
 #define INV_PI  0.31830988618379067154f
 #endif

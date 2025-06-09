@@ -282,7 +282,7 @@ template<> float PropertyValue::Get<float>() const {
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
-			throw std::runtime_error("Unknown type in PropertyValue::Get<float>(): " + ToString(dataType));
+			throw std::runtime_error("Unknown type in PropertyValue::Get<double>(): " + ToString(dataType));
 	}
 }
 
@@ -575,41 +575,41 @@ template<> const Blob &Property::Get<const Blob &>() const {
 template<> UV Property::Get<UV>() const {
 	if (values.size() != 2)
 		throw runtime_error("Wrong number of values in property: " + name);
-	return UV(Get<float>(0), Get<float>(1));
+	return UV(Get<double>(0), Get<double>(1));
 }
 
 template<> Vector Property::Get<Vector>() const {
 	if (values.size() != 3)
 		throw runtime_error("Wrong number of values in property: " + name);
-	return Vector(Get<float>(0), Get<float>(1), Get<float>(2));
+	return Vector(Get<double>(0), Get<double>(1), Get<double>(2));
 }
 
 template<> Normal Property::Get<Normal>() const {
 	if (values.size() != 3)
 		throw runtime_error("Wrong number of values in property: " + name);
-	return Normal(Get<float>(0), Get<float>(1), Get<float>(2));
+	return Normal(Get<double>(0), Get<double>(1), Get<double>(2));
 }
 
 template<> Point Property::Get<Point>() const {
 	if (values.size() != 3)
 		throw runtime_error("Wrong number of values in property: " + name);
-	return Point(Get<float>(0), Get<float>(1), Get<float>(2));
+	return Point(Get<double>(0), Get<double>(1), Get<double>(2));
 }
 
 template<> Spectrum Property::Get<Spectrum>() const {
 	if (values.size() != 3)
 		throw runtime_error("Wrong number of values in property: " + name);
-	return Spectrum(Get<float>(0), Get<float>(1), Get<float>(2));
+	return Spectrum(Get<double>(0), Get<double>(1), Get<double>(2));
 }
 
 template<> Matrix4x4 Property::Get<Matrix4x4>() const {
 	if (values.size() != 16)
 		throw runtime_error("Wrong number of values in property: " + name);
 	return Matrix4x4(
-			Get<float>(0), Get<float>(4), Get<float>(8), Get<float>(12),
-			Get<float>(1), Get<float>(5), Get<float>(9), Get<float>(13),
-			Get<float>(2), Get<float>(6), Get<float>(10), Get<float>(14),
-			Get<float>(3), Get<float>(7), Get<float>(11), Get<float>(15));
+			Get<double>(0), Get<double>(4), Get<double>(8), Get<double>(12),
+			Get<double>(1), Get<double>(5), Get<double>(9), Get<double>(13),
+			Get<double>(2), Get<double>(6), Get<double>(10), Get<double>(14),
+			Get<double>(3), Get<double>(7), Get<double>(11), Get<double>(15));
 }
 
 //------------------------------------------------------------------------------

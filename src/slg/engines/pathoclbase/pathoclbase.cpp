@@ -211,8 +211,8 @@ void PathOCLBaseRenderEngine::InitFilm() {
 string PathOCLBaseRenderEngine::GetCachedKernelsHash(const RenderConfig &renderConfig) {
 	const string renderEngineType = renderConfig.GetProperty("renderengine.type").Get<string>();
 
-	const float epsilonMin = renderConfig.GetProperty("scene.epsilon.min").Get<float>();
-	const float epsilonMax = renderConfig.GetProperty("scene.epsilon.max").Get<float>();
+	const float epsilonMin = renderConfig.GetProperty("scene.epsilon.min").Get<double>();
+	const float epsilonMax = renderConfig.GetProperty("scene.epsilon.max").Get<double>();
 		
 	const Properties &cfg = renderConfig.cfg;
 	const bool useCPUs = cfg.Get(GetDefaultProps().Get("opencl.cpu.use")).Get<bool>();

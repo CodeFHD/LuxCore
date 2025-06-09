@@ -51,13 +51,13 @@ static FresnelTexture *MakeCauchy(float a, float b)
 
 FresnelTexture *slg::AllocFresnelCauchyTex(const luxrays::Properties &props, const std::string &propName)
 {
-	const float b = props.Get(Property(propName + ".b")(0.f)).Get<float>();
-	const float index = props.Get(Property(propName + ".index")(-1.f)).Get<float>();
+	const float b = props.Get(Property(propName + ".b")(0.f)).Get<double>();
+	const float index = props.Get(Property(propName + ".index")(-1.f)).Get<double>();
 	float a;
 	if (index > 0.f)
-		a = props.Get(Property(propName + ".a")(index - b * 1e6f / (720.f * 380.f))).Get<float>();
+		a = props.Get(Property(propName + ".a")(index - b * 1e6f / (720.f * 380.f))).Get<double>();
 	else
-		a = props.Get(Property(propName + ".a")(1.5f)).Get<float>();
+		a = props.Get(Property(propName + ".a")(1.5f)).Get<double>();
 
 	return MakeCauchy(a, b);
 }
@@ -76,12 +76,12 @@ FresnelTexture *slg::AllocFresnelAbbeTex(const luxrays::Properties &props, const
 		f = 479.99f;
 		c = 643.85f;
 	} else if (mode == "custom") {
-		d = props.Get(Property(propName + ".d")(d)).Get<float>();
-		f = props.Get(Property(propName + ".f")(f)).Get<float>();
-		c = props.Get(Property(propName + ".c")(c)).Get<float>();
+		d = props.Get(Property(propName + ".d")(d)).Get<double>();
+		f = props.Get(Property(propName + ".f")(f)).Get<double>();
+		c = props.Get(Property(propName + ".c")(c)).Get<double>();
 	}
-	const float v = props.Get(Property(propName + ".v")(64.17f)).Get<float>();
-	const float n = props.Get(Property(propName + ".n")(1.5168f)).Get<float>();
+	const float v = props.Get(Property(propName + ".v")(64.17f)).Get<double>();
+	const float n = props.Get(Property(propName + ".n")(1.5168f)).Get<double>();
 
 	// Convert to cauchy coefficients
 	// convert wavelengths from nm to um

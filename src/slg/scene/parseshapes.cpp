@@ -80,7 +80,7 @@ ExtTriangleMesh *Scene::CreateInlinedMesh(const string &shapeName, const string 
 		points = TriangleMesh::AllocVerticesBuffer(pointsSize);
 		for (u_int i = 0; i < pointsSize; ++i) {
 			const u_int index = i * 3;
-			points[i] = Point(prop.Get<float>(index), prop.Get<float>(index + 1), prop.Get<float>(index + 2));
+			points[i] = Point(prop.Get<double>(index), prop.Get<double>(index + 1), prop.Get<double>(index + 2));
 		}
 	} else
 		throw runtime_error("Missing shape vertex list: " + shapeName);
@@ -112,7 +112,7 @@ ExtTriangleMesh *Scene::CreateInlinedMesh(const string &shapeName, const string 
 		normals = new Normal[pointsSize];
 		for (u_int i = 0; i < pointsSize; ++i) {
 			const u_int index = i * 3;
-			normals[i] = Normal(prop.Get<float>(index), prop.Get<float>(index + 1), prop.Get<float>(index + 2));
+			normals[i] = Normal(prop.Get<double>(index), prop.Get<double>(index + 1), prop.Get<double>(index + 2));
 		}
 	}
 
@@ -125,7 +125,7 @@ ExtTriangleMesh *Scene::CreateInlinedMesh(const string &shapeName, const string 
 		uvs = new UV[pointsSize];
 		for (u_int i = 0; i < pointsSize; ++i) {
 			const u_int index = i * 2;
-			uvs[i] = UV(prop.Get<float>(index), prop.Get<float>(index + 1));
+			uvs[i] = UV(prop.Get<double>(index), prop.Get<double>(index + 1));
 		}
 	}
 	
@@ -205,8 +205,8 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		u_int adaptiveMaxDepth = Max(0, props.Get(Property(propName + ".tesselation.adaptive.maxdepth")(8)).Get<int>());
 		adaptiveMaxDepth = Max(0, props.Get(Property(propName + ".tessellation.adaptive.maxdepth")(adaptiveMaxDepth)).Get<int>());
 		// For compatibility with the past
-		float adaptiveError = props.Get(Property(propName + ".tesselation.adaptive.error")(.1f)).Get<float>();
-		adaptiveError = props.Get(Property(propName + ".tessellation.adaptive.error")(adaptiveError)).Get<float>();
+		float adaptiveError = props.Get(Property(propName + ".tesselation.adaptive.error")(.1f)).Get<double>();
+		adaptiveError = props.Get(Property(propName + ".tessellation.adaptive.error")(adaptiveError)).Get<double>();
 
 		// For compatibility with the past
 		u_int solidSideCount = Max(0, props.Get(Property(propName + ".tesselation.solid.sidecount")(3)).Get<int>());
@@ -268,7 +268,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 			throw runtime_error("Unknown shape name in a subdiv shape: " + shapeName);
 
 		const u_int maxLevel = props.Get(Property(propName + ".maxlevel")(2)).Get<u_int>();
-		const float maxEdgeScreenSize = Max(props.Get(Property(propName + ".maxedgescreensize")(0.f)).Get<float>(), 0.f);
+		const float maxEdgeScreenSize = Max(props.Get(Property(propName + ".maxedgescreensize")(0.0)).Get<double>(), 0.0);
 		const bool subdivAdaptive = props.Get(Property(propName + ".adaptive")(false)).Get<bool>();
 
 		shape = new SubdivShape(
@@ -308,8 +308,8 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		params.mapChannels[1] = Min(propChannels.Get<u_int>(1), 2u);
 		params.mapChannels[2] = Min(propChannels.Get<u_int>(2), 2u);
 
-		params.scale = props.Get(Property(propName + ".scale")(1.f)).Get<float>();
-		params.offset = props.Get(Property(propName + ".offset")(0.f)).Get<float>();
+		params.scale = props.Get(Property(propName + ".scale")(1.f)).Get<double>();
+		params.offset = props.Get(Property(propName + ".offset")(0.f)).Get<double>();
 		params.uvIndex = Clamp(props.Get(Property(propName + ".uvindex")(0)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 		params.normalSmooth = props.Get(Property(propName + ".normalsmooth")(true)).Get<bool>();
 
@@ -326,8 +326,8 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
 			throw runtime_error("Unknown shape name in a simplify shape: " + shapeName);
 		
-		const float target = props.Get(Property(propName + ".target")(.25f)).Get<float>();
-		const float edgeScreenSize = Clamp(props.Get(Property(propName + ".edgescreensize")(0.f)).Get<float>(), 0.f, 1.f);
+		const float target = props.Get(Property(propName + ".target")(.25f)).Get<double>();
+		const float edgeScreenSize = Clamp(props.Get(Property(propName + ".edgescreensize")(0.0)).Get<double>(), 0.0, 1.0);
 		const bool preserveBorder = props.Get(Property(propName + ".preserveborder")(false)).Get<bool>();
 		
 		shape = new SimplifyShape(camera, (ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
@@ -374,7 +374,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
 			throw runtime_error("Unknown shape name in a bevel shape: " + shapeName);
 
-		const float geometryBevel = props.Get(Property(propName + ".bevel.radius")(0.f)).Get<float>();
+		const float geometryBevel = props.Get(Property(propName + ".bevel.radius")(0.f)).Get<double>();
 
 		shape = new BevelShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName), geometryBevel);
 	} else if (shapeType == "cameraprojuv") {

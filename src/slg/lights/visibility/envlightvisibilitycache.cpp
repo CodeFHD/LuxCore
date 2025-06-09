@@ -816,7 +816,7 @@ float EnvLightVisibilityCache::Pdf(const BSDF &bsdf, const float u, const float 
 ELVCParams EnvLightVisibilityCache::Properties2Params(const string &prefix, const Properties props) {
 	ELVCParams params;
 
-	params.map.quality = Clamp(props.Get(Property(prefix + ".visibilitymapcache.map.quality")(.5f)).Get<float>(), 0.f, 1.f);
+	params.map.quality = Clamp(props.Get(Property(prefix + ".visibilitymapcache.map.quality")(.5)).Get<double>(), 0.0, 1.0);
 	params.map.tileWidth = props.Get(Property(prefix + ".visibilitymapcache.map.tilewidth")(0)).Get<u_int>();
 	params.map.tileHeight = props.Get(Property(prefix + ".visibilitymapcache.map.tileheight")(0)).Get<u_int>();
 	params.map.tileSampleCount = Max(1u, props.Get(Property(prefix + ".visibilitymapcache.map.tilesamplecount")(0)).Get<u_int>());
@@ -824,9 +824,9 @@ ELVCParams EnvLightVisibilityCache::Properties2Params(const string &prefix, cons
 
 	params.visibility.maxSampleCount = Max(1u, props.Get(Property(prefix + ".visibilitymapcache.visibility.maxsamplecount")(1024 * 1024)).Get<u_int>());
 	params.visibility.maxPathDepth = Max(1u, props.Get(Property(prefix + ".visibilitymapcache.visibility.maxdepth")(4)).Get<u_int>());
-	params.visibility.targetHitRate = Max(0.f, props.Get(Property(prefix + ".visibilitymapcache.visibility.targethitrate")(.99f)).Get<float>());
-	params.visibility.lookUpRadius = Max(0.f, props.Get(Property(prefix + ".visibilitymapcache.visibility.radius")(0.f)).Get<float>());
-	params.visibility.lookUpNormalAngle = Max(0.f, props.Get(Property(prefix + ".visibilitymapcache.visibility.normalangle")(25.f)).Get<float>());
+	params.visibility.targetHitRate = Max(0.0, props.Get(Property(prefix + ".visibilitymapcache.visibility.targethitrate")(.99)).Get<double>());
+	params.visibility.lookUpRadius = Max(0.0, props.Get(Property(prefix + ".visibilitymapcache.visibility.radius")(0.0)).Get<double>());
+	params.visibility.lookUpNormalAngle = Max(0.0, props.Get(Property(prefix + ".visibilitymapcache.visibility.normalangle")(25.0)).Get<double>());
 
 	params.persistent.fileName = props.Get(Property(prefix + ".visibilitymapcache.persistent.file")("")).Get<string>();
 	params.persistent.safeSave = props.Get(Property(prefix + ".visibilitymapcache.persistent.safesave")(true)).Get<bool>();

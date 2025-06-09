@@ -147,12 +147,12 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		if (randomizedTiling && (im->GetStorage()->wrapType != ImageMapStorage::REPEAT))
 			throw runtime_error("Randomized tiling requires REPEAT wrap type in imagemap texture: " + propName);
 
-		const float gain = props.Get(Property(propName + ".gain")(1.f)).Get<float>();
+		const float gain = props.Get(Property(propName + ".gain")(1.0)).Get<double>();
 		tex = ImageMapTexture::AllocImageMapTexture(texName, imgMapCache, im,
 				CreateTextureMapping2D(propName + ".mapping", props),
 				gain, randomizedTiling);
 	} else if (texType == "constfloat1") {
-		float v = props.Get(Property(propName + ".value")(1.f)).Get<float>();
+		float v = props.Get(Property(propName + ".value")(1.0)).Get<double>();
 		
 		ColorSpaceConfig colorCfg;
 		ColorSpaceConfig::FromProperties(props, propName, colorCfg, ColorSpaceConfig::defaultNopConfig);
@@ -245,49 +245,49 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		tex = new MixTexture(amtTex, tex1, tex2);
 	} else if (texType == "fbm") {
 		const int octaves = props.Get(Property(propName + ".octaves")(8)).Get<int>();
-		const float omega = props.Get(Property(propName + ".roughness")(.5f)).Get<float>();
+		const float omega = props.Get(Property(propName + ".roughness")(.5)).Get<double>();
 
 		tex = new FBMTexture(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega);
 	} else if (texType == "marble") {
 		const int octaves = props.Get(Property(propName + ".octaves")(8)).Get<int>();
-		const float omega = props.Get(Property(propName + ".roughness")(.5f)).Get<float>();
-		const float scale = props.Get(Property(propName + ".scale")(1.f)).Get<float>();
-		const float variation = props.Get(Property(propName + ".variation")(.2f)).Get<float>();
+		const float omega = props.Get(Property(propName + ".roughness")(.5)).Get<double>();
+		const float scale = props.Get(Property(propName + ".scale")(1.0)).Get<double>();
+		const float variation = props.Get(Property(propName + ".variation")(.2)).Get<double>();
 
 		tex = new MarbleTexture(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega, scale, variation);
 	} else if (texType == "blender_blend") {
 		const string progressiontype = props.Get(Property(propName + ".progressiontype")("linear")).Get<string>();
 		const string direct = props.Get(Property(propName + ".direction")("horizontal")).Get<string>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderBlendTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				progressiontype, (direct=="vertical"), bright, contrast);
 	} else if (texType == "blender_clouds") {
 		const string hard = props.Get(Property(propName + ".noisetype")("soft_noise")).Get<string>();
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
 		const int noisedepth = Clamp(props.Get(Property(propName + ".noisedepth")(2)).Get<int>(), 0, 25);
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderCloudsTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				noisebasis, noisesize, noisedepth, (hard == "hard_noise"), bright, contrast);
 	} else if (texType == "blender_distortednoise") {
 		const string noisedistortion = props.Get(Property(propName + ".noise_distortion")("blender_original")).Get<string>();
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
-		const float distortion = props.Get(Property(propName + ".distortion")(1.f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
+		const float distortion = props.Get(Property(propName + ".distortion")(1.0)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderDistortedNoiseTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				noisedistortion, noisebasis, distortion, noisesize, bright, contrast);
 	} else if (texType == "blender_magic") {
 		const int noisedepth = Clamp(props.Get(Property(propName + ".noisedepth")(2)).Get<int>(), 0, 25);
-		const float turbulence = props.Get(Property(propName + ".turbulence")(5.f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float turbulence = props.Get(Property(propName + ".turbulence")(5.0)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderMagicTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				noisedepth, turbulence, bright, contrast);
@@ -296,43 +296,43 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
 		const string noisebasis2 = props.Get(Property(propName + ".noisebasis2")("sin")).Get<string>();
 		const int noisedepth = Clamp(props.Get(Property(propName + ".noisedepth")(2)).Get<int>(), 0, 25);
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
 		const string hard = props.Get(Property(propName + ".noisetype")("soft_noise")).Get<string>();
-		const float turbulence = props.Get(Property(propName + ".turbulence")(5.f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float turbulence = props.Get(Property(propName + ".turbulence")(5.0)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderMarbleTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				marbletype, noisebasis, noisebasis2, noisesize, turbulence, noisedepth, (hard=="hard_noise"), bright, contrast);
 	} else if (texType == "blender_musgrave") {
 		const string musgravetype = props.Get(Property(propName + ".musgravetype")("multifractal")).Get<string>();
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
-		const float dimension = props.Get(Property(propName + ".dimension")(1.f)).Get<float>();
-		const float intensity = props.Get(Property(propName + ".intensity")(1.f)).Get<float>();
-		const float lacunarity = props.Get(Property(propName + ".lacunarity")(1.f)).Get<float>();
-		const float offset = props.Get(Property(propName + ".offset")(1.f)).Get<float>();
-		const float gain = props.Get(Property(propName + ".gain")(1.f)).Get<float>();
-		const float octaves = props.Get(Property(propName + ".octaves")(2.f)).Get<float>();
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float dimension = props.Get(Property(propName + ".dimension")(1.0)).Get<double>();
+		const float intensity = props.Get(Property(propName + ".intensity")(1.0)).Get<double>();
+		const float lacunarity = props.Get(Property(propName + ".lacunarity")(1.0)).Get<double>();
+		const float offset = props.Get(Property(propName + ".offset")(1.0)).Get<double>();
+		const float gain = props.Get(Property(propName + ".gain")(1.0)).Get<double>();
+		const float octaves = props.Get(Property(propName + ".octaves")(2.0)).Get<double>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderMusgraveTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				musgravetype, noisebasis, dimension, intensity, lacunarity, offset, gain, octaves, noisesize, bright, contrast);
 	} else if (texType == "blender_noise") {
 		const int noisedepth = Clamp(props.Get(Property(propName + ".noisedepth")(2)).Get<int>(), 0, 25);
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderNoiseTexture(noisedepth, bright, contrast);
 	} else if (texType == "blender_stucci") {
 		const string stuccitype = props.Get(Property(propName + ".stuccitype")("plastic")).Get<string>();
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
 		const string hard = props.Get(Property(propName + ".noisetype")("soft_noise")).Get<string>();
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
-		const float turbulence = props.Get(Property(propName + ".turbulence")(5.f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
+		const float turbulence = props.Get(Property(propName + ".turbulence")(5.0)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderStucciTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				stuccitype, noisebasis, noisesize, turbulence, (hard=="hard_noise"), bright, contrast);
@@ -341,24 +341,24 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
 		const string noisebasis2 = props.Get(Property(propName + ".noisebasis2")("sin")).Get<string>();
 		const string hard = props.Get(Property(propName + ".noisetype")("soft_noise")).Get<string>();
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
-		const float turbulence = props.Get(Property(propName + ".turbulence")(5.f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
+		const float turbulence = props.Get(Property(propName + ".turbulence")(5.0)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderWoodTexture(CreateTextureMapping3D(propName + ".mapping", props),
 				woodtype, noisebasis2, noisebasis, noisesize, turbulence, (hard=="hard_noise"), bright, contrast);
 	} else if (texType == "blender_voronoi") {
-		const float intensity = props.Get(Property(propName + ".intensity")(1.f)).Get<float>();
-		const float exponent = props.Get(Property(propName + ".exponent")(2.f)).Get<float>();
+		const float intensity = props.Get(Property(propName + ".intensity")(1.0)).Get<double>();
+		const float exponent = props.Get(Property(propName + ".exponent")(2.0)).Get<double>();
 		const string distmetric = props.Get(Property(propName + ".distmetric")("actual_distance")).Get<string>();
-		const float fw1 = props.Get(Property(propName + ".w1")(1.f)).Get<float>();
-		const float fw2 = props.Get(Property(propName + ".w2")(0.f)).Get<float>();
-		const float fw3 = props.Get(Property(propName + ".w3")(0.f)).Get<float>();
-		const float fw4 = props.Get(Property(propName + ".w4")(0.f)).Get<float>();
-		const float noisesize = props.Get(Property(propName + ".noisesize")(.25f)).Get<float>();
-		const float bright = props.Get(Property(propName + ".bright")(1.f)).Get<float>();
-		const float contrast = props.Get(Property(propName + ".contrast")(1.f)).Get<float>();
+		const float fw1 = props.Get(Property(propName + ".w1")(1.0)).Get<double>();
+		const float fw2 = props.Get(Property(propName + ".w2")(0.0)).Get<double>();
+		const float fw3 = props.Get(Property(propName + ".w3")(0.0)).Get<double>();
+		const float fw4 = props.Get(Property(propName + ".w4")(0.0)).Get<double>();
+		const float noisesize = props.Get(Property(propName + ".noisesize")(.250)).Get<double>();
+		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
+		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
 		tex = new BlenderVoronoiTexture(CreateTextureMapping3D(propName + ".mapping", props), intensity, exponent, fw1, fw2, fw3, fw4, distmetric, noisesize, bright, contrast);
 	} else if (texType == "dots") {
@@ -371,13 +371,13 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".mortartex")(.2f, .2f, .2f)));
 		const Texture *tex3 = GetTexture(props.Get(Property(propName + ".brickmodtex")(1.f, 1.f, 1.f)));
 
-		const float modulationBias = Clamp(props.Get(Property(propName + ".brickmodbias")(0.f)).Get<float>(), -1.f, 1.f);
+		const float modulationBias = Clamp(props.Get(Property(propName + ".brickmodbias")(0.0)).Get<double>(), -1.0, 1.0);
 		const string brickbond = props.Get(Property(propName + ".brickbond")("running")).Get<string>();
-		const float brickwidth = props.Get(Property(propName + ".brickwidth")(.3f)).Get<float>();
-		const float brickheight = props.Get(Property(propName + ".brickheight")(.1f)).Get<float>();
-		const float brickdepth = props.Get(Property(propName + ".brickdepth")(.15f)).Get<float>();
-		const float mortarsize = props.Get(Property(propName + ".mortarsize")(.01f)).Get<float>();
-		const float brickrun = props.Get(Property(propName + ".brickrun")(.75f)).Get<float>();
+		const float brickwidth = props.Get(Property(propName + ".brickwidth")(.30)).Get<double>();
+		const float brickheight = props.Get(Property(propName + ".brickheight")(.10)).Get<double>();
+		const float brickdepth = props.Get(Property(propName + ".brickdepth")(.150)).Get<double>();
+		const float mortarsize = props.Get(Property(propName + ".mortarsize")(.010)).Get<double>();
+		const float brickrun = props.Get(Property(propName + ".brickrun")(.750)).Get<double>();
 
 		tex = new BrickTexture(CreateTextureMapping3D(propName + ".mapping", props), tex1, tex2, tex3,
 				brickwidth, brickheight, brickdepth, mortarsize, brickrun, brickbond, modulationBias);
@@ -393,7 +393,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		tex = new WindyTexture(CreateTextureMapping3D(propName + ".mapping", props));
 	} else if (texType == "wrinkled") {
 		const int octaves = props.Get(Property(propName + ".octaves")(8)).Get<int>();
-		const float omega = props.Get(Property(propName + ".roughness")(.5f)).Get<float>();
+		const float omega = props.Get(Property(propName + ".roughness")(.50)).Get<double>();
 
 		tex = new WrinkledTexture(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega);
 	} else if (texType == "uv") {
@@ -407,7 +407,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		vector<float> offsets;
 		vector<Spectrum> values;
 		for (u_int i = 0; props.IsDefined(propName + ".offset" + ToString(i)); ++i) {
-			const float offset = props.Get(Property(propName + ".offset" + ToString(i))(0.f)).Get<float>();
+			const float offset = props.Get(Property(propName + ".offset" + ToString(i))(0.0)).Get<double>();
 			const Spectrum value = GetColor(props.Get(Property(propName + ".value" + ToString(i))(1.f, 1.f, 1.f)));
 
 			offsets.push_back(offset);
@@ -441,22 +441,22 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 
 		tex = new HitPointTriangleAOVTexture(dataIndex);
 	} else if (texType == "cloud") {
-		const float radius = props.Get(Property(propName + ".radius")(.5f)).Get<float>();
-		const float noisescale = props.Get(Property(propName + ".noisescale")(.5f)).Get<float>();
-		const float turbulence = props.Get(Property(propName + ".turbulence")(0.01f)).Get<float>();
-		const float sharpness = props.Get(Property(propName + ".sharpness")(6.0f)).Get<float>();
-		const float noiseoffset = props.Get(Property(propName + ".noiseoffset")(.0f)).Get<float>();
+		const float radius = props.Get(Property(propName + ".radius")(.50)).Get<double>();
+		const float noisescale = props.Get(Property(propName + ".noisescale")(.50)).Get<double>();
+		const float turbulence = props.Get(Property(propName + ".turbulence")(0.010)).Get<double>();
+		const float sharpness = props.Get(Property(propName + ".sharpness")(6.00)).Get<double>();
+		const float noiseoffset = props.Get(Property(propName + ".noiseoffset")(.00)).Get<double>();
 		const int spheres = props.Get(Property(propName + ".spheres")(0)).Get<int>();
 		const int octaves = props.Get(Property(propName + ".octaves")(1)).Get<int>();
-		const float omega = props.Get(Property(propName + ".omega")(.5f)).Get<float>();
-		const float variability = props.Get(Property(propName + ".variability")(.9f)).Get<float>();
-		const float baseflatness = props.Get(Property(propName + ".baseflatness")(.8f)).Get<float>();
-		const float spheresize = props.Get(Property(propName + ".spheresize")(.15f)).Get<float>();
+		const float omega = props.Get(Property(propName + ".omega")(.50)).Get<double>();
+		const float variability = props.Get(Property(propName + ".variability")(.90)).Get<double>();
+		const float baseflatness = props.Get(Property(propName + ".baseflatness")(.80)).Get<double>();
+		const float spheresize = props.Get(Property(propName + ".spheresize")(.150)).Get<double>();
 
 		tex = new CloudTexture(CreateTextureMapping3D(propName + ".mapping", props), radius, noisescale, turbulence,
 								sharpness, noiseoffset, spheres, octaves, omega, variability, baseflatness, spheresize);
 	} else if (texType == "blackbody") {
-		const float temperature = Max(props.Get(Property(propName + ".temperature")(6500.f)).Get<float>(), 0.f);
+		const float temperature = Max(props.Get(Property(propName + ".temperature")(6500.0)).Get<double>(), 0.0);
 		const bool normalize = props.Get(Property(propName + ".normalize")(false)).Get<bool>();
 		tex = new BlackBodyTexture(temperature, normalize);
 	} else if (texType == "irregulardata") {
@@ -474,11 +474,11 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 
 		vector<float> waveLengths, data;
 		for (u_int i = 0; i < wl.GetSize(); ++i) {
-			waveLengths.push_back(wl.Get<float>(i));
-			data.push_back(dt.Get<float>(i));
+			waveLengths.push_back(wl.Get<double>(i));
+			data.push_back(dt.Get<double>(i));
 		}
 
-		const float resolution = props.Get(Property(propName + ".resolution")(5.f)).Get<float>();
+		const float resolution = props.Get(Property(propName + ".resolution")(5.0)).Get<double>();
 		const bool emission = props.Get(Property(propName + ".emission")(true)).Get<bool>();
 		tex = new IrregularDataTexture(waveLengths.size(), &waveLengths[0], &data[0], resolution, emission);
 	} else if (texType == "lampspectrum") {
@@ -508,18 +508,18 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		tex = new AbsTexture(tex1);
 	} else if (texType == "clamp") {
 		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
-		const float minVal = props.Get(Property(propName + ".min")(0.f)).Get<float>();
-		const float maxVal = props.Get(Property(propName + ".max")(0.f)).Get<float>();
+		const float minVal = props.Get(Property(propName + ".min")(0.0)).Get<double>();
+		const float maxVal = props.Get(Property(propName + ".max")(0.0)).Get<double>();
 
 		tex = new ClampTexture(tex1, minVal, maxVal);
 	} else if (texType == "colordepth") {
 		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".kt")(1.f)));
-		const float depth = props.Get(Property(propName + ".depth")(1.0f)).Get<float>();
+		const float depth = props.Get(Property(propName + ".depth")(1.00)).Get<double>();
 
 		tex = new ColorDepthTexture(depth, tex1);
 	} else if (texType == "normalmap") {
 		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
-		const float scale = Max(0.f, props.Get(Property(propName + ".scale")(1.f)).Get<float>());
+		const float scale = Max(0.0, props.Get(Property(propName + ".scale")(1.0)).Get<double>());
 
 		tex = new NormalMapTexture(tex1, scale);
 	} else if (texType == "bilerp") {
@@ -609,20 +609,20 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 	} else if (texType == "wireframe") {
 		const Texture *borderTex = GetTexture(props.Get(Property(propName + ".border")(1.f)));
 		const Texture *insideTex = GetTexture(props.Get(Property(propName + ".inside")(0.f)));
-		const float width = props.Get(Property(propName + ".width")(0.f)).Get<float>();
+		const float width = props.Get(Property(propName + ".width")(0.0)).Get<double>();
 
 		tex = new WireFrameTexture(width, borderTex, insideTex);
 	/*} else if (texType == "bevel") {
 		const Texture *bumpTex = props.IsDefined(propName + ".bumptex") ?
 			GetTexture(props.Get(Property(propName + ".bumptex")(1.f))) : nullptr;
 		
-		const float radius = props.Get(Property(propName + ".radius")(.025f)).Get<float>();
+		const float radius = props.Get(Property(propName + ".radius")(.0250)).Get<double>();
 
 		tex = new BevelTexture(bumpTex, radius);*/
 	} else if (texType == "distort") {
 		const Texture *texture = GetTexture(props.Get(Property(propName + ".texture")(0.f)));
 		const Texture *offset = GetTexture(props.Get(Property(propName + ".offset")(0.f)));
-		const float strength = props.Get(Property(propName + ".strength")(1.f)).Get<float>();
+		const float strength = props.Get(Property(propName + ".strength")(1.0)).Get<double>();
 
 		tex = new DistortTexture(texture, offset, strength);
 	} else if (texType == "bombing") {
@@ -630,7 +630,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const Texture *bullet = GetTexture(props.Get(Property(propName + ".bullet")(1.f)));
 		const Texture *bulletMask = GetTexture(props.Get(Property(propName + ".bullet.mask")(0.f)));
 		
-		const float randomScaleFactor = Max(props.Get(Property(propName + ".bullet.randomscale.range")(.25f)).Get<float>(), 0.f);
+		const float randomScaleFactor = Max(props.Get(Property(propName + ".bullet.randomscale.range")(.250)).Get<double>(), 0.0);
 		const bool useRandomRotation = props.Get(Property(propName + ".bullet.randomrotation.enable")(true)).Get<bool>();
 		const u_int multiBulletCount = Max(props.Get(Property(propName + ".bullet.count")(1u)).Get<u_int>(), 1u);
 
@@ -651,7 +651,7 @@ Spectrum Scene::GetColor(const luxrays::Property &prop) {
 
 		if (colorSpaceName == ColorSpaceConfig::ColorSpaceType2String(ColorSpaceConfig::NOP_COLORSPACE)) {
 			if (prop.GetSize() == 4) {
-				Spectrum c(prop.Get<float>(1), prop.Get<float>(2), prop.Get<float>(3));
+				Spectrum c(prop.Get<double>(1), prop.Get<double>(2), prop.Get<double>(3));
 				colorSpaceConv.ConvertFrom(ColorSpaceConfig::defaultNopConfig, c);
 
 				return c;
@@ -659,8 +659,8 @@ Spectrum Scene::GetColor(const luxrays::Property &prop) {
 				throw runtime_error("Wrong number of arguments in the color definition with a color space: " + prop.ToString());
 		} else if (colorSpaceName == ColorSpaceConfig::ColorSpaceType2String(ColorSpaceConfig::LUXCORE_COLORSPACE)) {
 			if (prop.GetSize() == 5) {
-				const float gamma = prop.Get<float>(1);
-				Spectrum c(prop.Get<float>(2), prop.Get<float>(3), prop.Get<float>(4));
+				const float gamma = prop.Get<double>(1);
+				Spectrum c(prop.Get<double>(2), prop.Get<double>(3), prop.Get<double>(4));
 				colorSpaceConv.ConvertFrom(ColorSpaceConfig(gamma), c);
 
 				return c;
@@ -670,7 +670,7 @@ Spectrum Scene::GetColor(const luxrays::Property &prop) {
 			if (prop.GetSize() == 6) {
 				const string configName = prop.Get<string>(1);
 				const string colorSapceName = prop.Get<string>(2);
-				Spectrum c(prop.Get<float>(3), prop.Get<float>(4), prop.Get<float>(5));
+				Spectrum c(prop.Get<double>(3), prop.Get<double>(4), prop.Get<double>(5));
 				colorSpaceConv.ConvertFrom(ColorSpaceConfig(configName, colorSapceName), c);
 
 				return c;
@@ -697,7 +697,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 
 				if (colorSpaceName == ColorSpaceConfig::ColorSpaceType2String(ColorSpaceConfig::NOP_COLORSPACE)) {
 					if (prop.GetSize() == 2) {
-						float v = prop.Get<float>(1);				
+						float v = prop.Get<double>(1);				
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig::defaultNopConfig, v);
 		
 						ConstFloatTexture *tex = new ConstFloatTexture(v);
@@ -706,7 +706,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 
 						return tex;
 					} else if (prop.GetSize() == 4) {
-						Spectrum c(prop.Get<float>(1), prop.Get<float>(2), prop.Get<float>(3));
+						Spectrum c(prop.Get<double>(1), prop.Get<double>(2), prop.Get<double>(3));
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig::defaultNopConfig, c);
 
 						ConstFloat3Texture *tex = new ConstFloat3Texture(c);
@@ -718,8 +718,8 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						throw runtime_error("Wrong number of arguments in the implicit definition of a constant texture with a color space: " + prop.ToString());
 				} else if (colorSpaceName == ColorSpaceConfig::ColorSpaceType2String(ColorSpaceConfig::LUXCORE_COLORSPACE)) {
 					if (prop.GetSize() == 3) {
-						const float gamma = prop.Get<float>(1);
-						float v = prop.Get<float>(2);
+						const float gamma = prop.Get<double>(1);
+						float v = prop.Get<double>(2);
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(gamma), v);
 		
 						ConstFloatTexture *tex = new ConstFloatTexture(v);
@@ -728,8 +728,8 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 
 						return tex;
 					} else if (prop.GetSize() == 5) {
-						const float gamma = prop.Get<float>(1);
-						Spectrum c(prop.Get<float>(2), prop.Get<float>(3), prop.Get<float>(4));
+						const float gamma = prop.Get<double>(1);
+						Spectrum c(prop.Get<double>(2), prop.Get<double>(3), prop.Get<double>(4));
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(gamma), c);
 
 						ConstFloat3Texture *tex = new ConstFloat3Texture(c);
@@ -743,7 +743,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 					if (prop.GetSize() == 4) {
 						const string configName = prop.Get<string>(1);
 						const string colorSapceName = prop.Get<string>(2);
-						float v = prop.Get<float>(3);
+						float v = prop.Get<double>(3);
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(configName, colorSapceName), v);
 		
 						ConstFloatTexture *tex = new ConstFloatTexture(v);
@@ -754,7 +754,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 					} else if (prop.GetSize() == 6) {
 						const string configName = prop.Get<string>(1);
 						const string colorSapceName = prop.Get<string>(2);
-						Spectrum c(prop.Get<float>(3), prop.Get<float>(4), prop.Get<float>(5));
+						Spectrum c(prop.Get<double>(3), prop.Get<double>(4), prop.Get<double>(5));
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(configName, colorSapceName), c);
 
 						ConstFloat3Texture *tex = new ConstFloat3Texture(c);
@@ -808,7 +808,7 @@ TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const 
 	if (mapType == "uvmapping2d") {
 		const u_int dataIndex = Clamp(props.Get(Property(prefixName + ".uvindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		const float rotation = props.Get(Property(prefixName + ".rotation")(0.f)).Get<float>();
+		const float rotation = props.Get(Property(prefixName + ".rotation")(0.0)).Get<double>();
 		const UV uvScale = props.Get(Property(prefixName + ".uvscale")(1.f, 1.f)).Get<UV>();
 		const UV uvDelta = props.Get(Property(prefixName + ".uvdelta")(0.f, 0.f)).Get<UV>();
 
@@ -822,25 +822,25 @@ TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const 
 
 		const Property uvRotationDefaultProp = Property(prefixName + ".rotation")(0.f, 0.f);
 		const Property &uvRotationProp = props.Get(uvRotationDefaultProp);
-		const float uvRotationMin = uvRotationProp.Get<float>(0);
-		const float uvRotationMax = uvRotationProp.Get<float>(1);
-		const float uvRotationStep = (uvRotationProp.GetSize() > 2) ? uvRotationProp.Get<float>(2) : 0.f;
+		const float uvRotationMin = uvRotationProp.Get<double>(0);
+		const float uvRotationMax = uvRotationProp.Get<double>(1);
+		const float uvRotationStep = (uvRotationProp.GetSize() > 2) ? uvRotationProp.Get<double>(2) : 0.f;
 
 		const Property uvScaleDefaultProp = Property(prefixName + ".uvscale")(1.f, 1.f, 1.f, 1.f);
 		const Property &uvScaleProp = props.Get(uvScaleDefaultProp);
-		const float uScaleMin = uvScaleProp.Get<float>(0);
-		const float uScaleMax = uvScaleProp.Get<float>(1);
-		const float vScaleMin = uvScaleProp.Get<float>(2);
-		const float vScaleMax = uvScaleProp.Get<float>(3);
+		const float uScaleMin = uvScaleProp.Get<double>(0);
+		const float uScaleMax = uvScaleProp.Get<double>(1);
+		const float vScaleMin = uvScaleProp.Get<double>(2);
+		const float vScaleMax = uvScaleProp.Get<double>(3);
 		
 		const bool uniformScale = props.Get(Property(prefixName + ".uvscale.uniform")(false)).Get<bool>();
 
 		const Property uvDeltaDefaultProp = Property(prefixName + ".uvdelta")(0.f, 0.f, 0.f, 0.f);
 		const Property &uvDeltaProp = props.Get(uvDeltaDefaultProp);
-		const float uDeltaMin = uvDeltaProp.Get<float>(0);
-		const float uDeltaMax = uvDeltaProp.Get<float>(1);
-		const float vDeltaMin = uvDeltaProp.Get<float>(2);
-		const float vDeltaMax = uvDeltaProp.Get<float>(3);
+		const float uDeltaMin = uvDeltaProp.Get<double>(0);
+		const float uDeltaMax = uvDeltaProp.Get<double>(1);
+		const float vDeltaMin = uvDeltaProp.Get<double>(2);
+		const float vDeltaMax = uvDeltaProp.Get<double>(3);
 
 		return new UVRandomMapping2D(dataIndex, seedType, triAOVIndex, objectIDOffset,
 				uvRotationMin, uvRotationMax, uvRotationStep,
@@ -883,31 +883,31 @@ TextureMapping3D *Scene::CreateTextureMapping3D(const string &prefixName, const 
 		const Property zRotationDefaultProp = Property(prefixName + ".zrotation")(0.f, 0.f, 0.f);
 
 		const Property &xRotationProp = props.Get(xRotationDefaultProp);
-		const float xRotationMin = xRotationProp.Get<float>(0);
-		const float xRotationMax = xRotationProp.Get<float>(1);
-		const float xRotationStep = (xRotationProp.GetSize() > 2) ? xRotationProp.Get<float>(2) : 0.f;
+		const float xRotationMin = xRotationProp.Get<double>(0);
+		const float xRotationMax = xRotationProp.Get<double>(1);
+		const float xRotationStep = (xRotationProp.GetSize() > 2) ? xRotationProp.Get<double>(2) : 0.f;
 		const Property &yRotationProp = props.Get(yRotationDefaultProp);
-		const float yRotationMin = yRotationProp.Get<float>(0);
-		const float yRotationMax = yRotationProp.Get<float>(1);
-		const float yRotationStep = (yRotationProp.GetSize() > 2) ? yRotationProp.Get<float>(2) : 0.f;
+		const float yRotationMin = yRotationProp.Get<double>(0);
+		const float yRotationMax = yRotationProp.Get<double>(1);
+		const float yRotationStep = (yRotationProp.GetSize() > 2) ? yRotationProp.Get<double>(2) : 0.f;
 		const Property &zRotationProp = props.Get(zRotationDefaultProp);
-		const float zRotationMin = zRotationProp.Get<float>(0);
-		const float zRotationMax = zRotationProp.Get<float>(1);
-		const float zRotationStep = (zRotationProp.GetSize() > 2) ? zRotationProp.Get<float>(2) : 0.f;
+		const float zRotationMin = zRotationProp.Get<double>(0);
+		const float zRotationMax = zRotationProp.Get<double>(1);
+		const float zRotationStep = (zRotationProp.GetSize() > 2) ? zRotationProp.Get<double>(2) : 0.f;
 
 		const Property xScaleDefaultProp = Property(prefixName + ".xscale")(1.f, 1.f);
 		const Property yScaleDefaultProp = Property(prefixName + ".yscale")(1.f, 1.f);
 		const Property zScaleDefaultProp = Property(prefixName + ".zscale")(1.f, 1.f);
 
 		const Property &xScaleProp = props.Get(xScaleDefaultProp);
-		const float xScaleMin = xScaleProp.Get<float>(0);
-		const float xScaleMax = xScaleProp.Get<float>(1);
+		const float xScaleMin = xScaleProp.Get<double>(0);
+		const float xScaleMax = xScaleProp.Get<double>(1);
 		const Property &yScaleProp = props.Get(yScaleDefaultProp);
-		const float yScaleMin = yScaleProp.Get<float>(0);
-		const float yScaleMax = yScaleProp.Get<float>(1);
+		const float yScaleMin = yScaleProp.Get<double>(0);
+		const float yScaleMax = yScaleProp.Get<double>(1);
 		const Property &zScaleProp = props.Get(zScaleDefaultProp);
-		const float zScaleMin = zScaleProp.Get<float>(0);
-		const float zScaleMax = zScaleProp.Get<float>(1);
+		const float zScaleMin = zScaleProp.Get<double>(0);
+		const float zScaleMax = zScaleProp.Get<double>(1);
 		
 		const bool uniformScale = props.Get(Property(prefixName + ".xyzscale.uniform")(false)).Get<bool>();
 
@@ -916,14 +916,14 @@ TextureMapping3D *Scene::CreateTextureMapping3D(const string &prefixName, const 
 		const Property zTranslateDefaultProp = Property(prefixName + ".ztranslate")(0.f, 0.f);
 		
 		const Property &xTranslateProp = props.Get(xTranslateDefaultProp);
-		const float xTranslateMin = xTranslateProp.Get<float>(0);
-		const float xTranslateMax = xTranslateProp.Get<float>(1);
+		const float xTranslateMin = xTranslateProp.Get<double>(0);
+		const float xTranslateMax = xTranslateProp.Get<double>(1);
 		const Property &yTranslateProp = props.Get(yTranslateDefaultProp);
-		const float yTranslateMin = yTranslateProp.Get<float>(0);
-		const float yTranslateMax = yTranslateProp.Get<float>(1);
+		const float yTranslateMin = yTranslateProp.Get<double>(0);
+		const float yTranslateMax = yTranslateProp.Get<double>(1);
 		const Property &zTranslateProp = props.Get(zTranslateDefaultProp);
-		const float zTranslateMin = zTranslateProp.Get<float>(0);
-		const float zTranslateMax = zTranslateProp.Get<float>(1);
+		const float zTranslateMin = zTranslateProp.Get<double>(0);
+		const float zTranslateMax = zTranslateProp.Get<double>(1);
 
 		return new LocalRandomMapping3D(trans, seedType, triAOVIndex, objectIDOffset,
 				xRotationMin, xRotationMax, xRotationStep,

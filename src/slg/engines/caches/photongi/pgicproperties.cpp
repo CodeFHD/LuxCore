@@ -106,37 +106,37 @@ PhotonGICache *PhotonGICache::FromProperties(const Scene *scn, const Properties 
 
 		params.photon.maxTracedCount = Max(1u, cfg.Get(GetDefaultProps().Get("path.photongi.photon.maxcount")).Get<u_int>());
 		params.photon.maxPathDepth = Max(1u, cfg.Get(GetDefaultProps().Get("path.photongi.photon.maxdepth")).Get<u_int>());
-		params.photon.timeStart = cfg.Get(GetDefaultProps().Get("path.photongi.photon.time.start")).Get<float>();
-		params.photon.timeEnd = cfg.Get(GetDefaultProps().Get("path.photongi.photon.time.end")).Get<float>();
+		params.photon.timeStart = cfg.Get(GetDefaultProps().Get("path.photongi.photon.time.start")).Get<double>();
+		params.photon.timeEnd = cfg.Get(GetDefaultProps().Get("path.photongi.photon.time.end")).Get<double>();
 
-		params.visibility.lookUpRadius = Max(0.f, cfg.Get(GetDefaultProps().Get("path.photongi.visibility.lookup.radius")).Get<float>());
-		params.visibility.lookUpNormalAngle = Max(DEFAULT_EPSILON_MIN, cfg.Get(GetDefaultProps().Get("path.photongi.visibility.lookup.normalangle")).Get<float>());
-		params.visibility.targetHitRate = cfg.Get(GetDefaultProps().Get("path.photongi.visibility.targethitrate")).Get<float>();
+		params.visibility.lookUpRadius = Max(0.0, cfg.Get(GetDefaultProps().Get("path.photongi.visibility.lookup.radius")).Get<double>());
+		params.visibility.lookUpNormalAngle = Max(DEFAULT_EPSILON_MIN_DBL, cfg.Get(GetDefaultProps().Get("path.photongi.visibility.lookup.normalangle")).Get<double>());
+		params.visibility.targetHitRate = cfg.Get(GetDefaultProps().Get("path.photongi.visibility.targethitrate")).Get<double>();
 		params.visibility.maxSampleCount = cfg.Get(GetDefaultProps().Get("path.photongi.visibility.maxsamplecount")).Get<u_int>();
 
-		params.glossinessUsageThreshold = Max(0.f, cfg.Get(GetDefaultProps().Get("path.photongi.glossinessusagethreshold")).Get<float>());
+		params.glossinessUsageThreshold = Max(0.0, cfg.Get(GetDefaultProps().Get("path.photongi.glossinessusagethreshold")).Get<double>());
 
 		if (params.indirect.enabled) {
 			params.indirect.maxSize = Max(0u, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.maxsize")).Get<u_int>());
-			params.indirect.haltThreshold = Max(DEFAULT_EPSILON_MIN, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.haltthreshold")).Get<float>());
+			params.indirect.haltThreshold = Max(DEFAULT_EPSILON_MIN_DBL, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.haltthreshold")).Get<double>());
 
-			params.indirect.lookUpRadius = Max(0.f, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.lookup.radius")).Get<float>());
-			params.indirect.lookUpNormalAngle = Max(DEFAULT_EPSILON_MIN, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.lookup.normalangle")).Get<float>());
+			params.indirect.lookUpRadius = Max(0.0, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.lookup.radius")).Get<double>());
+			params.indirect.lookUpNormalAngle = Max(DEFAULT_EPSILON_MIN_DBL, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.lookup.normalangle")).Get<double>());
 
-			params.indirect.usageThresholdScale = Max(0.f, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.usagethresholdscale")).Get<float>());
+			params.indirect.usageThresholdScale = Max(0.0, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.usagethresholdscale")).Get<double>());
 
-			params.indirect.filterRadiusScale = Max(1.f, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.filter.radiusscale")).Get<float>());
+			params.indirect.filterRadiusScale = Max(1.0, cfg.Get(GetDefaultProps().Get("path.photongi.indirect.filter.radiusscale")).Get<double>());
 		}
 
 		if (params.caustic.enabled) {
 			params.caustic.maxSize = Max(0u, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.maxsize")).Get<u_int>());
 			params.caustic.updateSpp = Max(0u, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.updatespp")).Get<u_int>());
 
-			params.caustic.lookUpRadius = Max(DEFAULT_EPSILON_MIN, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.lookup.radius")).Get<float>());
-			params.caustic.lookUpNormalAngle = Max(DEFAULT_EPSILON_MIN, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.lookup.normalangle")).Get<float>());
+			params.caustic.lookUpRadius = Max(DEFAULT_EPSILON_MIN_DBL, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.lookup.radius")).Get<double>());
+			params.caustic.lookUpNormalAngle = Max(DEFAULT_EPSILON_MIN_DBL, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.lookup.normalangle")).Get<double>());
 
-			params.caustic.radiusReduction = Max(0.f, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.updatespp.radiusreduction")).Get<float>());
-			params.caustic.minLookUpRadius = Max(0.f, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.updatespp.minradius")).Get<float>());
+			params.caustic.radiusReduction = Max(0.0, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.updatespp.radiusreduction")).Get<double>());
+			params.caustic.minLookUpRadius = Max(0.0, cfg.Get(GetDefaultProps().Get("path.photongi.caustic.updatespp.minradius")).Get<double>());
 		}
 
 		params.debugType = String2DebugType(cfg.Get(GetDefaultProps().Get("path.photongi.debug.type")).Get<string>());

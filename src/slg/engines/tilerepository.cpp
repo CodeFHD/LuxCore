@@ -609,7 +609,7 @@ Properties TileRepository::ToProperties(const Properties &cfg) {
 	if (cfg.IsDefined("tile.multipass.convergencetest.threshold"))
 		props << cfg.Get(GetDefaultProps().Get("tile.multipass.convergencetest.threshold"));
 	else {
-		const float defaultThreshold = GetDefaultProps().Get("tile.multipass.convergencetest.threshold").Get<float>();
+		const float defaultThreshold = GetDefaultProps().Get("tile.multipass.convergencetest.threshold").Get<double>();
 		props << cfg.Get(Property("tile.multipass.convergencetest.threshold256")(defaultThreshold * 256.f));
 	}
 
@@ -633,13 +633,13 @@ TileRepository *TileRepository::FromProperties(const luxrays::Properties &cfg) {
 	tileRepository->enableMultipassRendering = cfg.Get(GetDefaultProps().Get("tile.multipass.enable")).Get<bool>();
 
 	if (cfg.IsDefined("tile.multipass.convergencetest.threshold"))
-		tileRepository->convergenceTestThreshold = cfg.Get(GetDefaultProps().Get("tile.multipass.convergencetest.threshold")).Get<float>();
+		tileRepository->convergenceTestThreshold = cfg.Get(GetDefaultProps().Get("tile.multipass.convergencetest.threshold")).Get<double>();
 	else {
-		const float defaultThreshold256 = 256.f * GetDefaultProps().Get("tile.multipass.convergencetest.threshold").Get<float>();
-		tileRepository->convergenceTestThreshold = cfg.Get(Property("tile.multipass.convergencetest.threshold256")(defaultThreshold256)).Get<float>() * (1.f / 256.f);
+		const float defaultThreshold256 = 256.f * GetDefaultProps().Get("tile.multipass.convergencetest.threshold").Get<double>();
+		tileRepository->convergenceTestThreshold = cfg.Get(Property("tile.multipass.convergencetest.threshold256")(defaultThreshold256)).Get<double>() * (1.f / 256.f);
 	}
 
-	tileRepository->convergenceTestThresholdReduction = cfg.Get(GetDefaultProps().Get("tile.multipass.convergencetest.threshold.reduction")).Get<float>();
+	tileRepository->convergenceTestThresholdReduction = cfg.Get(GetDefaultProps().Get("tile.multipass.convergencetest.threshold.reduction")).Get<double>();
 	tileRepository->convergenceTestWarmUpSamples = cfg.Get(GetDefaultProps().Get("tile.multipass.convergencetest.warmup.count")).Get<u_int>();
 
 	return tileRepository.release();

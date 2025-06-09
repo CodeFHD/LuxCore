@@ -239,8 +239,8 @@ Sampler *RandomSampler::FromProperties(const Properties &cfg, RandomGenerator *r
 		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
-	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<float>(), 0.f, .95f);
-	const float adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.userimportanceweight")).Get<float>();
+	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<double>(), 0.0, .95);
+	const float adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.userimportanceweight")).Get<double>();
 	const float bucketSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.random.bucketsize")).Get<u_int>());
 	const float tileSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.random.tilesize")).Get<u_int>());
 	const float superSampling = cfg.Get(GetDefaultProps().Get("sampler.random.supersampling")).Get<u_int>();
@@ -256,8 +256,8 @@ slg::ocl::Sampler *RandomSampler::FromPropertiesOCL(const Properties &cfg) {
 	slg::ocl::Sampler *oclSampler = new slg::ocl::Sampler();
 
 	oclSampler->type = slg::ocl::RANDOM;
-	oclSampler->random.adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<float>(), 0.f, .95f);
-	oclSampler->random.adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.userimportanceweight")).Get<float>();
+	oclSampler->random.adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<double>(), 0.0, .95);
+	oclSampler->random.adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.userimportanceweight")).Get<double>();
 	oclSampler->random.bucketSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.random.bucketsize")).Get<u_int>());
 	oclSampler->random.tileSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.random.tilesize")).Get<u_int>());
 	oclSampler->random.superSampling = cfg.Get(GetDefaultProps().Get("sampler.random.supersampling")).Get<u_int>();
@@ -269,7 +269,7 @@ slg::ocl::Sampler *RandomSampler::FromPropertiesOCL(const Properties &cfg) {
 void RandomSampler::AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
-	const float str = cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<float>();
+	const float str = cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<double>();
 
 	if (imageSamplesEnable && (str > 0.f))
 		channels.insert(Film::NOISE);

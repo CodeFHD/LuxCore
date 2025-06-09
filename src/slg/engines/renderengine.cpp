@@ -107,9 +107,9 @@ void RenderEngine::Start(Film *flm, std::mutex *flmMutex) {
 	delete pixelFilter;
 	pixelFilter = renderConfig->AllocPixelFilter();
 
-	const float epsilonMin = renderConfig->GetProperty("scene.epsilon.min").Get<float>();
+	const float epsilonMin = renderConfig->GetProperty("scene.epsilon.min").Get<double>();
 	MachineEpsilon::SetMin(epsilonMin);
-	const float epsilonMax = renderConfig->GetProperty("scene.epsilon.max").Get<float>();
+	const float epsilonMax = renderConfig->GetProperty("scene.epsilon.max").Get<double>();
 	MachineEpsilon::SetMax(epsilonMax);
 
 	// Force a complete preprocessing

@@ -51,7 +51,7 @@ BakeCPURenderEngine::BakeCPURenderEngine(const RenderConfig *rcfg) :
 	skipExistingMapFiles = cfg.Get(Property("bake.skipexistingmapfiles")(false)).Get<bool>();
 
 	marginPixels = Max(cfg.Get(Property("bake.margin")(0u)).Get<u_int>(), 0u);
-	marginSamplesThreshold = Max(cfg.Get(Property("bake.marginsamplesthreshold")(0.f)).Get<float>(), 0.f);
+	marginSamplesThreshold = Max(cfg.Get(Property("bake.marginsamplesthreshold")(0.0)).Get<double>(), 0.0);
 
 	// Read the list of bake maps to render
 	vector<string> mapKeys = cfg.GetAllUniqueSubNames("bake.maps");

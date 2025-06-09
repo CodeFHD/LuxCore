@@ -310,8 +310,8 @@ Sampler *SobolSampler::FromProperties(const Properties &cfg, RandomGenerator *rn
 		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
-	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<float>(), 0.f, .95f);
-	const float adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.userimportanceweight")).Get<float>();
+	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<double>(), 0.0, .95);
+	const float adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.userimportanceweight")).Get<double>();
 	const float bucketSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.sobol.bucketsize")).Get<u_int>());
 	const float tileSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.sobol.tilesize")).Get<u_int>());
 	const float superSampling = cfg.Get(GetDefaultProps().Get("sampler.sobol.supersampling")).Get<u_int>();
@@ -327,8 +327,8 @@ slg::ocl::Sampler *SobolSampler::FromPropertiesOCL(const Properties &cfg) {
 	slg::ocl::Sampler *oclSampler = new slg::ocl::Sampler();
 
 	oclSampler->type = slg::ocl::SOBOL;
-	oclSampler->sobol.adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<float>(), 0.f, .95f);
-	oclSampler->sobol.adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.userimportanceweight")).Get<float>();
+	oclSampler->sobol.adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<double>(), 0.0, .95);
+	oclSampler->sobol.adaptiveUserImportanceWeight = cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.userimportanceweight")).Get<double>();
 	oclSampler->sobol.bucketSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.sobol.bucketsize")).Get<u_int>());
 	oclSampler->sobol.tileSize = RoundUpPow2(cfg.Get(GetDefaultProps().Get("sampler.sobol.tilesize")).Get<u_int>());
 	oclSampler->sobol.superSampling = cfg.Get(GetDefaultProps().Get("sampler.sobol.supersampling")).Get<u_int>();
@@ -340,7 +340,7 @@ slg::ocl::Sampler *SobolSampler::FromPropertiesOCL(const Properties &cfg) {
 void SobolSampler::AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
-	const float str = cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<float>();
+	const float str = cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<double>();
 
 	if (imageSamplesEnable && (str > 0.f))
 		channels.insert(Film::NOISE);

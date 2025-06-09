@@ -51,12 +51,12 @@ Camera *Scene::CreateCamera(const Properties &props) {
 		SDL_LOG("WARNING: deprecated property scene.camera.lookat");
 
 		const Property &prop = props.Get("scene.camera.lookat");
-		orig.x = prop.Get<float>(0);
-		orig.y = prop.Get<float>(1);
-		orig.z = prop.Get<float>(2);
-		target.x = prop.Get<float>(3);
-		target.y = prop.Get<float>(4);
-		target.z = prop.Get<float>(5);
+		orig.x = prop.Get<double>(0);
+		orig.y = prop.Get<double>(1);
+		orig.z = prop.Get<double>(2);
+		target.x = prop.Get<double>(3);
+		target.y = prop.Get<double>(4);
+		target.z = prop.Get<double>(5);
 		up = Vector(0.f, 0.f, 1.f);
 	} else {
 		if (!props.IsDefined("scene.camera.lookat.orig")) {
@@ -71,7 +71,7 @@ Camera *Scene::CreateCamera(const Properties &props) {
 		}
 	}
 
-	const string type = props.Get(Property("scene.camera.type")("perspective")).Get<string>();		
+	const string type = props.Get(Property("scene.camera.type")("perspective")).Get<string>();
 
 	SDL_LOG("Camera type: " << type);
 	SDL_LOG("Camera position: " << orig);
@@ -87,10 +87,10 @@ Camera *Scene::CreateCamera(const Properties &props) {
 
 				const Property defaultProp = Property("scene.camera.screenwindow")(0.f, 1.f, 0.f, 1.f);
 				const Property &prop = props.Get(defaultProp);
-				screenWindow[0] = prop.Get<float>(0);
-				screenWindow[1] = prop.Get<float>(1);
-				screenWindow[2] = prop.Get<float>(2);
-				screenWindow[3] = prop.Get<float>(3);
+				screenWindow[0] = prop.Get<double>(0);
+				screenWindow[1] = prop.Get<double>(1);
+				screenWindow[2] = prop.Get<double>(2);
+				screenWindow[3] = prop.Get<double>(3);
 
 				orthoCamera = new OrthographicCamera(orig, target, up, &screenWindow[0]);
 			} else
@@ -104,18 +104,18 @@ Camera *Scene::CreateCamera(const Properties &props) {
 				float screenWindow[4];
 
 				const Property &prop = props.Get(Property("scene.camera.screenwindow")(0.f, 1.f, 0.f, 1.f));
-				screenWindow[0] = prop.Get<float>(0);
-				screenWindow[1] = prop.Get<float>(1);
-				screenWindow[2] = prop.Get<float>(2);
-				screenWindow[3] = prop.Get<float>(3);
+				screenWindow[0] = prop.Get<double>(0);
+				screenWindow[1] = prop.Get<double>(1);
+				screenWindow[2] = prop.Get<double>(2);
+				screenWindow[3] = prop.Get<double>(3);
 
 				perspCamera = new PerspectiveCamera(orig, target, up, &screenWindow[0]);
 			} else 
 				perspCamera = new PerspectiveCamera(orig, target, up);
 			camera.reset(perspCamera);
 
-			perspCamera->fieldOfView = Clamp(props.Get(Property("scene.camera.fieldofview")(45.f)).Get<float>(),
-					DEFAULT_EPSILON_STATIC, 180.f - DEFAULT_EPSILON_STATIC);
+			perspCamera->fieldOfView = Clamp(props.Get(Property("scene.camera.fieldofview")(45.0)).Get<double>(),
+					DEFAULT_EPSILON_STATIC_DBL, 180.0 - DEFAULT_EPSILON_STATIC_DBL);
 
 			perspCamera->bokehBlades = props.Get(Property("scene.camera.bokeh.blades")(0u)).Get<u_int>();
 			perspCamera->bokehPower = props.Get(Property("scene.camera.bokeh.power")(3u)).Get<u_int>();
@@ -135,8 +135,8 @@ Camera *Scene::CreateCamera(const Properties &props) {
 					throw runtime_error("Used a black image in camera bokeh distribution: " + imgMapName);
 			}
 
-			perspCamera->bokehScaleX = props.Get(Property("scene.camera.bokeh.scale.x")(1.f)).Get<float>();
-			perspCamera->bokehScaleY = props.Get(Property("scene.camera.bokeh.scale.y")(1.f)).Get<float>();
+			perspCamera->bokehScaleX = props.Get(Property("scene.camera.bokeh.scale.x")(1.0)).Get<double>();
+			perspCamera->bokehScaleY = props.Get(Property("scene.camera.bokeh.scale.y")(1.0)).Get<double>();
 
 			perspCamera->enableOculusRiftBarrel = props.Get(Property("scene.camera.oculusrift.barrelpostpro.enable")(false)).Get<bool>();
 		} else if (type == "stereo")  {
@@ -153,8 +153,8 @@ Camera *Scene::CreateCamera(const Properties &props) {
 				throw runtime_error("Unknown StereoCamera type: " + stereoTypeStr);
 			camera.reset(stereoCamera);
 			stereoCamera->enableOculusRiftBarrel = props.Get(Property("scene.camera.oculusrift.barrelpostpro.enable")(false)).Get<bool>();
-			stereoCamera->horizStereoEyesDistance = props.Get(Property("scene.camera.eyesdistance")(.0626f)).Get<float>();
-			stereoCamera->horizStereoLensDistance = props.Get(Property("scene.camera.lensdistance")(.2779f)).Get<float>();
+			stereoCamera->horizStereoEyesDistance = props.Get(Property("scene.camera.eyesdistance")(.0626f)).Get<double>();
+			stereoCamera->horizStereoLensDistance = props.Get(Property("scene.camera.lensdistance")(.2779f)).Get<double>();
 		} else {
 			EnvironmentCamera *environmentCamera;
 
@@ -162,10 +162,10 @@ Camera *Scene::CreateCamera(const Properties &props) {
 				float screenWindow[4];
 
 				const Property &prop = props.Get(Property("scene.camera.screenwindow")(-1.f, 1.f, -1.f, 1.f));
-				screenWindow[0] = prop.Get<float>(0);
-				screenWindow[1] = prop.Get<float>(1);
-				screenWindow[2] = prop.Get<float>(2);
-				screenWindow[3] = prop.Get<float>(3);
+				screenWindow[0] = prop.Get<double>(0);
+				screenWindow[1] = prop.Get<double>(1);
+				screenWindow[2] = prop.Get<double>(2);
+				screenWindow[3] = prop.Get<double>(3);
 
 				environmentCamera = new EnvironmentCamera(orig, target, up, &screenWindow[0]);
 			} else
@@ -173,15 +173,15 @@ Camera *Scene::CreateCamera(const Properties &props) {
 
 			camera.reset(environmentCamera);
 			
-			environmentCamera->degrees = Clamp(props.Get(Property("scene.camera.environment.degrees")(360.f)).Get<float>(),
-					0.f, 360.f);
+			environmentCamera->degrees = Clamp(props.Get(Property("scene.camera.environment.degrees")(360.0)).Get<double>(),
+					0.0, 360.0);
 		};
 
 		if (type != "environment") {
 			ProjectiveCamera *projCamera = (ProjectiveCamera *)camera.get();
 
-			projCamera->lensRadius = props.Get(Property("scene.camera.lensradius")(0.f)).Get<float>();
-			projCamera->focalDistance = props.Get(Property("scene.camera.focaldistance")(10.f)).Get<float>();
+			projCamera->lensRadius = props.Get(Property("scene.camera.lensradius")(0.0)).Get<double>();
+			projCamera->focalDistance = props.Get(Property("scene.camera.focaldistance")(10.0)).Get<double>();
 			projCamera->autoFocus = props.Get(Property("scene.camera.autofocus.enable")(false)).Get<bool>();
 
 			// Check if I have to arbitrary clipping plane
@@ -199,10 +199,10 @@ Camera *Scene::CreateCamera(const Properties &props) {
 	} else
 		throw runtime_error("Unknown camera type: " + type);
 	
-	camera->clipHither = props.Get(Property("scene.camera.cliphither")(1e-3f)).Get<float>();
-	camera->clipYon = props.Get(Property("scene.camera.clipyon")(1e30f)).Get<float>();
-	camera->shutterOpen = props.Get(Property("scene.camera.shutteropen")(0.f)).Get<float>();
-	camera->shutterClose = props.Get(Property("scene.camera.shutterclose")(1.f)).Get<float>();
+	camera->clipHither = props.Get(Property("scene.camera.cliphither")(1e-3)).Get<double>();
+	camera->clipYon = props.Get(Property("scene.camera.clipyon")(1e30)).Get<double>();
+	camera->shutterOpen = props.Get(Property("scene.camera.shutteropen")(0.0)).Get<double>();
+	camera->shutterClose = props.Get(Property("scene.camera.shutterclose")(1.0)).Get<double>();
 
 	camera->autoVolume = props.Get(Property("scene.camera.autovolume.enable")(true)).Get<bool>();
 	if (!camera->autoVolume && props.IsDefined("scene.camera.volume")) {
@@ -223,7 +223,7 @@ Camera *Scene::CreateCamera(const Properties &props) {
 			if (!props.IsDefined(prefix +".time"))
 				break;
 
-			const float t = props.Get(prefix +".time").Get<float>();
+			const float t = props.Get(prefix +".time").Get<double>();
 			if (i > 0 && t <= times.back())
 				throw runtime_error("Motion camera time must be monotonic");
 			times.push_back(t);

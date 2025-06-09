@@ -144,7 +144,7 @@ SceneObject *Scene::CreateObject(const u_int defaultObjID, const string &objName
 			if (!props.IsDefined(prefix +".time"))
 				break;
 
-			const float t = props.Get(prefix +".time").Get<float>();
+			const float t = props.Get(prefix +".time").Get<double>();
 			if (i > 0 && t <= times.back())
 				throw runtime_error(objName + " motion time must be monotonic");
 			times.push_back(t);

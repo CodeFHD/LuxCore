@@ -56,12 +56,12 @@ Properties Filter::ToProperties(const Properties &cfg) {
 	if (FilterRegistry::STATICTABLE_NAME(ToProperties).Get(type, func)) {
 		Properties props;
 
-		const float defaultFilterWidth = cfg.Get(GetDefaultProps().Get("film.filter.width")).Get<float>();
+		const float defaultFilterWidth = cfg.Get(GetDefaultProps().Get("film.filter.width")).Get<double>();
 		const Property filterXWidth = cfg.Get(Property("film.filter.xwidth")(defaultFilterWidth));
 		const Property filterYWidth = cfg.Get(Property("film.filter.ywidth")(defaultFilterWidth));
 
-		if (filterXWidth.Get<float>() == filterYWidth.Get<float>())
-			props << Property("film.filter.width")(filterXWidth.Get<float>());
+		if (filterXWidth.Get<double>() == filterYWidth.Get<double>())
+			props << Property("film.filter.width")(filterXWidth.Get<double>());
 		else
 			props << filterXWidth << filterYWidth;
 

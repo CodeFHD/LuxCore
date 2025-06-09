@@ -541,8 +541,8 @@ void Film::ParseRadianceGroupsScale(const Properties &props, const u_int imagePi
 		const string prefix = radianceGroupsScalePrefix + "." + indexStr;
 
 		RadianceChannelScale radianceChannelScale;
-		radianceChannelScale.globalScale = props.Get(Property(prefix + ".globalscale")(1.f)).Get<float>();
-		radianceChannelScale.temperature = props.Get(Property(prefix + ".temperature")(0.f)).Get<float>();
+		radianceChannelScale.globalScale = props.Get(Property(prefix + ".globalscale")(1.0)).Get<double>();
+		radianceChannelScale.temperature = props.Get(Property(prefix + ".temperature")(0.0)).Get<double>();
 		radianceChannelScale.rgbScale = props.Get(Property(prefix + ".rgbscale")(1.f, 1.f, 1.f)).Get<Spectrum>();
 		radianceChannelScale.reverse = props.Get(Property(prefix + ".reverse")(true)).Get<bool>();
 		radianceChannelScale.normalize = props.Get(Property(prefix + ".normalize")(false)).Get<bool>();
@@ -613,24 +613,24 @@ ImagePipeline *Film::CreateImagePipeline(const Properties &props, const string &
 
 			if (type == "TONEMAP_LINEAR") {
 				imagePipeline->AddPlugin(new LinearToneMap(
-					props.Get(Property(prefix + ".scale")(1.f)).Get<float>()));
+					props.Get(Property(prefix + ".scale")(1.0)).Get<double>()));
 			} else if (type == "TONEMAP_REINHARD02") {
 				imagePipeline->AddPlugin(new Reinhard02ToneMap(
-					props.Get(Property(prefix + ".prescale")(1.f)).Get<float>(),
-					props.Get(Property(prefix + ".postscale")(1.2f)).Get<float>(),
-					props.Get(Property(prefix + ".burn")(3.75f)).Get<float>()));
+					props.Get(Property(prefix + ".prescale")(1.0)).Get<double>(),
+					props.Get(Property(prefix + ".postscale")(1.2)).Get<double>(),
+					props.Get(Property(prefix + ".burn")(3.75)).Get<double>()));
 			} else if (type == "TONEMAP_AUTOLINEAR") {
 				imagePipeline->AddPlugin(new AutoLinearToneMap());
 			} else if (type == "TONEMAP_LUXLINEAR") {
 				imagePipeline->AddPlugin(new LuxLinearToneMap(
-					props.Get(Property(prefix + ".sensitivity")(100.f)).Get<float>(),
-					props.Get(Property(prefix + ".exposure")(1.f / 1000.f)).Get<float>(),
-					props.Get(Property(prefix + ".fstop")(2.8f)).Get<float>()));
+					props.Get(Property(prefix + ".sensitivity")(100.0)).Get<double>(),
+					props.Get(Property(prefix + ".exposure")(1.0 / 1000.0)).Get<double>(),
+					props.Get(Property(prefix + ".fstop")(2.8)).Get<double>()));
 			} else if (type == "NOP") {
 				imagePipeline->AddPlugin(new NopPlugin());
 			} else if (type == "GAMMA_CORRECTION") {
 				imagePipeline->AddPlugin(new GammaCorrectionPlugin(
-					props.Get(Property(prefix + ".value")(2.2f)).Get<float>(),
+					props.Get(Property(prefix + ".value")(2.2)).Get<double>(),
 					// 4096 => 12bit resolution
 					props.Get(Property(prefix + ".table.size")(4096u)).Get<u_int>()));
 			} else if (type == "OUTPUT_SWITCHER") {
@@ -644,15 +644,15 @@ ImagePipeline *Film::CreateImagePipeline(const Properties &props, const string &
 						props.Get(Property(prefix + ".index")(0u)).Get<u_int>()));
 				}
 			} else if (type == "GAUSSIANFILTER_3x3") {
-				const float weight = Clamp(props.Get(Property(prefix + ".weight")(.15f)).Get<float>(), 0.f, 1.f);
+				const float weight = Clamp(props.Get(Property(prefix + ".weight")(.15)).Get<double>(), 0.0, 1.0);
 
 				imagePipeline->AddPlugin(new GaussianBlur3x3FilterPlugin(weight));
 			} else if (type == "CAMERA_RESPONSE_FUNC") {
 				imagePipeline->AddPlugin(new CameraResponsePlugin(
 					props.Get(Property(prefix + ".name")("Advantix_100CD")).Get<string>()));
 			} else if (type == "CONTOUR_LINES") {
-				const float scale = props.Get(Property(prefix + ".scale")(179.f)).Get<float>();
-				const float range = Max(0.f, props.Get(Property(prefix + ".range")(100.f)).Get<float>());
+				const float scale = props.Get(Property(prefix + ".scale")(179.0)).Get<double>();
+				const float range = Max(0.0, props.Get(Property(prefix + ".range")(100.0)).Get<double>());
 				const u_int steps = Max(2u, props.Get(Property(prefix + ".steps")(8)).Get<u_int>());
 				const int zeroGridSize = props.Get(Property(prefix + ".zerogridsize")(8)).Get<int>();
 
@@ -662,8 +662,8 @@ ImagePipeline *Film::CreateImagePipeline(const Properties &props, const string &
 
 				imagePipeline->AddPlugin(new BackgroundImgPlugin(im));
 			} else if (type == "BLOOM") {
-				const float radius = Clamp(props.Get(Property(prefix + ".radius")(.07f)).Get<float>(), 0.f, 1.f);
-				const float weight = Clamp(props.Get(Property(prefix + ".weight")(.25f)).Get<float>(), 0.f, 1.f);
+				const float radius = Clamp(props.Get(Property(prefix + ".radius")(.07)).Get<double>(), 0.0, 1.0);
+				const float weight = Clamp(props.Get(Property(prefix + ".weight")(.25)).Get<double>(), 0.0, 1.0);
 
 				imagePipeline->AddPlugin(new BloomFilterPlugin(radius, weight));
 			} else if (type == "OBJECT_ID_MASK") {
@@ -671,18 +671,18 @@ ImagePipeline *Film::CreateImagePipeline(const Properties &props, const string &
 
 				imagePipeline->AddPlugin(new ObjectIDMaskFilterPlugin(objectID));
 			} else if (type == "VIGNETTING") {
-				const float scale = Clamp(props.Get(Property(prefix + ".scale")(.4f)).Get<float>(), 0.f, 1.f);
+				const float scale = Clamp(props.Get(Property(prefix + ".scale")(.4)).Get<double>(), 0.0, 1.0);
 
 				imagePipeline->AddPlugin(new VignettingPlugin(scale));
 			} else if (type == "COLOR_ABERRATION") {
-				const Property defaultProp = Property(prefix + ".amount")(.005f);
+				const Property defaultProp = Property(prefix + ".amount")(.005);
 				const Property &prop = props.Get(defaultProp);
 				float scaleX, scaleY;
 				if (prop.GetSize() == 2) {
-					scaleX = Clamp(prop.Get<float>(0), 0.f, 1.f);
-					scaleY = Clamp(prop.Get<float>(1), 0.f, 1.f);
+					scaleX = Clamp(prop.Get<double>(0), 0.0, 1.0);
+					scaleY = Clamp(prop.Get<double>(1), 0.0, 1.0);
 				} else {
-					scaleX = Clamp(prop.Get<float>(), 0.f, 1.f);
+					scaleX = Clamp(prop.Get<double>(), 0.0, 1.0);
 					scaleY = scaleX;
 				}
 
@@ -691,29 +691,29 @@ ImagePipeline *Film::CreateImagePipeline(const Properties &props, const string &
 				imagePipeline->AddPlugin(new PremultiplyAlphaPlugin());
 			} else if (type == "MIST") {
 				const Spectrum color = props.Get(Property(prefix + ".color")(1.f, 1.f, 1.f)).Get<Spectrum>();
-				const float amount = Clamp(props.Get(Property(prefix + ".amount")(.005f)).Get<float>(), 0.f, 1.f);
-				const float start = Clamp(props.Get(Property(prefix + ".startdistance")(0.f)).Get<float>(), 0.f, INFINITY);
+				const float amount = Clamp(props.Get(Property(prefix + ".amount")(.005)).Get<double>(), 0.0, 1.0);
+				const float start = Clamp(props.Get(Property(prefix + ".startdistance")(0.0)).Get<double>(), 0.0, INFINITY_DBL);
 				// Make sure end is at least start + a small epsilon to avoid problems
-				const float end = Clamp(props.Get(Property(prefix + ".enddistance")(10000.f)).Get<float>(), start + 0.1f, INFINITY);
+				const float end = Clamp(props.Get(Property(prefix + ".enddistance")(10000.0)).Get<double>(), start + 0.1, INFINITY_DBL);
 				const bool excludeBackground = props.Get(Property(prefix + ".excludebackground")(false)).Get<bool>();
-			
+
 				imagePipeline->AddPlugin(new MistPlugin(color, amount, start, end, excludeBackground));
 			} else if (type == "BCD_DENOISER") {
-				const float warmUpSamplesPerPixel = Max(props.Get(Property(prefix + ".warmupspp")(2.f)).Get<float>(), 1.f);
-				const float histogramDistanceThreshold = Max(props.Get(Property(prefix + ".histdistthresh")(1.f)).Get<float>(), 0.f);
+				const float warmUpSamplesPerPixel = Max(props.Get(Property(prefix + ".warmupspp")(2.0)).Get<double>(), 1.0);
+				const float histogramDistanceThreshold = Max(props.Get(Property(prefix + ".histdistthresh")(1.0)).Get<double>(), 0.0);
 				const int patchRadius = Max(props.Get(Property(prefix + ".patchradius")(1)).Get<int>(), 1);
 				const int searchWindowRadius = Max(props.Get(Property(prefix + ".searchwindowradius")(6)).Get<int>(), 1);
-				const float minEigenValue = Max(props.Get(Property(prefix + ".mineigenvalue")(1.e-8f)).Get<float>(), 0.f);
+				const float minEigenValue = Max(props.Get(Property(prefix + ".mineigenvalue")(1.e-8)).Get<double>(), 0.0);
 				const bool useRandomPixelOrder = props.Get(Property(prefix + ".userandompixelorder")(true)).Get<bool>();
-				const float markedPixelsSkippingProbability = Clamp(props.Get(Property(prefix + ".markedpixelsskippingprobability")(1.f)).Get<float>(), 0.f, 1.f);
+				const float markedPixelsSkippingProbability = Clamp(props.Get(Property(prefix + ".markedpixelsskippingprobability")(1.0)).Get<double>(), 0.0, 1.0);
 				const int userThreadCount = Max(props.Get(Property(prefix + ".threadcount")(0)).Get<int>(), 0);
 				const int scales = Max(props.Get(Property(prefix + ".scales")(3)).Get<int>(), 1);
 				const bool filterSpikes = props.Get(Property(prefix + ".filterspikes")(false)).Get<bool>();
 				const bool applyDenoise = props.Get(Property(prefix + ".applydenoise")(true)).Get<bool>();
-				const float prefilterThresholdStDevFactor = props.Get(Property(prefix + ".spikestddev")(2.f)).Get<float>();
+				const float prefilterThresholdStDevFactor = props.Get(Property(prefix + ".spikestddev")(2.0)).Get<double>();
 
 				const int threadCount = (userThreadCount > 0) ? userThreadCount : GetHardwareThreadCount();
-				
+
 				imagePipeline->AddPlugin(new BCDDenoiserPlugin(
 						warmUpSamplesPerPixel,
 						histogramDistanceThreshold,
@@ -734,28 +734,28 @@ ImagePipeline *Film::CreateImagePipeline(const Properties &props, const string &
 			} else if (type == "INTEL_OIDN") {
 				const string filterType = props.Get(Property(prefix + ".filter.type")("RT")).Get<string>();
 				const int oidnMemLimit = props.Get(Property(prefix + ".oidnmemory")(6000)).Get<int>();
-				const float sharpness = Clamp(props.Get(Property(prefix + ".sharpness")(.1f)).Get<float>(), 0.f, 1.f);
+				const float sharpness = Clamp(props.Get(Property(prefix + ".sharpness")(.1)).Get<double>(), 0.0, 1.0);
 				const bool enablePrefiltering = props.Get(Property(prefix + ".prefilter.enable")(true)).Get<bool>();
 
 				imagePipeline->AddPlugin(new IntelOIDN(filterType, oidnMemLimit, sharpness, enablePrefiltering));
 #endif
 			} else if (type == "WHITE_BALANCE") {
-				const float temperature = Clamp(props.Get(Property(prefix + ".temperature")(6500.f)).Get<float>(), 1000.f, 40000.f);
+				const float temperature = Clamp(props.Get(Property(prefix + ".temperature")(6500.0)).Get<double>(), 1000.0, 40000.0);
 				const bool reverse = props.Get(Property(prefix + ".reverse")(true)).Get<bool>();
 				const bool normalize = props.Get(Property(prefix + ".normalize")(false)).Get<bool>();
 
 				imagePipeline->AddPlugin(new WhiteBalance(temperature, reverse, normalize));
 			} else if (type == "BAKEMAP_MARGIN") {
 				const u_int marginPixels = Max(props.Get(Property(prefix + ".margin")(2)).Get<u_int>(), 1u);
-				const float samplesThreshold = Max(props.Get(Property(prefix + ".samplesthreshold")(0.f)).Get<float>(), 0.f);
+				const float samplesThreshold = Max(props.Get(Property(prefix + ".samplesthreshold")(0.0)).Get<double>(), 0.0);
 				imagePipeline->AddPlugin(new BakeMapMarginPlugin(marginPixels, samplesThreshold));
 			} else if (type == "COLOR_LUT") {
 				const string fileName = props.Get(Property(prefix + ".file")("lut.cube")).Get<string>();
-				const float strength = Clamp(props.Get(Property(prefix + ".strength")(1.f)).Get<float>(), 0.f, 1.f);
+				const float strength = Clamp(props.Get(Property(prefix + ".strength")(1.0)).Get<double>(), 0.0, 1.0);
 				imagePipeline->AddPlugin(new ColorLUTPlugin(fileName, strength));
 #if !defined(LUXRAYS_DISABLE_CUDA)
 			} else if (type == "OPTIX_DENOISER") {
-				const float sharpness = Clamp(props.Get(Property(prefix + ".sharpness")(.1f)).Get<float>(), 0.f, 1.f);
+				const float sharpness = Clamp(props.Get(Property(prefix + ".sharpness")(.1)).Get<double>(), 0.0, 1.0);
 				const u_int minSPP = props.Get(Property(prefix + ".minspp")(0)).Get<u_int>();
 				imagePipeline->AddPlugin(new OptixDenoiserPlugin(sharpness, minSPP));
 #endif
@@ -880,8 +880,8 @@ void Film::Parse(const Properties &props) {
 		convTest = NULL;
 
 		haltNoiseThreshold = props.Get(Property("batch.haltnoisethreshold")(
-				props.Get(Property("batch.haltthreshold")(-1.f)).Get<float>()
-				)).Get<float>();
+				props.Get(Property("batch.haltthreshold")(-1.0)).Get<double>()
+				)).Get<double>();
 
 		if (haltNoiseThreshold > 0.f) {
 			haltNoiseThresholdWarmUp = props.Get(Property("batch.haltnoisethreshold.warmup")(

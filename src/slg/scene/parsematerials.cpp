@@ -164,7 +164,7 @@ Material *Scene::CreateMaterial(const u_int defaultMatID, const string &matName,
             GetTexture(props.Get(Property(propName + ".normaltex")(1.f))) : NULL;
 
         if (normalTex) {
-			const float scale = Max(0.f, props.Get(Property(propName + ".normaltex.scale")(1.f)).Get<float>());
+			const float scale = Max(0.0, props.Get(Property(propName + ".normaltex.scale")(1.0)).Get<double>());
 
             Texture *implBumpTex = new NormalMapTexture(normalTex, scale);
 			implBumpTex->SetName(NamedObject::GetUniqueName("Implicit-NormalMapTexture"));
@@ -174,7 +174,7 @@ Material *Scene::CreateMaterial(const u_int defaultMatID, const string &matName,
         }
     }
 
-    const float bumpSampleDistance = props.Get(Property(propName + ".bumpsamplingdistance")(.001f)).Get<float>();
+    const float bumpSampleDistance = props.Get(Property(propName + ".bumpsamplingdistance")(.001f)).Get<double>();
 
 	Material *mat;
 	if (matType == "matte") {
@@ -380,8 +380,8 @@ Material *Scene::CreateMaterial(const u_int defaultMatID, const string &matName,
 		const Texture *weft_ks = GetTexture(props.Get(Property(propName + ".weft_ks")(.5f, .5f, .5f)));
 		const Texture *warp_kd = GetTexture(props.Get(Property(propName + ".warp_kd")(.5f, .5f, .5f)));
 		const Texture *warp_ks = GetTexture(props.Get(Property(propName + ".warp_ks")(.5f, .5f, .5f)));
-		const float repeat_u = props.Get(Property(propName + ".repeat_u")(100.0f)).Get<float>();
-		const float repeat_v = props.Get(Property(propName + ".repeat_v")(100.0f)).Get<float>();
+		const float repeat_u = props.Get(Property(propName + ".repeat_u")(100.0f)).Get<double>();
+		const float repeat_v = props.Get(Property(propName + ".repeat_v")(100.0f)).Get<double>();
 
 		mat = new ClothMaterial(frontTransparencyTex, backTransparencyTex, emissionTex, bumpTex, preset, weft_kd, weft_ks, warp_kd, warp_ks, repeat_u, repeat_v);
 	} else if (matType == "carpaint") {
@@ -520,15 +520,15 @@ Material *Scene::CreateMaterial(const u_int defaultMatID, const string &matName,
 
 	// Gain is not really a color so I avoid to use GetColor()
 	mat->SetEmittedGain(props.Get(Property(propName + ".emission.gain")(Spectrum(1.f))).Get<Spectrum>());
-	mat->SetEmittedPower(Max(0.f, props.Get(Property(propName + ".emission.power")(0.f)).Get<float>()));
+	mat->SetEmittedPower(Max(0.0, props.Get(Property(propName + ".emission.power")(0.0)).Get<double>()));
 	mat->SetEmittedPowerNormalize(props.Get(Property(propName + ".emission.normalizebycolor")(true)).Get<bool>());
 	mat->SetEmittedGainNormalize(props.Get(Property(propName + ".emission.gain.normalizebycolor")(false)).Get<bool>());
-	mat->SetEmittedEfficency(Max(0.f, props.Get(Property(propName + ".emission.efficiency")(0.f), propName + ".emission.efficency").Get<float>()));
-	mat->SetEmittedTheta(Clamp(props.Get(Property(propName + ".emission.theta")(90.f)).Get<float>(), 0.f, 90.f));
+	mat->SetEmittedEfficency(Max(0.0, props.Get(Property(propName + ".emission.efficiency")(0.0), propName + ".emission.efficency").Get<double>()));
+	mat->SetEmittedTheta(Clamp(props.Get(Property(propName + ".emission.theta")(90.0)).Get<double>(), 0.0, 90.0));
 	mat->SetLightID(props.Get(Property(propName + ".emission.id")(0u)).Get<u_int>());
-	mat->SetEmittedImportance(props.Get(Property(propName + ".emission.importance")(1.f)).Get<float>());
-	mat->SetEmittedTemperature(props.Get(Property(propName + ".emission.temperature")(-1.f)).Get<float>());
-	mat->SetEmittedTemperatureNormalize(props.Get(Property(propName + ".emission.temperature.normalize")(false)).Get<float>());
+	mat->SetEmittedImportance(props.Get(Property(propName + ".emission.importance")(1.0)).Get<double>());
+	mat->SetEmittedTemperature(props.Get(Property(propName + ".emission.temperature")(-1.f)).Get<double>());
+	mat->SetEmittedTemperatureNormalize(props.Get(Property(propName + ".emission.temperature.normalize")(false)).Get<double>());
 
 	mat->SetPassThroughShadowTransparency(GetColor(props.Get(Property(propName + ".transparency.shadow")(Spectrum(0.f)))));
 
