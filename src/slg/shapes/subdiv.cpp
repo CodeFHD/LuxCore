@@ -475,7 +475,18 @@ static Far::TopologyRefiner* createFarTopologyRefiner(const ExtTriangleMesh* src
 }  // ~namespace simple
 
 ////////////////////////////////////////////////////////////////////////////
-// Adaptive
+//						Enhanced mode
+//
+// Enhanced mode characteristics:
+// - Separate control on subdivision and tessellation
+// - Adaptive subdivision (nota bene: in the sense of opensubdiv, not Blender)
+// - Parallelized tessellation
+// - Parallelized evaluation
+//
+// We use opensubdiv concepts and vocabulary:
+// - Subdivision is NOT tessellation
+// - Positions are NOT coordinates
+// (please read the docs)
 
 namespace enhanced {
 
