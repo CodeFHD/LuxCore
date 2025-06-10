@@ -916,16 +916,7 @@ void Evaluate(
 ) {
 	SDL_LOG("Subdiv - Adaptive - Evaluate");
 
-	// Some constants
 	const auto& topology = surface.refiner->GetLevel(0);
-
-	// Offset  TODO
-	int offset = topology.GetNumVertices();
-	int tessPosCount = offset + topology.GetNumEdges();
-	tessPos.clear();
-	tessNormals.clear();
-	tessPos.resize(tessPosCount);
-	tessNormals.resize(tessPosCount);
 
 	tessPos.resize(localCoords.size());
 	tessNormals.resize(localCoords.size());
@@ -984,37 +975,6 @@ void Evaluate(
 }
 
 
-
-
-// TODO Merge with ApplySubdiv
-void AdaptiveSubdivImpl(
-	const PosVector& basePositions,
-	const TriVector& baseTriangles,
-	u_int maxLevel,
-	PosVector& tessPositions,
-	PosVector& tessNormals,
-	TriVector& tessTriangles
-) {
-
-	// Clear output structures
-	tessPositions.clear();
-	tessNormals.clear();
-	tessTriangles.clear();
-
-	// Create limit surface (subdivided) from base geometry
-	Surface surface(basePositions, baseTriangles, maxLevel);
-
-	// Tessellate
-	std::vector<LocalCoords> localCoords;  // We temporarily store new positions as (face, i, j)
-	size_t tessellationRate = 1 << maxLevel;
-	Tessellate(surface, tessellationRate, localCoords, tessTriangles);
-
-	// Evaluate
-	Evaluate(surface, tessellationRate, localCoords, tessPositions, tessNormals);
-
-}
-
-
 ExtTriangleMesh *ApplySubdiv(
 	ExtTriangleMesh *srcMesh,
 	const u_int maxLevel
@@ -1038,19 +998,22 @@ ExtTriangleMesh *ApplySubdiv(
 		basePositions[i][2] = meshVertices[i].z;
 	}
 
-
+	// Output structures
 	PosVector tessPositions;
 	PosVector tessNormals;
 	TriVector tessTriangles;
 
-	AdaptiveSubdivImpl(
-		basePositions,
-		baseTriangles,
-		maxLevel,
-		tessPositions,
-		tessNormals,
-		tessTriangles
-	);
+	// Create limit surface (subdivided) from base geometry
+	Surface surface(basePositions, baseTriangles, maxLevel);
+
+	// Tessellate
+	std::vector<LocalCoords> localCoords;  // We temporarily store new positions as (face, i, j)
+	size_t tessellationRate = 1 << maxLevel;
+	Tessellate(surface, tessellationRate, localCoords, tessTriangles);
+
+	// Evaluate
+	Evaluate(surface, tessellationRate, localCoords, tessPositions, tessNormals);
+
 	basePositions = tessPositions;
 	baseTriangles = tessTriangles;
 
