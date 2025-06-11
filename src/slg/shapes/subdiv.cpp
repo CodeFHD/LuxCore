@@ -918,12 +918,13 @@ void Tessellate (
 
 		// Lambda to get a point in the pointMap, given (i, j)
 		auto pnt = [N, &pointMap](int i, int j) {
-			int idx = (2 * N + 3 - j) * j / 2 + i; // Index of a point in the pointMap, given (i, j)
+			int idx = (2 * N + 3 - j) * j / 2 + i;
 			return pointMap[idx];
 		};
 
-		// Up triangles
 		int idxTri = f * N * N;
+
+		// Up triangles
 		for (int j = 0; j < N; ++j) {
 			for (int i = 0; i < N - j; ++i, ++idxTri) {
 				tessTris[idxTri] = Tri(pnt(i, j), pnt(i + 1, j), pnt(i, j + 1));
@@ -971,9 +972,7 @@ void Evaluate(
 			surface.patchMap->FindPatch(ptexFace, coords.x, coords.y);
 		assert(handle);
 
-		float pWeights[20];
-		float duWeights[20];
-		float dvWeights[20];
+		float pWeights[20], duWeights[20], dvWeights[20];
 		surface.patchTable->EvaluateBasis(
 			*handle, coords.x, coords.y, pWeights, duWeights, dvWeights
 		);
@@ -988,16 +987,15 @@ void Evaluate(
 		Pos dv{0.0f, 0.0f, 0.0f};
 		for (int cv = 0; cv < cvIndices.size(); ++cv) {
 			int cvIndex = cvIndices[cv];
-			// TODO Simplify
-			if (cvIndex < numBaseVerts) {
-				pos.AddWithWeight(surface.basePositions[cvIndex], pWeights[cv]);
-				du.AddWithWeight(surface.basePositions[cvIndex], duWeights[cv]);
-				dv.AddWithWeight(surface.basePositions[cvIndex], dvWeights[cv]);
-			} else {
-				pos.AddWithWeight(surface.localPositions[cvIndex - numBaseVerts], pWeights[cv]);
-				du.AddWithWeight(surface.localPositions[cvIndex - numBaseVerts], duWeights[cv]);
-				dv.AddWithWeight(surface.localPositions[cvIndex - numBaseVerts], dvWeights[cv]);
-			}
+
+			auto& position =
+				(cvIndex < numBaseVerts) ?
+				surface.basePositions[cvIndex] :
+				surface.localPositions[cvIndex - numBaseVerts];
+
+			pos.AddWithWeight(position, pWeights[cv]);
+			du.AddWithWeight(position, duWeights[cv]);
+			dv.AddWithWeight(position, dvWeights[cv]);
 		}
 
 		// Update output (position and normal)
@@ -1049,10 +1047,6 @@ ExtTriangleMesh *ApplySubdiv(
 
 	// Evaluate
 	Evaluate(surface, tessCoords, tessPositions, tessNormals);
-
-	// TODO
-	basePositions = tessPositions;
-	baseTriangles = tessTriangles;
 
 	SDL_LOG("Subdiv - Adaptive - Building new mesh");
 
