@@ -34,15 +34,18 @@ public:
 		luxrays::ExtTriangleMesh *srcMesh,
 		const u_int maxLevel,
 		const float maxEdgeScreenSize,
-		const bool adaptive
+		const std::string mode
 	);
 	virtual ~SubdivShape();
 
 	virtual ShapeType GetType() const { return SUBDIV; }
 
 	static float MaxEdgeScreenSize(const Camera *camera, luxrays::ExtTriangleMesh *srcMesh);
-	static luxrays::ExtTriangleMesh *ApplySubdiv(luxrays::ExtTriangleMesh *srcMesh,
-			const u_int maxLevel, const bool adaptive);
+	static luxrays::ExtTriangleMesh *ApplySubdiv(
+		luxrays::ExtTriangleMesh *srcMesh,
+		const u_int maxLevel,
+		const std::string mode
+	);
 
 protected:
 	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);

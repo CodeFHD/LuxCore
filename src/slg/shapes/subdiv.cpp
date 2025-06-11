@@ -151,7 +151,7 @@ ExtTriangleMesh *ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int maxLevel) {
 	std::unique_ptr<Far::TopologyRefiner> refiner(createFarTopologyRefiner(srcMesh));
 
 	// Refine the topology up to 'maxlevel'
-	SDL_LOG("Subdiv - Refining (uniform)");
+	SDL_LOG("Subdivision - Refining (uniform)");
 	Far::TopologyRefiner::UniformOptions refiner_options(maxLevel);
 	refiner_options.fullTopologyInLastLevel = true;
 	refiner->RefineUniform(refiner_options);
@@ -173,8 +173,8 @@ ExtTriangleMesh *ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int maxLevel) {
 	const int nRefinedFaces = refLastLevel.GetNumFaces(); // Coarse face count
 	const int totalVertsCount = nCoarseVerts + nRefinedVerts;  // Total vertex count
 
-	SDL_LOG("Subdiv - Refined vertices: " << nRefinedVerts);
-	SDL_LOG("Subdiv - Refined triangles: " << nRefinedFaces);
+	SDL_LOG("Subdivision - Refined vertices: " << nRefinedVerts);
+	SDL_LOG("Subdivision - Refined triangles: " << nRefinedFaces);
 
 
 	//--------------------------------------------------------------------------
@@ -206,7 +206,6 @@ ExtTriangleMesh *ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int maxLevel) {
 		// Append local point stencils
 		const auto *localPointStencilTable = patchTable->GetLocalPointStencilTable();
 		if (localPointStencilTable) {
-			SDL_LOG("Subdiv - Handling local points");
 			StencilTablePtr combinedTable(
 				Far::StencilTableFactory::AppendLocalPointStencilTable(
 					*refiner, stencilTable.get(), localPointStencilTable
@@ -218,7 +217,7 @@ ExtTriangleMesh *ApplySubdiv(ExtTriangleMesh *srcMesh, const u_int maxLevel) {
 		}
 	}
 
-	SDL_LOG("Subdiv - Stencil and patch tables created");
+	SDL_LOG("Subdivision - Stencil and patch tables created");
 
 	//--------------------------------------------------------------------------
 	// Set buffers and evaluate primvar from stencils
@@ -298,7 +297,7 @@ nRefinedVerts
 		}
 	}
 
-	SDL_LOG("Subdiv - Buffers built");
+	SDL_LOG("Subdivision - Buffers built");
 
 	//--------------------------------------------------------------------------
 	// Build the new mesh
@@ -679,7 +678,7 @@ struct Surface {
 		baseTriangles(p_baseTriangles),
 		maxLevel(p_maxLevel)
 	{
-		SDL_LOG("Subdiv - Adaptive - Computing limit surface");
+		SDL_LOG("Subdivision (enhanced) - Computing limit surface");
 
 		// Initialize patch table options
 		Far::PatchTableFactory::Options patchOptions(maxLevel);
@@ -776,7 +775,7 @@ void Tessellate (
 
 	// Check
 	SDL_LOG(
-		"Subdiv - Apdative - Tessellating "
+		"Subdivision (enhanced) - Tessellating "
 		<< FACE_COUNT
 		<< " faces with factor N="
 		<< N
@@ -808,28 +807,29 @@ void Tessellate (
 		+ numEdgeInteriorPoints * topology.GetNumEdges()
 		+ numTriangleInteriorPoints * topology.GetNumFaces();
 
-	SDL_LOG("Number of coords: " << numCoords);
-
 	// Size tessTris and tessCoords
 	tessTris.resize(FACE_COUNT * N * N);
 	tessCoords.resize(numCoords);
+
+	// Get vertex local coordinates in given face
+	auto getVertexLocalCoords = [&topology](int face, int vertex) {
+		auto faceVertices = topology.GetFaceVertices(face);
+		if (vertex == faceVertices[0]) {
+			return LocalCoords(face, 0.f, 0.f);
+		} else if (vertex == faceVertices[1]) {
+			return LocalCoords(face, 1.f, 0.f);
+		} else if (vertex == faceVertices[2]) {
+			return LocalCoords(face, 0.f, 1.f);
+		}
+
+		throw std::runtime_error("Error in getVertexLocalCoords");
+	};
 
 	// Step #1 - Initialize with initial (coarse) vertices
 	#pragma omp parallel for
 	for (int vertex = 0; vertex < numCoarseVertices; ++vertex) {
 		int face = topology.GetVertexFaces(vertex)[0];  // Choose first face (arbitrary)
-		auto faceVertices = topology.GetFaceVertices(face);
-		float x, y;
-		if (vertex == faceVertices[0]) {
-			x = 0.f; y = 0.f;
-		} else if (vertex == faceVertices[1]) {
-			x = 1.f; y = 0.f;
-		} else if (vertex == faceVertices[2]) {
-			x = 0.f; y = 1.f;
-		} else {
-			throw std::runtime_error("Error in getVertexLocalCoords");
-		}
-		tessCoords[vertex] = LocalCoords(face, x, y);
+		tessCoords[vertex] = getVertexLocalCoords(face, vertex);
 	}
 	offset = numCoarseVertices;
 
@@ -843,8 +843,8 @@ void Tessellate (
 		int v0 = edgeVerts[0];
 		int v1 = edgeVerts[1];
 
-		LocalCoords c0 = getVertexLocalCoords(v0, face);
-		LocalCoords c1 = getVertexLocalCoords(v1, face);
+		LocalCoords c0 = getVertexLocalCoords(face, v0);
+		LocalCoords c1 = getVertexLocalCoords(face, v1);
 
 		for (int i = 1; i < N; ++i) {  // Only edge interior vertices, not extremities
 			LocalCoords coords(c0, c1, i, N);  // Interpolate from c0 and c1
@@ -953,7 +953,7 @@ void Evaluate(
 	PosVector& tessPos,
 	PosVector& tessNormals
 ) {
-	SDL_LOG("Subdiv - Adaptive - Evaluating");
+	SDL_LOG("Subdivision (enhanced) - Evaluating");
 
 	const auto& topology = surface.refiner->GetLevel(0);
 
@@ -1014,7 +1014,6 @@ ExtTriangleMesh *ApplySubdiv(
 	ExtTriangleMesh *srcMesh,
 	const u_int maxLevel
 ) {
-	SDL_LOG("Subdiv - Adaptive - Starting");
 
 	// Initialize internal structures
 	TriVector baseTriangles(srcMesh->GetTotalTriangleCount());
@@ -1053,11 +1052,18 @@ ExtTriangleMesh *ApplySubdiv(
 	// Evaluate
 	Evaluate(surface, tessCoords, tessPositions, tessNormals);
 
-	SDL_LOG("Subdiv - Adaptive - Building new mesh");
+	// Compute dimensions
+	size_t pointCount = tessPositions.size();
+	size_t normCount = tessNormals.size();
+	size_t triCount = tessTriangles.size();
+
+	SDL_LOG(
+		"Subdivision (enhanced) - Building new mesh: "
+		<< pointCount << " points, "
+		<< triCount << " triangles"
+	);
 
 	// New vertices
-	size_t pointCount = tessPositions.size();
-	SDL_LOG("Subdiv - Adaptive - " << pointCount << " points");
 	Point *newVerts = TriangleMesh::AllocVerticesBuffer(pointCount);
 	#pragma omp parallel for
 	for (int i = 0; i < pointCount; ++i) {
@@ -1068,8 +1074,6 @@ ExtTriangleMesh *ApplySubdiv(
 	}
 
 	// New normals
-	size_t normCount = tessNormals.size();
-	SDL_LOG("Subdiv - Adaptive - " << normCount << " normals");
 	Normal *newNormals = new Normal[pointCount];
 	#pragma omp parallel for
 	for (int i = 0; i < normCount; ++i) {
@@ -1081,8 +1085,6 @@ ExtTriangleMesh *ApplySubdiv(
 	}
 
 	// New triangles
-	size_t triCount = tessTriangles.size();
-	SDL_LOG("Subdiv - Adaptive - " << triCount << " triangles");
 	Triangle *newTris = TriangleMesh::AllocTrianglesBuffer(triCount);
 	#pragma omp parallel for
 	for (int face = 0; face < triCount; ++face) {
@@ -1113,8 +1115,13 @@ ExtTriangleMesh *ApplySubdiv(
 //////////////////////////
 
 
-SubdivShape::SubdivShape(const Camera *camera, ExtTriangleMesh *srcMesh,
-		const u_int maxLevel, const float maxEdgeScreenSize, const bool adaptive) {
+SubdivShape::SubdivShape(
+	const Camera *camera,
+	ExtTriangleMesh *srcMesh,
+	const u_int maxLevel,
+	const float maxEdgeScreenSize,
+	const std::string mode
+) {
 	const double startTime = WallClockTime();
 
 	if ((maxEdgeScreenSize > 0.f) && !camera) {
@@ -1136,7 +1143,7 @@ SubdivShape::SubdivShape(const Camera *camera, ExtTriangleMesh *srcMesh,
 					break;
 
 				// Subdivide by one level and re-try
-				ExtTriangleMesh *newMesh = ApplySubdiv(mesh, 1, adaptive);
+				ExtTriangleMesh *newMesh = ApplySubdiv(mesh, 1, mode);
 				SDL_LOG("Subdivided shape step #" << i << " from " << mesh->GetTotalTriangleCount() << " to " << newMesh->GetTotalTriangleCount() << " faces");
 
 				// Replace old mesh with new one
@@ -1146,7 +1153,7 @@ SubdivShape::SubdivShape(const Camera *camera, ExtTriangleMesh *srcMesh,
 		} else {
 			SDL_LOG("Subdividing shape " << srcMesh->GetName() << " at level: " << maxLevel);
 
-			mesh = ApplySubdiv(srcMesh, maxLevel, adaptive);
+			mesh = ApplySubdiv(srcMesh, maxLevel, mode);
 		}
 	} else {
 		// Nothing to do, just make a copy
@@ -1220,7 +1227,9 @@ float SubdivShape::MaxEdgeScreenSize(const Camera *camera, ExtTriangleMesh *srcM
 
 
 ExtTriangleMesh *SubdivShape::ApplySubdiv(
-	ExtTriangleMesh *srcMesh, const u_int maxLevel, const bool adaptive
+	ExtTriangleMesh *srcMesh,
+	const u_int maxLevel,
+	const std::string mode
 ) {
 	//--------------------------------------------------------------------------
 	// Check data
@@ -1230,17 +1239,31 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(
 	assert(srcMesh->GetTotalVertexCount() <= std::numeric_limits<int>::max());
 	assert(srcMesh->GetTotalTriangleCount() <= std::numeric_limits<int>::max());
 
+	if (maxLevel <= 0) {
+		SDL_LOG("Subdivision: level <= 0 - Skipping");
+		return srcMesh;
+	}
 
-	// TODO
-	if (adaptive) {
-		SDL_LOG("Subdiv - Refining (adaptive)");
+	std::string upper_mode = mode;
+	std::transform(
+		upper_mode.cbegin(),
+		upper_mode.cend(),
+		upper_mode.begin(),
+		[](unsigned char c){ return std::toupper(c); }
+	);
+
+	if (upper_mode == "ENHANCED") {
+		SDL_LOG("Subdivision (enhanced) - Starting");
 
 		return enhanced::ApplySubdiv(srcMesh, maxLevel);
 	}
-	else {
-		SDL_LOG("Subdiv - Refining (adaptive)");
+	else if (upper_mode == "PLAIN") {
+		SDL_LOG("Subdivision - Starting");
 
 		return simple::ApplySubdiv(srcMesh, maxLevel);
+	}
+	else {
+		throw std::runtime_error("Subdivision: unknown mode '" + mode + "'");
 	}
 }
 

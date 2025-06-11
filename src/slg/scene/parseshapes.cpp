@@ -269,14 +269,14 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 
 		const u_int maxLevel = props.Get(Property(propName + ".maxlevel")(2)).Get<u_int>();
 		const float maxEdgeScreenSize = Max(props.Get(Property(propName + ".maxedgescreensize")(0.0)).Get<double>(), 0.0);
-		const bool subdivAdaptive = props.Get(Property(propName + ".adaptive")(false)).Get<bool>();
+		const std::string subdivMode = props.Get(Property(propName + ".mode")("normal")).Get<string>();
 
 		shape = new SubdivShape(
 			camera,
 			(ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
 			maxLevel,
 			maxEdgeScreenSize,
-			subdivAdaptive
+			subdivMode
 		);
 	} else if (shapeType == "displacement") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
