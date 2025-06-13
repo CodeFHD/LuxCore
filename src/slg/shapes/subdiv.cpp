@@ -483,8 +483,13 @@ static Far::TopologyRefiner* createFarTopologyRefiner(const ExtTriangleMesh* src
 // - Parallelized evaluation
 //
 // We use opensubdiv concepts and vocabulary:
+//
 // - Subdivision is NOT tessellation
-// - Positions are NOT coordinates
+//   (https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#subdivision-versus-tessellation)
+//
+// - Topology and Primvar are separate things
+//   (https://graphics.pixar.com/opensubdiv/docs/far_overview.html#feature-adaptive-representation-far)
+//
 // (please read the docs)
 
 namespace enhanced {
@@ -678,32 +683,40 @@ struct Surface {
 		baseTriangles(p_baseTriangles),
 		maxLevel(p_maxLevel)
 	{
-		SDL_LOG("Subdivision (enhanced) - Computing limit surface");
+		SDL_LOG("Subdivision (enhanced) - Computing patches");
 
 		// Initialize patch table options
-		Far::PatchTableFactory::Options patchOptions(maxLevel);
-		//patchOptions.useInfSharpPatch = true;
-		patchOptions.generateVaryingTables = false;
-		patchOptions.shareEndCapPatchPoints = true;
-		patchOptions.endCapType =
-			Far::PatchTableFactory::Options::ENDCAP_GREGORY_BASIS;
+		Far::PatchTableFactory::Options patchTableOptions(maxLevel);
+		patchTableOptions.useInfSharpPatch = true;
+		patchTableOptions.generateVaryingTables = false;
 
-		// Construct refiner and associated ptex
+		// Note: ENDCAP_GREGORY_BASIS can generate null normals
+		// (try with Suzanne, level=3...):
+		// please avoid...
+		patchTableOptions.endCapType =
+			Far::PatchTableFactory::Options::ENDCAP_BSPLINE_BASIS;
+
+		// Construct refiner
 		refiner = std::move(
-			createTopologyAdaptiveRefiner(basePositions, baseTriangles, patchOptions)
+			createTopologyAdaptiveRefiner(
+				basePositions,
+				baseTriangles,
+				patchTableOptions
+			)
 		);
-		ptexIndices.reset(new Far::PtexIndices(*refiner));
 
 		// Apply adaptive refinement and construct the associated PatchTable to
 		// evaluate the limit surface:
-		refiner->RefineAdaptive(patchOptions.GetRefineAdaptiveOptions());
+		refiner->RefineAdaptive(patchTableOptions.GetRefineAdaptiveOptions());
 
 		// Construct the associated PatchTable to evaluate the limit surface:
-		patchTable.reset(Far::PatchTableFactory::Create(*refiner, patchOptions));
+		patchTable.reset(Far::PatchTableFactory::Create(*refiner, patchTableOptions));
+
+		// Construct ptex indices table
+		ptexIndices.reset(new Far::PtexIndices(*refiner));
 
 		// Construct patch map
 		patchMap.reset(new Far::PatchMap(*patchTable));
-
 
 		// Set localPositions
 		int nBaseVertices    = refiner->GetLevel(0).GetNumVertices();
@@ -725,8 +738,11 @@ struct Surface {
 		}
 		if (nLocalPoints) {
 			patchTable->GetLocalPointStencilTable()->UpdateValues(
-					&basePositions[0], nBaseVertices, &localPositions[0],
-					&localPositions[nRefinedVertices]);
+				&basePositions[0],
+				nBaseVertices,
+				&localPositions[0],
+				&localPositions[nRefinedVertices]
+			);
 		}
 	}
 };
@@ -777,7 +793,8 @@ void Tessellate (
 	SDL_LOG(
 		"Subdivision (enhanced) - Tessellating "
 		<< FACE_COUNT
-		<< " faces with factor N="
+		<< " faces / " << topology.GetNumVertices()
+		<< " points with factor N="
 		<< N
 	);
 	if (FACE_COUNT * N * N >= std::numeric_limits<int>::max()) {
@@ -966,9 +983,9 @@ void Evaluate(
 	#pragma omp parallel for
 	for (int vertex = 0; vertex < tessCoords.size(); ++vertex) {
 		// Init
-		auto coords = tessCoords[vertex];
+		auto& coords = tessCoords[vertex];
 
-		// Translate local coords in global ones
+		// Translate in ptex face
 		int ptexFace = surface.ptexIndices->GetFaceId(coords.face);
 
 		//  Locate the patch corresponding to the face ptex idx and (s,t)
@@ -977,9 +994,12 @@ void Evaluate(
 			surface.patchMap->FindPatch(ptexFace, coords.x, coords.y);
 		assert(handle);
 
-		float pWeights[20], duWeights[20], dvWeights[20];
+		float pWeights[20];
+		float duWeights[20];
+		float dvWeights[20];
 		surface.patchTable->EvaluateBasis(
-			*handle, coords.x, coords.y, pWeights, duWeights, dvWeights
+			*handle, coords.x, coords.y,
+			pWeights, duWeights, dvWeights
 		);
 
 		//  Identify the patch cvs and combine with the evaluated weights --
@@ -1006,7 +1026,19 @@ void Evaluate(
 		// Update output (position and normal)
 		tessPos[vertex] = pos;
 		tessNormals[vertex] = du * dv;
-	}  // ~for coords
+
+		// Check validity of normal
+		auto t = tessNormals[vertex];
+		if (t[0] == 0.f && t[1] == 0.f && t[2] == 0.f) {
+			SDL_LOG(
+				"Subdivision (enhanced) - Vertex #" << vertex << ", "
+				<< "uv = (" << coords.x << ", " << coords.y << "), "
+				<< "du = (" << du[0] << ", " << du[1] << ", " << du[2] << "), "
+				<< "dv = (" << dv[0] << ", " << dv[1] << ", " << dv[2] << ")"
+			);
+			throw std::runtime_error("Null normal (vect(du, dv) == 0)");
+		}
+	}  // ~for vertex
 }
 
 
@@ -1074,7 +1106,7 @@ ExtTriangleMesh *ApplySubdiv(
 	}
 
 	// New normals
-	Normal *newNormals = new Normal[pointCount];
+	Normal *newNormals = new Normal[normCount];
 	#pragma omp parallel for
 	for (int i = 0; i < normCount; ++i) {
 		Normal* norm = newNormals + i;
