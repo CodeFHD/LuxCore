@@ -528,43 +528,43 @@ namespace enhanced {
 //};
 
 // TODO Extend Point rather
-struct Vec3: Point {
+//struct Vec3: Point {
 
-	// Minimal required interface
-	Vec3() {}
+	//// Minimal required interface
+	//Vec3() {}
 
-	Vec3(Point& point) : Point(point) {}
+	//Vec3(Point& point) : Point(point) {}
 
-	Vec3(std::initializer_list<float> src) {
-		assert(src.size() == 3);
-		x = src.begin()[0]; // note the replacement for absent operator[]
-		y = src.begin()[1];
-		z = src.begin()[2];
-	}
+	//Vec3(std::initializer_list<float> src) {
+		//assert(src.size() == 3);
+		//x = src.begin()[0]; // note the replacement for absent operator[]
+		//y = src.begin()[1];
+		//z = src.begin()[2];
+	//}
 
-	void Clear(void* = nullptr) {
-		x = y = z = 0.f;
-	}
+	//void Clear(void* = nullptr) {
+		//x = y = z = 0.f;
+	//}
 
-	inline void AddWithWeight(const Point& src, const float weight) {
-		x += src.x * weight;
-		y += src.y * weight;
-		z += src.z * weight;
-	}
+	//inline void AddWithWeight(const Point& src, const float weight) {
+		//x += src.x * weight;
+		//y += src.y * weight;
+		//z += src.z * weight;
+	//}
 
-};
+//};
 
-// Vector product
-Normal operator * (Vec3 u, Vec3 v) {
-	Normal r;
-	r[0] = u[1] * v[2] - u[2] * v[1];
-	r[1] = u[2] * v[0] - u[0] * v[2];
-	r[2] = u[0] * v[1] - u[1] * v[0];
+//// Vector product
+//Normal operator * (Vec3 u, Vec3 v) {
+	//Normal r;
+	//r[0] = u[1] * v[2] - u[2] * v[1];
+	//r[1] = u[2] * v[0] - u[0] * v[2];
+	//r[2] = u[0] * v[1] - u[1] * v[0];
 
-	return r;
-}
+	//return r;
+//}
 
-using PosVector = std::vector<Vec3>;
+//using PosVector = std::vector<Vec3>;
 // TODO
 //template<size_t DIMENSION>
 //struct SubdivBuffer: std::vector< SubdivVec<DIMENSION> > {
@@ -696,6 +696,7 @@ TopologyRefinerPtr createTopologyAdaptiveRefiner(
 
 // Subdivision limit surface
 struct Surface {
+
 	TopologyRefinerPtr refiner;
 	PtexIndicesPtr ptexIndices;
 	PatchTablePtr patchTable;
@@ -703,7 +704,9 @@ struct Surface {
 	const Point* basePositions;  // TODO
 	const int numBasePositions;
 	//const Triangle* baseTriangles; // TODO
-	PosVector localPositions;
+	Point* localPositions;
+	int numLocalPositions;
+	//PosVector localPositions; // TODO
 	int maxLevel;
 
 	Surface(
@@ -759,7 +762,9 @@ struct Surface {
 		int nRefinedVertices = refiner->GetNumVerticesTotal() - nBaseVertices;
 		int nLocalPoints     = patchTable->GetNumLocalPoints();
 
-		localPositions.resize(nRefinedVertices + nLocalPoints);
+		numLocalPositions = nRefinedVertices + nLocalPoints;
+		localPositions = TriangleMesh::AllocVerticesBuffer(numLocalPositions);
+		//localPositions.resize(nRefinedVertices + nLocalPoints); TODO
 
 		if (nRefinedVertices) {
 			Far::PrimvarRefiner primvarRefiner(*refiner);
@@ -1126,17 +1131,17 @@ ExtTriangleMesh *ApplySubdiv(
 		//}
 	//}
 
-	// TODO
-	PosVector basePositions;
-	int numVertices = srcMesh->GetTotalVertexCount();
-	basePositions.resize(numVertices);
-	auto meshVertices = srcMesh->GetVertices();
-	#pragma omp parallel for
-	for (int i = 0; i < numVertices; ++i) {
-		basePositions[i][0] = meshVertices[i].x;
-		basePositions[i][1] = meshVertices[i].y;
-		basePositions[i][2] = meshVertices[i].z;
-	}
+	//// TODO
+	//PosVector basePositions;
+	//int numVertices = srcMesh->GetTotalVertexCount();
+	//basePositions.resize(numVertices);
+	//auto meshVertices = srcMesh->GetVertices();
+	//#pragma omp parallel for
+	//for (int i = 0; i < numVertices; ++i) {
+		//basePositions[i][0] = meshVertices[i].x;
+		//basePositions[i][1] = meshVertices[i].y;
+		//basePositions[i][2] = meshVertices[i].z;
+	//}
 
 	// Create limit surface (subdivided) from base geometry
 	Surface surface(srcMesh, maxLevel);
