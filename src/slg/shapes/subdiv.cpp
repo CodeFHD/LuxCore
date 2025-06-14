@@ -494,122 +494,6 @@ static Far::TopologyRefiner* createFarTopologyRefiner(const ExtTriangleMesh* src
 
 namespace enhanced {
 
-// TODO
-//template <size_t DIMENSION> struct SubdivVec: std::array<float, DIMENSION> {
-	//// Minimal required interface
-	//SubdivVec() {}
-
-	//SubdivVec(const float * src) {
-		//for (size_t i = 0; i < DIMENSION; ++i) {
-			//(*this)[i] = *(src + i);
-		//}
-	//}
-	//SubdivVec(std::initializer_list<float> src) {
-		//assert(src.size() == DIMENSION);
-		//for (int i=0; auto e: src) {
-			//(*this)[i++] = e;
-		//}
-	//}
-
-	//void Clear(void* = nullptr) {
-		//for (size_t i = 0; i < DIMENSION; ++i) {
-			//(*this)[i] = 0.0f;
-		//}
-	//}
-
-	//inline void AddWithWeight(const SubdivVec<DIMENSION>& src, const float& weight) {
-		//auto i = this->begin();
-		//auto j = src.cbegin();
-		//for (; i != this->end() ; ++i, ++j) {
-			//*i += *j * weight;
-		//}
-	//}
-
-//};
-
-// TODO Extend Point rather
-//struct Vec3: Point {
-
-	//// Minimal required interface
-	//Vec3() {}
-
-	//Vec3(Point& point) : Point(point) {}
-
-	//Vec3(std::initializer_list<float> src) {
-		//assert(src.size() == 3);
-		//x = src.begin()[0]; // note the replacement for absent operator[]
-		//y = src.begin()[1];
-		//z = src.begin()[2];
-	//}
-
-	//void Clear(void* = nullptr) {
-		//x = y = z = 0.f;
-	//}
-
-	//inline void AddWithWeight(const Point& src, const float weight) {
-		//x += src.x * weight;
-		//y += src.y * weight;
-		//z += src.z * weight;
-	//}
-
-//};
-
-//// Vector product
-//Normal operator * (Vec3 u, Vec3 v) {
-	//Normal r;
-	//r[0] = u[1] * v[2] - u[2] * v[1];
-	//r[1] = u[2] * v[0] - u[0] * v[2];
-	//r[2] = u[0] * v[1] - u[1] * v[0];
-
-	//return r;
-//}
-
-//using PosVector = std::vector<Vec3>;
-// TODO
-//template<size_t DIMENSION>
-//struct SubdivBuffer: std::vector< SubdivVec<DIMENSION> > {
-	//SubdivBuffer() {};
-	//SubdivBuffer(const float * src, size_t count) {
-		//this->resize(count);
-		//for (size_t i = 0; i < count; ++i) {
-			//(*this)[i] = SubdivVec<3>(src + i * DIMENSION);
-		//}
-	//}
-	//SubdivBuffer(size_t count):
-		//std::vector< SubdivVec<DIMENSION> >(count)
-	//{}
-	//operator SubdivVec<DIMENSION>*() {
-		//return &(*this)[0];
-	//}
-	//operator const float * () {
-		//return reinterpret_cast<float *>(&(*this)[0]);
-	//}
-	//void pack_front(const float * src, size_t count) {
-		//assert(count <= this->size());
-		//for (size_t i = 0; i < count; ++i) {
-			//(*this)[i] = SubdivVec<3>(src + i * DIMENSION);
-		//}
-	//}
-	//void pack_front(const SubdivBuffer& src) {
-		//for (size_t i = 0; i < src.size(); ++i) {
-			//(*this)[i] = src[i];
-		//}
-	//}
-//};
-
-// TODO
-//using PosVector = SubdivBuffer<3>;
-//using PosVector = std::vector<Vec3>;
-
-
-// TODO
-//struct Tri: std::array<int, 3> {
-	//Tri() { }
-	//Tri(int a, int b, int c) { (*this)[0] = a, (*this)[1] = b, (*this)[2] = c; }
-
-//};
-typedef std::vector<Triangle> TriVector;
-
 
 // Storage of local coordinates (coordinates in a given face) during
 // tessellation.
@@ -654,8 +538,6 @@ struct LocalCoords {
 typedef std::vector<LocalCoords> CoordVector;
 
 TopologyRefinerPtr createTopologyAdaptiveRefiner(
-		//const PosVector& positions,  // TODO
-		//const Triangle * triangles,  // TODO
 		const ExtTriangleMesh * srcMesh,
 		const Far::PatchTableFactory::Options& patchOptions
 ) {
@@ -703,21 +585,13 @@ struct Surface {
 	PatchMapPtr patchMap;
 	const Point* basePositions;  // TODO
 	const int numBasePositions;
-	//const Triangle* baseTriangles; // TODO
 	Point* localPositions;
 	int numLocalPositions;
-	//PosVector localPositions; // TODO
 	int maxLevel;
 
-	Surface(
-		//const PosVector& p_basePositions,
-		//const Triangle* p_baseTriangles,
-		const ExtTriangleMesh * p_srcMesh,
-		int p_maxLevel
-	):
+	Surface(const ExtTriangleMesh * p_srcMesh, int p_maxLevel):
 		basePositions(p_srcMesh->GetVertices()),
 		numBasePositions(p_srcMesh->GetTotalVertexCount()),
-		//baseTriangles(p_baseTriangles),
 		maxLevel(p_maxLevel)
 	{
 		SDL_LOG("Subdivision (enhanced) - Computing patches");
@@ -734,15 +608,7 @@ struct Surface {
 			Far::PatchTableFactory::Options::ENDCAP_BSPLINE_BASIS;
 
 		// Construct refiner
-		refiner = std::move(
-			createTopologyAdaptiveRefiner(
-				// TODO
-				//basePositions,
-				//baseTriangles,
-				p_srcMesh,
-				patchTableOptions
-			)
-		);
+		refiner = std::move(createTopologyAdaptiveRefiner(p_srcMesh, patchTableOptions));
 
 		// Apply adaptive refinement and construct the associated PatchTable to
 		// evaluate the limit surface:
@@ -764,7 +630,6 @@ struct Surface {
 
 		numLocalPositions = nRefinedVertices + nLocalPoints;
 		localPositions = TriangleMesh::AllocVerticesBuffer(numLocalPositions);
-		//localPositions.resize(nRefinedVertices + nLocalPoints); TODO
 
 		if (nRefinedVertices) {
 			Far::PrimvarRefiner primvarRefiner(*refiner);
@@ -890,7 +755,6 @@ void Tessellate (
 		+ numTriangleInteriorPoints * topology.GetNumFaces();
 
 	// Size tessCoords
-	//tessTris.resize(FACE_COUNT * N * N);  TODO
 	tessCoords.resize(numCoords);
 
 	// Get vertex local coordinates in given face
@@ -1039,9 +903,6 @@ void Evaluate(
 
 	const auto& topology = surface.refiner->GetLevel(0);
 
-	//tessPos.resize(tessCoords.size()); TODO
-	//tessNormals.resize(tessCoords.size()); TODO
-
     int numBaseVerts = surface.numBasePositions;
 
 	// Evaluate positions and derivatives
@@ -1116,33 +977,6 @@ ExtTriangleMesh *ApplySubdiv(
 	ExtTriangleMesh *srcMesh,
 	const u_int maxLevel
 ) {
-
-	// Initialize internal structures
-	//TriVector baseTriangles(srcMesh->GetTotalTriangleCount());
-	//Triangle* baseTriangles = srcMesh->GetTriangles();
-	//#pragma omp parallel for
-	//for (int t = 0; t < srcMesh->GetTotalTriangleCount(); ++t) {
-		//baseTriangles[t][0] = luxTriangles[t].v[0];
-		//baseTriangles[t][1] = luxTriangles[t].v[1];
-		//baseTriangles[t][2] = luxTriangles[t].v[2];
-		////TODO
-		////for (size_t v = 0; v < 3; ++v) {
-			////baseTriangles[t][v] = luxTriangles[t].v[v];
-		//}
-	//}
-
-	//// TODO
-	//PosVector basePositions;
-	//int numVertices = srcMesh->GetTotalVertexCount();
-	//basePositions.resize(numVertices);
-	//auto meshVertices = srcMesh->GetVertices();
-	//#pragma omp parallel for
-	//for (int i = 0; i < numVertices; ++i) {
-		//basePositions[i][0] = meshVertices[i].x;
-		//basePositions[i][1] = meshVertices[i].y;
-		//basePositions[i][2] = meshVertices[i].z;
-	//}
-
 	// Create limit surface (subdivided) from base geometry
 	Surface surface(srcMesh, maxLevel);
 
@@ -1156,9 +990,6 @@ ExtTriangleMesh *ApplySubdiv(
 	auto tessPositions = TriangleMesh::AllocVerticesBuffer(pointCount);
 	auto tessNormals = new Normal[normCount];
 	auto tessTriangles = TriangleMesh::AllocTrianglesBuffer(triCount);
-	//PosVector tessPositions;  TODO
-	//PosVector tessNormals;  TODO
-	//TriVector tessTriangles;  TODO
 
 	// Tessellate
 	CoordVector tessCoords;  // We temporarily store new positions as (face, x, y)
@@ -1172,20 +1003,6 @@ ExtTriangleMesh *ApplySubdiv(
 		<< pointCount << " points, "
 		<< triCount << " triangles"
 	);
-
-	/// TODO
-	//// New triangles
-	//Triangle *newTris = TriangleMesh::AllocTrianglesBuffer(triCount);
-	//#pragma omp parallel for
-	//for (int face = 0; face < triCount; ++face) {
-		//auto tri = tessTriangles[face];
-		//newTris[face].v[0] = 
-		//for (u_int vertex = 0; vertex < 3; ++vertex) {
-			//newTris[face].v[vertex] = tri[vertex];
-			//assert(tri[vertex] <= pointCount);
-			//assert(tri[vertex] >= 0);
-		//}
-	//}
 
 	SDL_LOG("Subdivision (enhanced) - Allocating");
 
