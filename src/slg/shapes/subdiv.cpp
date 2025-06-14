@@ -764,8 +764,8 @@ struct Surface {
 		if (nRefinedVertices) {
 			Far::PrimvarRefiner primvarRefiner(*refiner);
 
-			Vec3 const * src = static_cast<Vec3 const *>(basePositions);
-			Vec3 * dst = &localPositions[0];
+			Point const * src = basePositions;
+			Point * dst = &localPositions[0];
 			for (int level = 1; level < refiner->GetNumLevels(); ++level) {
 				primvarRefiner.Interpolate(level, src, dst);
 				src = dst;
@@ -1067,25 +1067,30 @@ void Evaluate(
 		Far::ConstIndexArray cvIndices = surface.patchTable->GetPatchVertices(*handle);
 
 		// Evaluate position and derivatives
-		auto pos = static_cast<Vec3*>(tessPoints + vertex);
-		pos->Clear();
-		Vec3 du{0.0f, 0.0f, 0.0f};
-		Vec3 dv{0.0f, 0.0f, 0.0f};
+		Point& pos = tessPoints[vertex];
+		pos.Clear();
+
+		Vector du;
+		du.Clear();
+
+		Vector dv;
+		dv.Clear();
+
 		for (int cv = 0; cv < cvIndices.size(); ++cv) {
 			int cvIndex = cvIndices[cv];
 
-			auto& position =
+			const Point& position =
 				(cvIndex < numBaseVerts) ?
 				surface.basePositions[cvIndex] :
 				surface.localPositions[cvIndex - numBaseVerts];
 
-			pos->AddWithWeight(position, pWeights[cv]);
+			pos.AddWithWeight(position, pWeights[cv]);
 			du.AddWithWeight(position, duWeights[cv]);
 			dv.AddWithWeight(position, dvWeights[cv]);
 		}
 
 		// Update output (position and normal)
-		tessNormals[vertex] = du * dv;
+		tessNormals[vertex] = Normal(Cross(du, dv));
 
 		// Check validity of normal
 		auto t = tessNormals[vertex];
