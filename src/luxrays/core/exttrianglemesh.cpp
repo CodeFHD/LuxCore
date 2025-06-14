@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <execution>
 
 #include <boost/format.hpp>
 #include <filesystem>
@@ -129,28 +130,29 @@ ExtTriangleMesh::ExtTriangleMesh(const u_int meshVertCount, const u_int meshTriC
 	bevelBoundingCylinders = nullptr;
 	bevelBVHArrayNodes = nullptr;
 
-	fill(uvs.begin(), uvs.end(), nullptr);
-	fill(cols.begin(), cols.end(), nullptr);
-	fill(alphas.begin(), alphas.end(), nullptr);
-	fill(vertAOV.begin(), vertAOV.end(), nullptr);
-	fill(triAOV.begin(), triAOV.end(), nullptr);
+
+	uvs.fill(nullptr);
+	cols.fill(nullptr);
+	alphas.fill(nullptr);
+	vertAOV.fill(nullptr);
+	triAOV.fill(nullptr);
 
 	array<UV *, EXTMESH_MAX_DATA_COUNT> meshUVs;
-	fill(meshUVs.begin(), meshUVs.end(), nullptr);
+	meshUVs.fill(nullptr);
 	if (mUVs)
 		meshUVs[0] = mUVs;
 
 	array<Spectrum *, EXTMESH_MAX_DATA_COUNT> meshCols;
-	fill(meshCols.begin(), meshCols.end(), nullptr);
+	meshCols.fill(nullptr);
 	if (mCols)
 		meshCols[0] = mCols;
 
 	array<float *, EXTMESH_MAX_DATA_COUNT> meshAlphas;
-	fill(meshAlphas.begin(), meshAlphas.end(), nullptr);
+	meshAlphas.fill(nullptr);
 	if (mAlphas)
 		meshAlphas[0] = mAlphas;
 
-	Init(meshNormals, &meshUVs, &meshCols, &meshAlphas);	
+	Init(meshNormals, &meshUVs, &meshCols, &meshAlphas);
 }
 
 ExtTriangleMesh::ExtTriangleMesh(const u_int meshVertCount, const u_int meshTriCount,
@@ -165,11 +167,11 @@ ExtTriangleMesh::ExtTriangleMesh(const u_int meshVertCount, const u_int meshTriC
 	bevelBoundingCylinders = nullptr;
 	bevelBVHArrayNodes = nullptr;
 
-	fill(uvs.begin(), uvs.end(), nullptr);
-	fill(cols.begin(), cols.end(), nullptr);
-	fill(alphas.begin(), alphas.end(), nullptr);
-	fill(vertAOV.begin(), vertAOV.end(), nullptr);
-	fill(triAOV.begin(), triAOV.end(), nullptr);
+	uvs.fill(nullptr);
+	cols.fill(nullptr);
+	alphas.fill(nullptr);
+	vertAOV.fill(nullptr);
+	triAOV.fill(nullptr);
 
 	Init(meshNormals, meshUVs, meshCols, meshAlphas);
 }
@@ -206,9 +208,10 @@ void ExtTriangleMesh::Init(Normal *meshNormals,
 
 void ExtTriangleMesh::Preprocess() {
 	// Compute all triangle normals
-	for (u_int i = 0; i < triCount; ++i)
+	#pragma omp parallel for
+	for (long long i = 0; i < triCount; ++i)
 		triNormals[i] = tris[i].GetGeometryNormal(vertices);
-	
+
 	PreprocessBevel();
 }
 

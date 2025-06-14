@@ -33,7 +33,7 @@ class Normal {
 public:
 	// Normal Methods
 
-	Normal(float _x = 0, float _y = 0, float _z = 0)
+	Normal(float _x = 0.f, float _y = 0.f, float _z = 0.f)
 	: x(_x), y(_y), z(_z) {
 	}
 
