@@ -554,8 +554,8 @@ struct Vec3: Point {
 };
 
 // Vector product
-Vec3 operator * (Vec3 u, Vec3 v) {
-	Vec3 r;
+Normal operator * (Vec3 u, Vec3 v) {
+	Normal r;
 	r[0] = u[1] * v[2] - u[2] * v[1];
 	r[1] = u[2] * v[0] - u[0] * v[2];
 	r[2] = u[0] * v[1] - u[1] * v[0];
@@ -1020,14 +1020,14 @@ void Evaluate(
 	const Surface& surface,
 	const CoordVector& tessCoords,
 	Point* tessPoints,
-	PosVector& tessNormals
+	Normal* tessNormals
 ) {
 	SDL_LOG("Subdivision (enhanced) - Evaluating");
 
 	const auto& topology = surface.refiner->GetLevel(0);
 
 	//tessPos.resize(tessCoords.size()); TODO
-	tessNormals.resize(tessCoords.size());
+	//tessNormals.resize(tessCoords.size()); TODO
 
     int numBaseVerts = (int) surface.basePositions.size();
 
@@ -1077,7 +1077,6 @@ void Evaluate(
 		}
 
 		// Update output (position and normal)
-		//tessPos[vertex] = pos;  TODO
 		tessNormals[vertex] = du * dv;
 
 		// Check validity of normal
@@ -1132,8 +1131,9 @@ ExtTriangleMesh *ApplySubdiv(
 
 	// Output structures
 	auto tessPositions = TriangleMesh::AllocVerticesBuffer(pointCount);
-	//PosVector tessPositions;
-	PosVector tessNormals;
+	auto tessNormals = new Normal[normCount];
+	//PosVector tessPositions;  TODO
+	//PosVector tessNormals;  TODO
 	TriVector tessTriangles;
 
 	// Tessellate
@@ -1148,17 +1148,6 @@ ExtTriangleMesh *ApplySubdiv(
 		<< pointCount << " points, "
 		<< triCount << " triangles"
 	);
-
-	// New normals
-	Normal *newNormals = new Normal[normCount];
-	#pragma omp parallel for
-	for (int i = 0; i < normCount; ++i) {
-		Normal* norm = newNormals + i;
-		norm->x = tessNormals[i][0];
-		norm->y = tessNormals[i][1];
-		norm->z = tessNormals[i][2];
-		*norm = Normalize(*norm);
-	}
 
 	// New triangles
 	Triangle *newTris = TriangleMesh::AllocTrianglesBuffer(triCount);
@@ -1176,7 +1165,7 @@ ExtTriangleMesh *ApplySubdiv(
 
 	// Allocate the new mesh
 	ExtTriangleMesh *newMesh =  new ExtTriangleMesh(
-		pointCount, triCount, tessPositions, newTris, newNormals
+		pointCount, triCount, tessPositions, newTris, tessNormals
 	);
 
 	return newMesh;
