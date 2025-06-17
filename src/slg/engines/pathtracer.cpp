@@ -798,10 +798,12 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 
 		LightPathInfo pathInfo;
 
+		/*
 		// Sample a point on the camera lens
 		if (!scene->camera->SampleLens(time, sampler->GetSample(6), sampler->GetSample(7),
 				&pathInfo.lensPoint))
 			return;
+		*/
 
 		//----------------------------------------------------------------------
 		// Trace the light path
@@ -828,6 +830,9 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			//--------------------------------------------------------------
 			// Try to connect the light path vertex with the eye
 			//--------------------------------------------------------------
+
+			scene->camera->SampleLens(time, sampler->GetSample(6), sampler->GetSample(7),
+				&pathInfo.lensPoint);
 
 			if (ConnectToEyeCallBack){
 				ConnectToEyeCallBack(pathInfo, bsdf, light->GetID(), lightPathFlux, sampleResults);
