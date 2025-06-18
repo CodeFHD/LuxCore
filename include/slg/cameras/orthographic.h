@@ -34,6 +34,7 @@ public:
 	virtual ~OrthographicCamera() { }
 
 	virtual void ClampRay(luxrays::Ray *ray) const;
+	virtual bool ProjectToImage(luxrays::Ray *ray, float *filmX, float *filmY) const;
 	virtual bool GetSamplePosition(luxrays::Ray *eyeRay, float *filmX, float *filmY) const;
 	virtual bool LocalSampleLens(const float time, const float u1, const float u2,
 		luxrays::Point *lensPoint) const;

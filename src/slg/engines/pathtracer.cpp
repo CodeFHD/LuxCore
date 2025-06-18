@@ -698,19 +698,45 @@ void PathTracer::ConnectToEye(IntersectionDevice *device,
 	if (bsdf.IsCameraInvisible() || bsdf.IsDelta())
 		return;
 
-	Vector eyeDir(bsdf.hitPoint.p - pathInfo.lensPoint);
-	const float eyeDistance = eyeDir.Length();
-	eyeDir /= eyeDistance;
+	float filmX, filmY;
+	bool sampleSuccess;
+	Ray eyeRay;
 
-	Ray eyeRay(pathInfo.lensPoint, eyeDir,
+	Vector eyeDir;
+	float eyeDistance = 0;
+	Point lensPoint = pathInfo.lensPoint;
+    if (scene->camera->GetType() == Camera::ORTHOGRAPHIC){
+		// Orthographic camera need to be handled separately,
+		// lensPoint can not be pre-calculated in this case
+		Point p = bsdf.hitPoint.p;
+		eyeDir = scene->camera->GetDir();
+		// calculate distance from vertex to camera plane
+		const float D = -eyeDir.x*lensPoint.x - eyeDir.y*lensPoint.y - eyeDir.z*lensPoint.z;
+		eyeDistance = eyeDir.x*p.x + eyeDir.y*p.y + eyeDir.z*p.z + D;
+		eyeDistance = fabsf(eyeDistance);
+
+		eyeRay = Ray(bsdf.hitPoint.p, eyeDir,
 			0.f,
 			eyeDistance,
 			time);
-	scene->camera->ClampRay(&eyeRay);
-	eyeRay.UpdateMinMaxWithEpsilon();
+		scene->camera->ClampRay(&eyeRay);
+		eyeRay.UpdateMinMaxWithEpsilon();
+		sampleSuccess = scene->camera->ProjectToImage(&eyeRay, &filmX, &filmY);
+	} else {
+		eyeDir = Vector(bsdf.hitPoint.p - lensPoint);
+		eyeDistance = eyeDir.Length();
+		eyeDir /= eyeDistance;
 
-	float filmX, filmY;
-	if (scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY)) {
+		eyeRay = Ray(lensPoint, eyeDir,
+			0.f,
+			eyeDistance,
+			time);
+		scene->camera->ClampRay(&eyeRay);
+		eyeRay.UpdateMinMaxWithEpsilon();
+		sampleSuccess = scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY);
+	}
+
+	if (sampleSuccess) {
 		BSDFEvent event;
 		const Spectrum bsdfEval = bsdf.Evaluate(-eyeDir, &event);
 

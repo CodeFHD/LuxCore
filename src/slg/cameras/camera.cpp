@@ -53,6 +53,11 @@ bool Camera::GetSamplePosition(const luxrays::Point &p,
 	return GetSamplePosition(&eyeRay, filmX, filmY);
 }
 
+bool Camera::ProjectToImage(luxrays::Ray *ray, float *filmX, float *filmY) const{
+	// Intended only for implementation in OrthographicCamera
+	return false;
+}
+
 void Camera::Update(const u_int width, const u_int height, const u_int *subRegion) {
 	filmWidth = width;
 	filmHeight = height;

@@ -75,6 +75,44 @@ void OrthographicCamera::ClampRay(Ray *ray) const {
 	ray->maxt = Min(ray->maxt, clipYon);
 }
 
+bool OrthographicCamera::ProjectToImage(Ray *ray, float *x, float *y) const {
+	// Get coordinates of point in image plane
+	Point pO = Inverse(camTrans.rasterToWorld) * ray->o;
+	if (motionSystem)
+		pO *= motionSystem->Sample(ray->time);
+
+	*x = pO.x;
+	*y = filmHeight - 1 - pO.y;
+
+	// check if point is behind camera
+	const float cosi = Dot(ray->d, dir);
+
+	if ((cosi <= 0.f) || (!isinf(ray->maxt) && (ray->maxt < clipHither ||
+		ray->maxt > clipYon)))
+		return false;
+
+	// Update the ray origin
+	pO.z = 0.f;
+	ray->o = camTrans.rasterToWorld * pO;
+
+	// Check if we are inside the image plane
+	if ((*x < filmSubRegion[0]) || (*x >= filmSubRegion[1] + 1) ||
+			(*y < filmSubRegion[2]) || (*y >= filmSubRegion[3] + 1))
+		return false;
+	else {
+		// World arbitrary clipping plane support
+		if (enableClippingPlane) {
+			// Check if the ray end point is on the not visible side of the plane
+			if (Dot(clippingPlaneNormal, ray->o - clippingPlaneCenter) <= 0.f)
+				return false;
+			// Update ray mint/maxt
+			ApplyArbitraryClippingPlane(ray);
+		}
+
+		return true;
+	}
+}
+
 bool OrthographicCamera::GetSamplePosition(Ray *ray, float *x, float *y) const {
 	const float cosi = Dot(ray->d, dir);
 

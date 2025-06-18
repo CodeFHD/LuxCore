@@ -326,24 +326,50 @@ void BiDirCPURenderThread::ConnectToEye(const float time,
 	BiDirCPURenderEngine *engine = (BiDirCPURenderEngine *)renderEngine;
 	Scene *scene = engine->renderConfig->scene;
 
-	Vector eyeDir(lightVertex.bsdf.hitPoint.p - lensPoint);
-	const float eyeDistance = eyeDir.Length();
-	eyeDir /= eyeDistance;
+	Vector eyeDir;
+	float eyeDistance = 0;
+    if (scene->camera->GetType() == Camera::ORTHOGRAPHIC){
+		// Orthographic camera need to be handled separately,
+		// lensPoint can not be pre-calculated in this case
+		Point p = lightVertex.bsdf.hitPoint.p;
+		eyeDir = scene->camera->GetDir();
+		// calculate distance from vertex to camera plane
+		const float D = -eyeDir.x*lensPoint.x - eyeDir.y*lensPoint.y - eyeDir.z*lensPoint.z;
+		eyeDistance = eyeDir.x*p.x + eyeDir.y*p.y + eyeDir.z*p.z + D;
+		eyeDistance = fabsf(eyeDistance);
+	} else {
+		eyeDir = Vector(lightVertex.bsdf.hitPoint.p - lensPoint);
+		eyeDistance = eyeDir.Length();
+		eyeDir /= eyeDistance;
+	}
 
 	float bsdfPdfW, bsdfRevPdfW;
 	BSDFEvent event;
 	const Spectrum bsdfEval = lightVertex.bsdf.Evaluate(-eyeDir, &event, &bsdfPdfW, &bsdfRevPdfW);
 
 	if (!bsdfEval.Black()) {
-		Ray eyeRay(lensPoint, eyeDir,
+		float filmX, filmY;
+		bool sampleSuccess;
+		Ray eyeRay;
+		
+		if (scene->camera->GetType() == Camera::ORTHOGRAPHIC){
+			eyeRay = Ray(lightVertex.bsdf.hitPoint.p, eyeDir,
 				0.f,
 				eyeDistance,
 				time);
-		scene->camera->ClampRay(&eyeRay);
-		eyeRay.UpdateMinMaxWithEpsilon();
-
-		float filmX, filmY;
-		if (scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY)) {
+			scene->camera->ClampRay(&eyeRay);
+			eyeRay.UpdateMinMaxWithEpsilon();
+			sampleSuccess = scene->camera->ProjectToImage(&eyeRay, &filmX, &filmY);
+		} else {
+			eyeRay = Ray(lensPoint, eyeDir,
+				0.f,
+				eyeDistance,
+				time);
+			scene->camera->ClampRay(&eyeRay);
+			eyeRay.UpdateMinMaxWithEpsilon();
+			sampleSuccess = scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY);
+		}
+		if (sampleSuccess) {
 			// I have to flip the direction of the traced ray because
 			// the information inside PathVolumeInfo are about the path from
 			// the light toward the camera (i.e. ray.o would be in the wrong
