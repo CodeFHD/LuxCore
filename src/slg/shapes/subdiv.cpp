@@ -659,21 +659,15 @@ struct Surface {
 		// Designed to contain:
 		// - Base values
 		// - Refined values, ie values at refined vertices and local vertices
-		const float * baseValues;
-		const int numBaseValues;
-		const float * refinedValues;
+		const std::unique_ptr<float[]> refinedValues;
 		const int numRefinedValues;
 		const int stride;
 
 		InterpolatedValues(
-			const float * p_baseValues,
-			int p_numBaseValues,
-			const float * p_refinedValues,
+			float* p_refinedValues,
 			int p_numRefinedValues,
 			int p_stride
 		):
-			baseValues(p_baseValues),
-			numBaseValues(p_numBaseValues),
 			refinedValues(p_refinedValues),
 			numRefinedValues(p_numRefinedValues),
 			stride(p_stride)
@@ -693,16 +687,16 @@ struct Surface {
 		int numAllRefinedValues = numRegularRefinedValues + numLocalRefinedValues;
 
 		// Allocate output
-		T * refinedValues = new T[numAllRefinedValues]; // TODO smart pointer
+		std::unique_ptr<T[]> refinedValues(new T[numAllRefinedValues]);
 
 		// Copy base values in refined values
-		std::memcpy(&refinedValues[0], &baseValues[0], numBaseValues * sizeof(T));
+		std::memcpy(&refinedValues.get()[0], &baseValues[0], numBaseValues * sizeof(T));
 
 		// Interpolate on refined vertices and local points (Tutorial 5_1)
 		if (numRegularRefinedValues) {
 			Far::PrimvarRefiner primvarRefiner(*refiner);
 
-			T * srcValues = refinedValues;
+			T * srcValues = refinedValues.get();
 			for (int level = 1; level < refiner->GetNumLevels(); ++level) {
 				T * dstValues = srcValues + refiner->GetLevel(level - 1).GetNumVertices();
 				primvarRefiner.Interpolate(level, srcValues, dstValues);
@@ -717,9 +711,7 @@ struct Surface {
 		}
 
 		return InterpolatedValues(
-			(float *) baseValues,
-			numBaseValues,
-			(float *) refinedValues,
+			(float*) refinedValues.release(),
 			numAllRefinedValues,
 			stride
 		);
@@ -1024,7 +1016,7 @@ EvaluatePositions(
 		Vector dv;
 		dv.Clear();
 
-		auto positions = (const Point *) subdivPositions.refinedValues;
+		auto positions = (const Point *) subdivPositions.refinedValues.get();
 
 		for (int cv = 0; cv < cvIndices.size(); ++cv) {
 			int cvIndex = cvIndices[cv];
