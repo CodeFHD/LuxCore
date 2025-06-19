@@ -698,22 +698,7 @@ struct Surface {
 		// Copy base values in refined values
 		std::memcpy(&refinedValues[0], &baseValues[0], numBaseValues * sizeof(T));
 
-		// Interpolate on refined vertices and local points
-		// TODO which scheme for refiner?
-		// TODO
-		//if (nRefinedVertices) {
-			//Far::PrimvarRefiner primvarRefiner(*refiner);
-
-			//Point const * srcPos = basePositions;
-			//Point * dstPos = &localPositions[0];
-			//for (int level = 1; level < refiner->GetNumLevels(); ++level) {
-				//primvarRefiner.Interpolate(level, srcPos, dstPos);
-				//srcPos = dstPos;
-				//dstPos += refiner->GetLevel(level).GetNumVertices();
-			//}
-		//}
-
-		// Tutorial 5_1
+		// Interpolate on refined vertices and local points (Tutorial 5_1)
 		if (numRegularRefinedValues) {
 			Far::PrimvarRefiner primvarRefiner(*refiner);
 
@@ -1043,8 +1028,6 @@ EvaluatePositions(
 
 		for (int cv = 0; cv < cvIndices.size(); ++cv) {
 			int cvIndex = cvIndices[cv];
-
-			// TODO Merge base and local
 
 			const Point& position = positions[cvIndex];
 
