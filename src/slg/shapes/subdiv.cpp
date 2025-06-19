@@ -958,7 +958,12 @@ void Tessellate (
 }  // ~Tessellate
 
 // TODO method of surface
-std::tuple<Point*, Normal*>
+
+using PointArrayPtr = std::unique_ptr<Point[]>;
+using NormalArrayPtr = std::unique_ptr<Normal[]>;
+
+//
+std::tuple<PointArrayPtr, NormalArrayPtr>
 EvaluatePositions(
 	const Surface& surface,
 	const Surface::InterpolatedValues& subdivPositions,
@@ -969,9 +974,8 @@ EvaluatePositions(
 	int numCoords = tessCoords.size();
 
 	// Allocate output structure
-	// TODO unique_ptr
-	auto tessPositions = TriangleMesh::AllocVerticesBuffer(numCoords);
-	auto tessNormals = new Normal[numCoords];
+	auto tessPositions = PointArrayPtr(TriangleMesh::AllocVerticesBuffer(numCoords));
+	auto tessNormals = NormalArrayPtr(new Normal[numCoords]);
 
 	const auto& topology = surface.refiner->GetLevel(0);
 	const auto& patchTable = *surface.patchTable;
@@ -1044,7 +1048,7 @@ EvaluatePositions(
 		}
 	}  // ~for vertex
 
-	return std::tuple<Point*, Normal*>(tessPositions, tessNormals);
+	return std::make_tuple(std::move(tessPositions), std::move(tessNormals));
 }
 
 
@@ -1075,11 +1079,9 @@ ExtTriangleMesh *ApplySubdiv(
 	auto subdivPositions = surface.Interpolate(basePositions, numBasePositions);
 
 	// Evaluate positions on tessellation
-	auto tessPositions = EvaluatePositions(surface, subdivPositions, tessCoords);
-
-	// Break down positions
-	auto tessPoints = std::get<Point *>(tessPositions);
-	auto tessNormals = std::get<Normal *>(tessPositions);
+	PointArrayPtr tessPoints;
+	NormalArrayPtr tessNormals;
+	std::tie(tessPoints, tessNormals) = EvaluatePositions(surface, subdivPositions, tessCoords);
 
 
 	SDL_LOG(
@@ -1090,9 +1092,11 @@ ExtTriangleMesh *ApplySubdiv(
 
 	SDL_LOG("Subdivision (enhanced) - Allocating");
 
+
 	// Allocate the new mesh
 	ExtTriangleMesh *newMesh =  new ExtTriangleMesh(
-		pointCount, triCount, tessPoints, tessTriangles, tessNormals
+		pointCount, triCount,
+		tessPoints.release(), tessTriangles, tessNormals.release()
 	);
 
 	return newMesh;
