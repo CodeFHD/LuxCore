@@ -555,6 +555,31 @@ struct FloatAdapter {
 	float x;
 };
 
+// Output object for interpolation process
+struct InterpolatedValues {
+	// Intended to contain:
+	// - Refined values, ie values at refined vertices and local vertices
+
+	InterpolatedValues(
+		float* p_values,
+		int p_numValues,
+		int p_stride
+	):
+		values(p_values),
+		numValues(p_numValues),
+		stride(p_stride)
+	{}
+
+	template <typename T>
+	const T* Get() const {
+		return reinterpret_cast<const T*>(values.get());
+	}
+
+	// Property members
+	const std::unique_ptr<float[]> values;
+	const int numValues;
+	const int stride;
+};
 
 // Adaptive topology refiner factory function
 TopologyRefinerPtr createTopologyAdaptiveRefiner(
@@ -610,8 +635,10 @@ TopologyRefinerPtr createTopologyAdaptiveRefiner(
 /// https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#subdivision-versus-tessellation
 struct Surface {
 
-	Surface(const ExtTriangleMesh * p_srcMesh, int p_maxLevel):
-		maxLevel(p_maxLevel)
+	/// Constructor
+	///
+	/// @param srcMesh The mesh to be subdivided
+	Surface(const ExtTriangleMesh * srcMesh)
 	{
 		SDL_LOG("Subdivision (enhanced) - Computing patches");
 
@@ -620,7 +647,6 @@ struct Surface {
 		// Note: ENDCAP_GREGORY_BASIS can generate null normals
 		// (try with Suzanne, level=3...):
 		// please avoid...
-		Far::PatchTableFactory::Options patchTableOptions(maxLevel);
 		patchTableOptions.useInfSharpPatch = true;
 		patchTableOptions.generateVaryingTables = false;
 		patchTableOptions.endCapType =
@@ -635,9 +661,20 @@ struct Surface {
 				patchTableOptions
 			)
 		);
+	}
 
-		// Apply adaptive refinement and construct the associated PatchTable to
-		// evaluate the limit surface:
+	/// Subdivide parametric surface
+	///
+	///	This method applies a refinement on the topology of the control surface.
+	///	The refinement is adaptive (in the sense of OpenSubdiv).
+	///
+	/// @param maxLevel The maximum isolation level
+	/// 
+	void Subdivide(int maxLevel) {
+		// Set refinement level
+		patchTableOptions.maxIsolationLevel = maxLevel;
+
+		// Apply adaptive refinement
 		refiner->RefineAdaptive(patchTableOptions.GetRefineAdaptiveOptions());
 
 		// Construct the associated PatchTable to evaluate the limit surface:
@@ -649,25 +686,6 @@ struct Surface {
 		// Construct patch map
 		patchMap.reset(new Far::PatchMap(*patchTable));
 	}
-
-	struct InterpolatedValues {
-		// Intended to contain:
-		// - Base values
-		// - Refined values, ie values at refined vertices and local vertices
-		const std::unique_ptr<float[]> refinedValues;
-		const int numRefinedValues;
-		const int stride;
-
-		InterpolatedValues(
-			float* p_refinedValues,
-			int p_numRefinedValues,
-			int p_stride
-		):
-			refinedValues(p_refinedValues),
-			numRefinedValues(p_numRefinedValues),
-			stride(p_stride)
-		{}
-	};
 
 	/// Tessellate input mesh
 	///
@@ -978,7 +996,7 @@ struct Surface {
 	///
 	std::tuple<PointArrayPtr, NormalArrayPtr>
 	EvaluatePositions(
-		const Surface::InterpolatedValues& subdivPositions,
+		const InterpolatedValues& interpolatedPositions,
 		const CoordVector& tessCoords
 	) const {
 
@@ -990,7 +1008,7 @@ struct Surface {
 
 		const auto& topology = refiner->GetLevel(0);
 
-		auto positions = (const Point *) subdivPositions.refinedValues.get();
+		const Point* positions = interpolatedPositions.Get<Point>();
 
 		float pWeights[20];
 		float duWeights[20];
@@ -1067,8 +1085,19 @@ struct Surface {
 		return std::make_tuple(std::move(tessPositions), std::move(tessNormals));
 	}
 
-	template<typename T> std::unique_ptr<T[]> Evaluate(
-		const Surface::InterpolatedValues& subdivValues,
+	///
+	/// Evaluate primvar data at tessellated mesh coordinates
+	///
+	/// @param interpolatedValues Values of the data to be evaluated at the vertices
+	///							  of the control surface
+	///
+	///	@param tessCoords Coordinates on the tessellated mesh where to evaluate data
+	///
+	///	@return A smart pointer to a buffer containing the evaluated data
+	///
+	template<typename T>
+	std::unique_ptr<T[]> Evaluate(
+		const InterpolatedValues& interpolatedValues,
 		const CoordVector& tessCoords
 	) const {
 
@@ -1079,7 +1108,7 @@ struct Surface {
 
 		const auto& topology = refiner->GetLevel(0);
 
-		auto inputValues = (const T *) subdivValues.refinedValues.get();
+		auto inputValues = interpolatedValues.Get<T>();
 
 		float pWeights[20];
 
@@ -1125,16 +1154,15 @@ struct Surface {
 	// "We're all consenting adults here", so those members will be left public
 	TopologyRefinerPtr refiner;
 	PtexIndicesPtr ptexIndices;
+	Far::PatchTableFactory::Options patchTableOptions;
 	PatchTablePtr patchTable;
 	PatchMapPtr patchMap;
-	int maxLevel;
 
 };
 
 // Helper to evaluate multi-layers data, like UV, Colors, Gamma, AOV.
-// EXTRACTOR is a callable type providing the coarse data.
-// OUT_FLOAT is a flag to get buffer as float*, rather than T*
-template < typename EXTRACTOR, bool OUT_FLOAT=false >
+// EXTRACTOR is a callable type providing the coarse data for a given layer.
+template < typename EXTRACTOR >
 struct MultiLayerDataEvaluator{
 
 	// Evaluated data are stored as smart pointers in a vector (one row per
@@ -1146,8 +1174,13 @@ struct MultiLayerDataEvaluator{
 	using DATA = std::remove_pointer_t<std::invoke_result_t<EXTRACTOR, u_int>>;
 	using DATA_BUFFER = std::unique_ptr<DATA[]>;
 
-	// Let the possibility to return an array of float* (for Alpha, essentially)
-	using DATA_OUT = std::conditional_t<OUT_FLOAT, float, DATA>;
+	// Return float* if DATA is FloatAdapter
+	// (for Alpha and AOV)
+	using DATA_OUT = std::conditional_t<
+		std::is_same_v<DATA, FloatAdapter>,
+		float,
+		DATA
+	>;
 
 	// Return type for evaluation
 	struct EvaluatedLayers: std::vector<DATA_BUFFER> {
@@ -1217,14 +1250,14 @@ ExtTriangleMesh *ApplySubdiv(
 
 	using std::tie;
 
-	// Create limit surface (subdivided) from base geometry
-	Surface surface(srcMesh, maxLevel);
+	// Create limit surface from base geometry
+	Surface surface(srcMesh);
 
-	// Compute tesselletion rate, from level
+	// Subdivide
+	surface.Subdivide(maxLevel);
+
+	// Compute tesselletion rate, from maxLevel
 	size_t tessellationRate = 1 << maxLevel;
-
-	// Record initial vertex count
-	u_int numMeshVertex = srcMesh->GetTotalVertexCount();
 
 	// Tessellate
 	CoordVector tessCoords;
@@ -1233,6 +1266,9 @@ ExtTriangleMesh *ApplySubdiv(
 
 	tie(tessCoords, tessTriangles, numPoints, numTriangles) =
 		surface.Tessellate(tessellationRate);
+
+	// Record initial vertex count
+	u_int numMeshVertex = srcMesh->GetTotalVertexCount();
 
 	// Evaluate positions and normals
 	PointArrayPtr tessPoints;
@@ -1250,25 +1286,27 @@ ExtTriangleMesh *ApplySubdiv(
 
 	// Evaluate UV
 	auto extractorUV = [&srcMesh](u_int layer) { return srcMesh->GetUVs(layer); };
-	MultiLayerDataEvaluator EvaluatorUV(surface, extractorUV, numMeshVertex, tessCoords);
+	MultiLayerDataEvaluator
+		EvaluatorUV(surface, extractorUV, numMeshVertex, tessCoords);
 	auto tessUVs = EvaluatorUV.evaluate();
 
 	// Evaluate Colors
 	auto extractorCols = [&srcMesh](u_int layer) { return srcMesh->GetColors(layer); };
-	MultiLayerDataEvaluator EvaluatorCols(surface, extractorCols, numMeshVertex, tessCoords);
+	MultiLayerDataEvaluator
+		EvaluatorCols(surface, extractorCols, numMeshVertex, tessCoords);
 	auto tessCols = EvaluatorCols.evaluate();
 
 	// Evaluate Alphas
-	auto extractorAlphas = [&srcMesh, &numMeshVertex](u_int layer)
+	auto extractorAlphas = [&srcMesh](u_int layer)
 		{ return (FloatAdapter*) srcMesh->GetAlphas(layer); };
-	MultiLayerDataEvaluator<decltype(extractorAlphas), true>
+	MultiLayerDataEvaluator
 		EvaluatorAlphas(surface, extractorAlphas, numMeshVertex, tessCoords);
 	auto tessAlphas = EvaluatorAlphas.evaluate();
 
 	// Evaluate AOVs
 	auto extractorAOVs = [&srcMesh](u_int layer)
 		{ return (FloatAdapter*) srcMesh->GetVertexAOVs(layer); };
-	MultiLayerDataEvaluator<decltype(extractorAOVs), true>
+	MultiLayerDataEvaluator
 		EvaluatorAOVs(surface, extractorAOVs, numMeshVertex, tessCoords);
 	auto tessAOVs = EvaluatorAOVs.evaluate();
 
