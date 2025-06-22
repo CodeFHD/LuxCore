@@ -741,10 +741,7 @@ struct Surface {
 
 		// Check
 		SDL_LOG(
-			"Subdivision (enhanced) - Tessellating "
-			<< FACE_COUNT
-			<< " faces / " << topology.GetNumVertices()
-			<< " points with factor N="
+			"Subdivision (enhanced) - Tessellating with factor N = "
 			<< N
 		);
 		if (FACE_COUNT * N * N >= std::numeric_limits<int>::max()) {
@@ -1308,7 +1305,7 @@ ExtTriangleMesh *ApplySubdiv(
 	// mesh)
 	SDL_LOG(
 		"Subdivision (enhanced) - Building new mesh: "
-		<< numPoints << " points, "
+		<< numPoints << " points / "
 		<< numTriangles << " triangles"
 	);
 
@@ -1357,21 +1354,40 @@ SubdivShape::SubdivShape(
 
 	if (maxLevel > 0) {
 		if (camera && (maxEdgeScreenSize > 0.f)) {
-			SDL_LOG("Subdividing shape " << srcMesh->GetName() << " max. at level: " << maxLevel);
+			SDL_LOG("Subdividing shape " << srcMesh->GetName()
+					<< " - Adaptive subdivision");
 
 			mesh = srcMesh->Copy();
 
 			for (u_int i = 0; i < maxLevel; ++i) {
+				SDL_LOG("Subdividing - Adaptive - Computing max edge size");
 				// Check the size of the longest mesh edge on film image plane
 				const float edgeScreenSize = MaxEdgeScreenSize(camera, mesh);
-				SDL_LOG("Subdividing shape current max. edge screen size: " << edgeScreenSize);
 
 				if (edgeScreenSize <= maxEdgeScreenSize)
 					break;
 
-				// Subdivide by one level and re-try
-				ExtTriangleMesh *newMesh = ApplySubdiv(mesh, 1, enhanced);
-				SDL_LOG("Subdivided shape step #" << i << " from " << mesh->GetTotalTriangleCount() << " to " << newMesh->GetTotalTriangleCount() << " faces");
+				SDL_LOG(
+					"Subdivision - Adaptive - Step #" << i << " - "
+					<< "Current maximum edge size on screen = "
+					<< edgeScreenSize
+					<< ", target = "
+					<< maxEdgeScreenSize
+				);
+
+
+				int optimizedLevel =
+					static_cast<int>(std::ceil(std::log2f(edgeScreenSize / maxEdgeScreenSize)));
+				SDL_LOG("Subdividing adapted level = " << optimizedLevel);
+
+				// Subdivide and re-try
+				ExtTriangleMesh *newMesh = ApplySubdiv(mesh, optimizedLevel, enhanced);
+				SDL_LOG(
+					"Done step #" << i
+					<< " from " << mesh->GetTotalTriangleCount()
+					<< " to " << newMesh->GetTotalTriangleCount() << " faces "
+					<< "(level=" << optimizedLevel << ")"
+				);
 
 				// Replace old mesh with new one
 				delete mesh;
@@ -1409,48 +1425,47 @@ float SubdivShape::MaxEdgeScreenSize(const Camera *camera, ExtTriangleMesh *srcM
 	// Note VisualStudio doesn't support:
 	//#pragma omp parallel for reduction(max:maxEdgeSize)
 
-	const u_int threadCount =
-#if defined(_OPENMP)
-			omp_get_max_threads()
-#else
-			0
-#endif
-			;
+	const u_int threadCount = omp_get_max_threads();
 
 	const Transform worldToScreen = Inverse(camera->GetScreenToWorld());
 
 	std::vector<float> maxEdgeSizes(threadCount, 0.f);
-	for(
-			// Visual C++ 2013 supports only OpenMP 2.5
-#if _OPENMP >= 200805
-			unsigned
-#endif
-			int i = 0; i < triCount; ++i) {
-		const int tid =
-#if defined(_OPENMP)
-			omp_get_thread_num()
-#else
-			0
-#endif
-			;
 
-		const Triangle &tri = tris[i];
-		const Point p0 = worldToScreen * verts[tri.v[0]];
-		const Point p1 = worldToScreen * verts[tri.v[1]];
-		const Point p2 = worldToScreen * verts[tri.v[2]];
-
-		float maxEdgeSize = (p1 - p0).Length();
-		maxEdgeSize = Max(maxEdgeSize, (p2 - p1).Length());
-		maxEdgeSize = Max(maxEdgeSize, (p0 - p2).Length());
-
-		maxEdgeSizes[tid] = Max(maxEdgeSizes[tid], maxEdgeSize);
+	std::vector<Point> projectedPoints(srcMesh->GetTotalVertexCount());
+	#pragma omp parallel for
+	for(int i = 0; i < srcMesh->GetTotalVertexCount(); ++i) {
+		projectedPoints[i] = worldToScreen * verts[i];
+		projectedPoints[i] /= projectedPoints[i].z;
 	}
 
-	float maxEdgeSize = 0.f;
-	for (u_int i = 0; i < threadCount; ++i)
-		maxEdgeSize = Max(maxEdgeSize, maxEdgeSizes[i]);
+	// Visual C++ 2013 supports only OpenMP 2.5, with int loop indices
+	// At any rate, opensubdiv indices are of type 'int', so no regret...
+	//
+	// We use LengthSquared for max search, sparing one operation per iteration (sqrt)
+	#pragma omp parallel for
+	for(int i = 0; i < triCount; ++i) {
+		const int tid = omp_get_thread_num();
+		//const int tid = 0;
 
-	return maxEdgeSize;
+		const Triangle &tri = tris[i];
+		const Point p0 = projectedPoints[tri.v[0]];
+		const Point p1 = projectedPoints[tri.v[1]];
+		const Point p2 = projectedPoints[tri.v[2]];
+
+		std::array<float, 4> triMaxEdgeSize;
+		triMaxEdgeSize[0] = (p1 - p0).LengthSquared();
+		triMaxEdgeSize[1] = (p2 - p1).LengthSquared();
+		triMaxEdgeSize[2] = (p0 - p2).LengthSquared();
+		triMaxEdgeSize[3] = maxEdgeSizes[tid];
+
+		maxEdgeSizes[tid] =
+			*std::max_element(triMaxEdgeSize.begin(), triMaxEdgeSize.end());
+
+	}
+
+	float maxEdgeSize = *std::max_element(maxEdgeSizes.begin(), maxEdgeSizes.end());
+
+	return sqrtf(maxEdgeSize);
 }
 
 
@@ -1468,12 +1483,19 @@ ExtTriangleMesh *SubdivShape::ApplySubdiv(
 	assert(srcMesh->GetTotalTriangleCount() <= std::numeric_limits<int>::max());
 
 	if (enhanced) {
-		SDL_LOG("Subdivision (enhanced) - Starting");
+		SDL_LOG(
+			"Subdivision (enhanced) - Starting - "
+			<< srcMesh->GetTotalVertexCount() << " points / "
+			<< srcMesh->GetTotalTriangleCount() << " triangles"
+		);
 
 		return enhanced::ApplySubdiv(srcMesh, maxLevel);
 	}
 	else {
-		SDL_LOG("Subdivision - Starting");
+		SDL_LOG("Subdivision - Starting - "
+			<< srcMesh->GetTotalVertexCount() << " points / "
+			<< srcMesh->GetTotalTriangleCount() << " triangles"
+		);
 
 		return simple::ApplySubdiv(srcMesh, maxLevel);
 	}
