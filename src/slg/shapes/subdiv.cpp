@@ -556,9 +556,12 @@ struct FloatAdapter {
 };
 
 
+// Adaptive topology refiner factory function
 TopologyRefinerPtr createTopologyAdaptiveRefiner(
-		const ExtTriangleMesh * srcMesh,  // TODO Only topology is needed
-		const Far::PatchTableFactory::Options& patchOptions
+	const int * vertIndicesPerFace,
+	int numVertices,
+	int numFaces,
+	const Far::PatchTableFactory::Options& patchOptions
 ) {
 
 	// Be sure patch options were intialized with the desired max level
@@ -573,11 +576,11 @@ TopologyRefinerPtr createTopologyAdaptiveRefiner(
 
 	// Populate a topology descriptor with our raw data
 	Far::TopologyDescriptor desc;
-	desc.numVertices = srcMesh->GetTotalVertexCount();
-	desc.numFaces = srcMesh->GetTotalTriangleCount();
-	std::vector<int> vertPerFace(desc.numFaces, 3);
-	desc.numVertsPerFace = &vertPerFace[0];
-	desc.vertIndicesPerFace = reinterpret_cast<const int *>(srcMesh->GetTriangles());
+	desc.numVertices = numVertices;
+	desc.numFaces = numFaces;
+	std::vector<int> vertsPerFace(numFaces, 3);  // We only support triangle meshes
+	desc.numVertsPerFace = vertsPerFace.data();
+	desc.vertIndicesPerFace = vertIndicesPerFace;
 
 	// Create refiner
 	using RefinerFactory = Far::TopologyRefinerFactory<Far::TopologyDescriptor>;
@@ -623,8 +626,15 @@ struct Surface {
 		patchTableOptions.endCapType =
 			Far::PatchTableFactory::Options::ENDCAP_BSPLINE_BASIS;
 
-		// Construct refiner  TODO
-		refiner = std::move(createTopologyAdaptiveRefiner(p_srcMesh, patchTableOptions));
+		// Construct refiner
+		refiner = std::move(
+			createTopologyAdaptiveRefiner(
+				reinterpret_cast<const int *>(srcMesh->GetTriangles()),
+				srcMesh->GetTotalVertexCount(),
+				srcMesh->GetTotalTriangleCount(),
+				patchTableOptions
+			)
+		);
 
 		// Apply adaptive refinement and construct the associated PatchTable to
 		// evaluate the limit surface:
