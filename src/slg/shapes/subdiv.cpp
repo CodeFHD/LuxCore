@@ -501,8 +501,7 @@ namespace enhanced {
 
 
 // Storage of local coordinates (coordinates in a given face) during
-// tessellation.
-
+// tessellation, in the form (face, x, y).
 struct LocalCoords {
 	int face = -1;
 	float x = 0.f;
@@ -543,6 +542,8 @@ struct LocalCoords {
 
 typedef std::vector<LocalCoords> CoordVector;
 
+// Adapter for float values in subdiv buffer The main adaptation consists in
+// addition of Clear and AddWithWeight methods
 struct FloatAdapter {
 	FloatAdapter() : x(0.f) {}
 	FloatAdapter(float p_x): x(p_x) {}
@@ -588,13 +589,22 @@ TopologyRefinerPtr createTopologyAdaptiveRefiner(
 	);
 	assert(refiner);
 
-
 	return refiner;
 
 }
 
 
-// Subdivision surface
+/// Subdivision surface
+///
+/// This is the central object of enhanced subdivision. It implements the following steps:
+/// - Construction
+/// - Subdivision
+/// - Tessellation
+/// - Interpolation
+/// - Evaluation
+///
+/// Please note Subdivision and Tessellation are 2 distinct things:
+/// https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#subdivision-versus-tessellation
 struct Surface {
 
 	Surface(const ExtTriangleMesh * p_srcMesh, int p_maxLevel):
@@ -649,38 +659,46 @@ struct Surface {
 		{}
 	};
 
+	/// Tessellate input mesh
+	///
+	/// Apply a triforce tessellation to input mesh.
+	///
+	/// This tessellation splits edges in N segments,
+	/// and generates N² resulting triangles by input triangle.
+	/// It's been reimplemented here in order to use multithreading (osd
+	/// implementation is monothreaded...).
+	///
+	/// Input:
+	///           V2
+	///          / \
+	///		   /  \
+	///        /   \
+	///      V0----V1
+	///
+	///
+	///	Output (N=4):
+	///
+	///          V2
+	///         / \
+	///        E7-E8
+	///       / \/ \
+	///      E5-I3-E6
+	///     / \/ \/ \
+	///    E3-I0-I1-E4
+	///   / \/ \/ \/ \
+	///	V0-E0-E1-E2-V1
+	///
+	///	Nota:
+	///	Vx - initial vertex (to be kept)
+	///	Ex - edge vertex (to be created)
+	///	Ix - internal vertex (to be created)
+	///
+	/// @param N Tessellation rate: each edge will be subdivided into N
+	/// sub-edges
+	///
 	std::tuple<CoordVector, TriangleArrayPtr, int, int>
 	Tessellate (const size_t N) {
 		// This is triforce tessellation.
-		// This tessellation splits edges in N segments,
-		// and generates N² resulting triangles by input triangle.
-		// It's been totally reimplemented here in order to use
-		// multithreading (osd implementation is monothreaded...).
-		//
-		// Input:
-		//           V2
-		//          / \
-		//		   /  \
-		//        /   \
-		//      V0----V1
-		//
-		//
-		//	Output (N=4):
-		//
-		//          V2
-		//         / \
-		//        E7-E8
-		//       / \/ \
-		//      E5-I3-E6
-		//     / \/ \/ \
-		//    E3-I0-I1-E4
-		//   / \/ \/ \/ \
-		//	V0-E0-E1-E2-V1
-		//
-		//	Nota:
-		//	Vx - initial vertex (to be referenced)
-		//	Ex - edge vertex (to be created)
-		//	Ix - internal vertex (to be created)
 
 		// Allocate outputs
 		CoordVector tessCoords;
@@ -937,6 +955,17 @@ struct Surface {
 		return topology.GetNumFaces() * N * N;
 	}
 
+	///
+	/// Evaluate positions and normals at tessellated mesh coordinates
+	///
+	/// @param interpolatedValues Values of the positions at the vertices
+	///							  of the limit surface
+	///
+	///	@param tessCoords Coordinates on the tessellated mesh where to evaluate Positions
+	///
+	///	@return A smart pointer to a buffer containing the evaluated positions
+	///	and a smart pointer to a buffer containing the evaluated normals
+	///
 	std::tuple<PointArrayPtr, NormalArrayPtr>
 	EvaluatePositions(
 		const Surface::InterpolatedValues& subdivPositions,
@@ -1047,7 +1076,7 @@ struct Surface {
 			// Init
 			auto& coords = tessCoords[vertex];
 
-			// Translate in ptex face  TODO move to tessellation
+			// Translate in ptex face
 			int ptexFace = ptexIndices->GetFaceId(coords.face);
 
 			//  Locate the patch corresponding to the face ptex idx and (s,t)
@@ -1081,6 +1110,7 @@ struct Surface {
 
 
 	// Property members
+	// "We're all consenting adults here", so those members will be left public
 	TopologyRefinerPtr refiner;
 	PtexIndicesPtr ptexIndices;
 	PatchTablePtr patchTable;
@@ -1097,10 +1127,9 @@ struct MultiLayerDataEvaluator{
 
 	// Evaluated data are stored as smart pointers in a vector (one row per
 	// layer), so that they are automatically freed if anything goes wrong
-	// before the mesh is built (any exception...). Each element of the vector
-	// is a buffer for a layer. At the end, the buffers have to be passed to
-	// ExtTriangleMesh constructor, which takes ownership. In that way, they
-	// must be released by this object.
+	// before the mesh is built. Each element of the vector is a buffer for a
+	// layer. Eventually, the buffers have to be passed to ExtTriangleMesh
+	// constructor, which takes ownership. In that way, they will be released.
 
 	using DATA = std::remove_pointer_t<std::invoke_result_t<EXTRACTOR, u_int>>;
 	using DATA_BUFFER = std::unique_ptr<DATA[]>;
@@ -1153,7 +1182,6 @@ struct MultiLayerDataEvaluator{
 		return res;
 	}
 
-
 	const Surface& surface;
 	const size_t layerSize;
 	const std::function<DATA*(u_int)> getLayerData;
@@ -1169,7 +1197,7 @@ ExtTriangleMesh *ApplySubdiv(
 ) {
 	// Remarks:
 	// All buffers (triangles, points, normals...) are enclosed in smart pointers
-	// in order to guarantee that memory is released even in case of exception araising
+	// in order to guarantee that memory is released in case of exception arising
 	// during whole process: please keep it so.
 	//
 	// Outputs values are returned as tuples, instead of using byref arguments.
