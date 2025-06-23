@@ -623,7 +623,7 @@ bool BiDirCPURenderThread::TraceLightPath(const float time,
 				// Check if it is something with a not black shadow transparency
 				// and stop if it has. Direct light sampling will take care of
 				// this kind of paths.
-				if (!lightVertex.bsdf.GetPassThroughShadowTransparency().Black())
+				if (!lightVertex.bsdf.GetPassThroughShadowTransparency().Black() & !lightVertex.bsdf.GetPassThroughShadowTransparencyOverride())
 					break;
 
 				// Update the new light vertex

@@ -128,6 +128,7 @@ public:
 
 	luxrays::Spectrum GetPassThroughTransparency(const bool backTracing) const;
 	const luxrays::Spectrum &GetPassThroughShadowTransparency() const { return material->GetPassThroughShadowTransparency(); }
+	const bool &GetPassThroughShadowTransparencyOverride() const { return material->GetPassThroughShadowTransparencyOverride(); }
 	const luxrays::Frame &GetFrame() const { return frame; }
 
 	luxrays::Spectrum Albedo() const;

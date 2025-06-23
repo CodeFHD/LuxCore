@@ -123,6 +123,8 @@ public:
 
 	void SetPassThroughShadowTransparency(const luxrays::Spectrum &t) { passThroughShadowTransparency = t; }
 	const luxrays::Spectrum &GetPassThroughShadowTransparency() const { return passThroughShadowTransparency; }
+	void SetPassThroughShadowTransparencyOverride(const bool &o) { passThroughShadowTransparencyOverride = o; }
+	const bool &GetPassThroughShadowTransparencyOverride() const { return passThroughShadowTransparencyOverride; }
 
 	virtual luxrays::Spectrum GetEmittedRadiance(const HitPoint &hitPoint,
 		const float oneOverPrimitiveArea) const;
@@ -225,6 +227,7 @@ protected:
 	const Texture *frontTransparencyTex;
 	const Texture *backTransparencyTex;
 	luxrays::Spectrum passThroughShadowTransparency;
+	bool passThroughShadowTransparencyOverride;
 	const Texture *emittedTex;
 	const Texture *bumpTex;
     float bumpSampleDistance;

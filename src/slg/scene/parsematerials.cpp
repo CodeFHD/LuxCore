@@ -531,6 +531,11 @@ Material *Scene::CreateMaterial(const u_int defaultMatID, const string &matName,
 	mat->SetEmittedTemperatureNormalize(props.Get(Property(propName + ".emission.temperature.normalize")(false)).Get<double>());
 
 	mat->SetPassThroughShadowTransparency(GetColor(props.Get(Property(propName + ".transparency.shadow")(Spectrum(0.f)))));
+	if (props.IsDefined(propName + ".transparency.shadowoverride")){
+		mat->SetPassThroughShadowTransparencyOverride(props.Get(Property(propName + ".transparency.shadowoverride")).Get<bool>());
+	} else{
+		mat->SetPassThroughShadowTransparencyOverride(false);
+	}
 
 	const string dlsType = props.Get(Property(propName + ".emission.directlightsampling.type")("AUTO")).Get<string>();
 	if (dlsType == "ENABLED")

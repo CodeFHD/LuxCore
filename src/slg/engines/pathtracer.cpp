@@ -849,6 +849,12 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 				break;
 			}
 
+			// Check if it is something with a not black shadow transparency
+			// and stop if it has. Direct light sampling will take care of
+			// this kind of paths.
+			if (!bsdf.GetPassThroughShadowTransparency().Black() & !bsdf.GetPassThroughShadowTransparencyOverride())
+				break;
+
 			// Something was hit
 
 			lightPathFlux *= connectionThroughput;
