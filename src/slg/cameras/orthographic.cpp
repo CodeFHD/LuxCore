@@ -76,6 +76,13 @@ void OrthographicCamera::ClampRay(Ray *ray) const {
 }
 
 bool OrthographicCamera::ProjectToImage(Ray *ray, float *x, float *y) const {
+	// check if point is behind camera
+	const float cosi = Dot(ray->d, dir);
+
+	if ((cosi <= 0.f) || (!isinf(ray->maxt) && (ray->maxt < clipHither ||
+		ray->maxt > clipYon)))
+		return false;
+
 	// Get coordinates of point in image plane
 	Point pO = Inverse(camTrans.rasterToWorld) * ray->o;
 	if (motionSystem)
@@ -83,13 +90,6 @@ bool OrthographicCamera::ProjectToImage(Ray *ray, float *x, float *y) const {
 
 	*x = pO.x;
 	*y = filmHeight - 1 - pO.y;
-
-	// check if point is behind camera
-	const float cosi = Dot(ray->d, dir);
-
-	if ((cosi <= 0.f) || (!isinf(ray->maxt) && (ray->maxt < clipHither ||
-		ray->maxt > clipYon)))
-		return false;
 
 	// Update the ray origin
 	pO.z = 0.f;
