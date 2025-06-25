@@ -719,7 +719,6 @@ void PathTracer::ConnectToEye(IntersectionDevice *device,
 			0.f,
 			eyeDistance,
 			time);
-		scene->camera->ClampRay(&eyeRay);
 		eyeRay.UpdateMinMaxWithEpsilon();
 		sampleSuccess = scene->camera->ProjectToImage(&eyeRay, &filmX, &filmY);
 	} else {
@@ -731,7 +730,6 @@ void PathTracer::ConnectToEye(IntersectionDevice *device,
 			0.f,
 			eyeDistance,
 			time);
-		scene->camera->ClampRay(&eyeRay);
 		eyeRay.UpdateMinMaxWithEpsilon();
 		sampleSuccess = scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY);
 	}
