@@ -353,7 +353,8 @@ void BiDirCPURenderThread::ConnectToEye(const float time,
 		Ray eyeRay;
 		
 		if (scene->camera->GetType() == Camera::ORTHOGRAPHIC){
-			eyeRay = Ray(lightVertex.bsdf.hitPoint.p, eyeDir,
+			Vector rayDir(lightVertex.bsdf.hitPoint.p - lensPoint);
+			eyeRay = Ray(lightVertex.bsdf.hitPoint.p, rayDir,
 				0.f,
 				eyeDistance,
 				time);
