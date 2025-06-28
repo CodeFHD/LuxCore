@@ -903,6 +903,7 @@ void BiDirCPURenderThread::RenderFunc(std::stop_token stop_token) {
 					albedoToDo = false;
 				}
 
+				float t_MIS;
 				if (eyeSampleResult.firstPathVertex) {
 					eyeSampleResult.alpha = 1.f;
 					eyeSampleResult.depth = eyeRayHit.t;
@@ -911,11 +912,18 @@ void BiDirCPURenderThread::RenderFunc(std::stop_token stop_token) {
 					eyeSampleResult.materialID = eyeVertex.bsdf.GetMaterialID();
 					eyeSampleResult.objectID = eyeVertex.bsdf.GetObjectID();
 					eyeSampleResult.uv = eyeVertex.bsdf.hitPoint.GetUV(0);
+					// for the camera ray, we need to add the clipping distance
+					// because eyeRayHit.t is measured from clipping start.
+					// Otherwise, the brightness near the front clipping plane may be distorted.
+					t_MIS = eyeRayHit.t + camera->clipHither;
+				} 
+				else{
+					t_MIS = eyeRayHit.t;
 				}
 
 				// Update MIS constants
 				const float factor = 1.f / MIS(AbsDot(eyeVertex.bsdf.hitPoint.shadeN, eyeVertex.bsdf.hitPoint.fixedDir));
-				eyeVertex.dVCM *= MIS(eyeRayHit.t * eyeRayHit.t) * factor;
+				eyeVertex.dVCM *= MIS(t_MIS * t_MIS) * factor;
 				eyeVertex.dVC *= factor;
 				eyeVertex.dVM *= factor;
 
