@@ -31,7 +31,7 @@ class Status(Enum):
 
 
 REQUIREMENTS = (
-    Require("conan", None, True),
+    Require("conan", (2, 18), True),
     Require("wheel", None, True),
     Require("cmake", (3, 29), True),
     Require("git", None, True),
