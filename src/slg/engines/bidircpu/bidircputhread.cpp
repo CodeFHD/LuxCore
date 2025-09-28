@@ -358,14 +358,12 @@ void BiDirCPURenderThread::ConnectToEye(const float time,
 				0.f,
 				eyeDistance,
 				time);
-			eyeRay.UpdateMinMaxWithEpsilon();
 			sampleSuccess = scene->camera->ProjectToImage(&eyeRay, &filmX, &filmY);
 		} else {
 			eyeRay = Ray(lensPoint, eyeDir,
 				0.f,
 				eyeDistance,
 				time);
-			eyeRay.UpdateMinMaxWithEpsilon();
 			sampleSuccess = scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY);
 		}
 		if (sampleSuccess) {
