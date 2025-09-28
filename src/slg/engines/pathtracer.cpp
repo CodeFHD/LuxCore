@@ -719,7 +719,6 @@ void PathTracer::ConnectToEye(IntersectionDevice *device,
 			0.f,
 			eyeDistance,
 			time);
-		eyeRay.UpdateMinMaxWithEpsilon();
 		sampleSuccess = scene->camera->ProjectToImage(&eyeRay, &filmX, &filmY);
 	} else {
 		eyeDir = Vector(bsdf.hitPoint.p - lensPoint);
@@ -730,7 +729,6 @@ void PathTracer::ConnectToEye(IntersectionDevice *device,
 			0.f,
 			eyeDistance,
 			time);
-		eyeRay.UpdateMinMaxWithEpsilon();
 		sampleSuccess = scene->camera->GetSamplePosition(&eyeRay, &filmX, &filmY);
 	}
 
