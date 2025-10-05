@@ -54,7 +54,7 @@ using namespace std;
 PathOCLBaseRenderEngine::PathOCLBaseRenderEngine(const RenderConfig *rcfg,
 		const bool supportsNativeThreads) :	OCLRenderEngine(rcfg, supportsNativeThreads),
 		compiledScene(nullptr), pixelFilterDistribution(nullptr), oclSampler(nullptr),
-		oclPixelFilter(nullptr), photonGICache(nullptr) {
+		oclPixelFilter(nullptr), photonGICache(nullptr), lightSamplerSharedData(nullptr) {
 	writeKernelsToFile = false;
 
 	//--------------------------------------------------------------------------
@@ -155,6 +155,7 @@ PathOCLBaseRenderEngine::~PathOCLBaseRenderEngine() {
 	delete[] pixelFilterDistribution;
 	delete oclSampler;
 	delete oclPixelFilter;
+	delete lightSamplerSharedData;
 }
 
 void PathOCLBaseRenderEngine::InitGPUTaskConfiguration() {
@@ -203,6 +204,7 @@ void PathOCLBaseRenderEngine::InitFilm() {
 			Get("path.hybridbackforward.enable")).Get<bool>();
 	if (hybridBackForwardEnable)
 		film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
+		lightSamplerSharedData = MetropolisSamplerSharedData::FromProperties(Properties(), &seedBaseGenerator, film);
 
 	film->SetRadianceGroupCount(renderConfig->scene->lightDefs.GetLightGroupCount());
 	film->Init();
@@ -396,6 +398,8 @@ void PathOCLBaseRenderEngine::StopLockLess() {
 	photonGICache = nullptr;
 	delete[] pixelFilterDistribution;
 	pixelFilterDistribution = nullptr;
+	delete lightSamplerSharedData;
+	lightSamplerSharedData = nullptr;
 }
 
 void PathOCLBaseRenderEngine::BeginSceneEditLockLess() {
@@ -414,6 +418,8 @@ void PathOCLBaseRenderEngine::BeginSceneEditLockLess() {
 }
 
 void PathOCLBaseRenderEngine::EndSceneEditLockLess(const EditActionList &editActions) {
+	if (lightSamplerSharedData)
+		lightSamplerSharedData->Reset();
 	compiledScene->Recompile(editActions);
 
 	for (size_t i = 0; i < renderOCLThreads.size(); ++i) {

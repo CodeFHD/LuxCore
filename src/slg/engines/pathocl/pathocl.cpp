@@ -60,7 +60,6 @@ PathOCLRenderEngine::PathOCLRenderEngine(const RenderConfig *rcfg) :
 		PathOCLBaseRenderEngine(rcfg, true) {
 	lightSampleSplatter = nullptr; 
 	eyeSamplerSharedData = nullptr;
-	lightSamplerSharedData = nullptr;
 	hasStartFilm = false;
 	allRenderingThreadsStarted = false;
 }
@@ -68,7 +67,6 @@ PathOCLRenderEngine::PathOCLRenderEngine(const RenderConfig *rcfg) :
 PathOCLRenderEngine::~PathOCLRenderEngine() {
 	delete lightSampleSplatter;
 	delete eyeSamplerSharedData;
-	delete lightSamplerSharedData;
 }
 
 PathOCLBaseOCLRenderThread *PathOCLRenderEngine::CreateOCLThread(const u_int index,
@@ -145,8 +143,6 @@ void PathOCLRenderEngine::StartLockLess() {
 	if (nativeRenderThreadCount > 0) {
 		eyeSamplerSharedData = renderConfig->AllocSamplerSharedData(&seedBaseGenerator, film);
 		
-		if (pathTracer.hybridBackForwardEnable)
-			lightSamplerSharedData = MetropolisSamplerSharedData::FromProperties(Properties(), &seedBaseGenerator, film);
 	}
 
 	//--------------------------------------------------------------------------
@@ -174,8 +170,6 @@ void PathOCLRenderEngine::StopLockLess() {
 
 	delete eyeSamplerSharedData;
 	eyeSamplerSharedData = nullptr;
-	delete lightSamplerSharedData;
-	lightSamplerSharedData = nullptr;
 
 	delete photonGICache;
 	photonGICache = nullptr;
