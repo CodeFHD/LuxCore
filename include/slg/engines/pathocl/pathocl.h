@@ -112,10 +112,9 @@ protected:
 	void UpdateTaskCount();
 
 	u_int GetTotalEyeSPP() const;
-	
+
 	FilmSampleSplatter *lightSampleSplatter;
 	SamplerSharedData *eyeSamplerSharedData;
-	SamplerSharedData *lightSamplerSharedData;
 
 	bool hasStartFilm, allRenderingThreadsStarted;
 };
