@@ -16,44 +16,30 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
-#ifndef _SLG_SUBDIVSHAPE_H
-#define	_SLG_SUBDIVSHAPE_H
-
-#include <string>
+#pragma once
 
 #include "slg/shapes/shape.h"
 
 namespace slg {
 
-class Camera;
-
-class SubdivShape : public Shape {
+class MergeOnDistanceShape : public Shape {
 public:
-	SubdivShape(
-		const Camera *camera,
-		luxrays::ExtTriangleMesh *srcMesh,
-		const u_int maxLevel,
-		const float maxEdgeScreenSize,
-		const bool enhanced
+	MergeOnDistanceShape(
+		luxrays::ExtTriangleMesh *srcMesh
 	);
-	virtual ~SubdivShape();
 
-	virtual ShapeType GetType() const { return SUBDIV; }
+	virtual ShapeType GetType() const { return MERGEONDISTANCE; }
 
-	static float MaxEdgeScreenSize(const Camera *camera, luxrays::ExtTriangleMesh *srcMesh);
-	static luxrays::ExtTriangleMesh *ApplySubdiv(
-		luxrays::ExtTriangleMesh *srcMesh,
-		const u_int maxLevel,
-		const bool enhanced
+	static luxrays::ExtTriangleMesh * ApplyMergeOnDistance(
+		luxrays::ExtTriangleMesh *srcMesh
 	);
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMesh *RefineImpl(const slg::Scene *scene);
 
-	luxrays::ExtTriangleMesh *mesh = nullptr;
+	luxrays::ExtTriangleMesh *mesh;
 };
 
 }
 
-#endif	/* _SLG_SUBDIVSHAPE_H */
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

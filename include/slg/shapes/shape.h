@@ -44,7 +44,8 @@ public:
 		RANDOMTRIANGLEAOV,
 		EDGEDETECTORAOV,
 		BEVEL,
-		CAMERAPROJUV
+		CAMERAPROJUV,
+		MERGEONDISTANCE
 	} ShapeType;
 
 	Shape() : refined(false) { }

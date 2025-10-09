@@ -36,6 +36,7 @@
 
 #include "luxrays/core/exttrianglemesh.h"
 #include "slg/shapes/subdiv.h"
+#include "slg/shapes/merge_on_distance.h"
 #include "slg/cameras/camera.h"
 #include "slg/scene/scene.h"
 
@@ -1353,11 +1354,15 @@ SubdivShape::SubdivShape(
 	}
 
 	if (maxLevel > 0) {
+
+		mesh = slg::MergeOnDistanceShape::ApplyMergeOnDistance(srcMesh);
+
 		if (camera && (maxEdgeScreenSize > 0.f)) {
 			SDL_LOG("Subdividing shape " << srcMesh->GetName()
 					<< " - Adaptive subdivision");
 
-			mesh = srcMesh->Copy();
+			//TODO
+			//mesh = srcMesh->Copy();
 
 			for (u_int i = 0; i < maxLevel; ++i) {
 				SDL_LOG("Subdividing - Adaptive - Computing max edge size");
@@ -1396,7 +1401,8 @@ SubdivShape::SubdivShape(
 		} else {
 			SDL_LOG("Subdividing shape " << srcMesh->GetName() << " at level: " << maxLevel);
 
-			mesh = ApplySubdiv(srcMesh, maxLevel, enhanced);
+			//mesh = ApplySubdiv(srcMesh, maxLevel, enhanced);  TODO
+			mesh = ApplySubdiv(mesh, maxLevel, enhanced);
 		}
 	} else {
 		// Nothing to do, just make a copy

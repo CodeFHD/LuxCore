@@ -398,6 +398,7 @@ set(SLG_CORE_SRCS
   ${PROJECT_SOURCE_DIR}/src/slg/shapes/groupshape.cpp
   ${PROJECT_SOURCE_DIR}/src/slg/shapes/harlequinshape.cpp
   ${PROJECT_SOURCE_DIR}/src/slg/shapes/islandaovshape.cpp
+  ${PROJECT_SOURCE_DIR}/src/slg/shapes/merge_on_distance.cpp
   ${PROJECT_SOURCE_DIR}/src/slg/shapes/meshshape.cpp
   ${PROJECT_SOURCE_DIR}/src/slg/shapes/pointiness.cpp
   ${PROJECT_SOURCE_DIR}/src/slg/shapes/randomtriangleaovshape.cpp
