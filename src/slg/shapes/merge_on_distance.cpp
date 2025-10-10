@@ -28,6 +28,7 @@
 #include <format>
 
 #include "oneapi/tbb.h"
+#include "oneapi/tbb/scalable_allocator.h"
 
 #include "luxrays/core/exttrianglemesh.h"
 #include "slg/shapes/merge_on_distance.h"
@@ -58,9 +59,30 @@ bool nearly_equal(float a, float b, int factor /* a factor of epsilon */)
 class UnionFind {
 public:
     UnionFind() {}
+    UnionFind(size_t count) {
+		reserve(count);
+	}
+	UnionFind(const UnionFind& other) {
+		parent = other.parent;
+		rank = other.rank;
+	}
+	UnionFind(UnionFind&& other) {
+		parent = std::move(other.parent);
+		rank = std::move(other.rank);
+	}
+	UnionFind& operator=(const UnionFind& other) {
+		parent = other.parent;
+		rank = other.rank;
+		return (*this);
+	}
+	UnionFind& operator=(UnionFind&& other) {
+		parent = std::move(other.parent);
+		rank = std::move(other.rank);
+		return (*this);
+	}
 
     // Find the root of the set containing element i
-    int find(int i) {
+    u_int find(u_int i) {
         if (parent.find(i) == parent.end()) {
             parent[i] = i;
             rank[i] = 0;
@@ -72,9 +94,9 @@ public:
     }
 
     // Union the sets containing elements i and j
-    void unite(int i, int j) {
-        int rootI = find(i);
-        int rootJ = find(j);
+    void unite(u_int i, u_int j) {
+        u_int rootI = find(i);
+        u_int rootJ = find(j);
 
         if (rootI != rootJ) {
             // Union by rank
@@ -89,6 +111,12 @@ public:
         }
     }
 
+	// Reserve space
+	void reserve(size_t count) {
+		parent.reserve(count);
+		rank.reserve(count);
+	}
+
     // Overload the += operator to merge two UnionFind instances
     UnionFind operator+=(UnionFind& other) {
 
@@ -99,9 +127,16 @@ public:
         return (*this);
     }
 
+	size_t size() {
+		return parent.size();
+	}
+
 private:
-    std::unordered_map<int, int> parent;
-    std::unordered_map<int, int> rank;
+	using Allocator = tbb::scalable_allocator<std::pair<const u_int, u_int>>;
+	using Hash = std::hash<u_int>;
+	using Equal = std::equal_to<u_int>;
+    std::unordered_map<u_int, u_int, Hash, Equal, Allocator> parent;
+    std::unordered_map<u_int, u_int, Hash, Equal, Allocator> rank;
 
     friend std::ostream& operator<<(std::ostream& os, const UnionFind& uf);
 };
@@ -118,7 +153,7 @@ std::ostream& operator<<(std::ostream& os, const UnionFind& uf) {
     return os;
 }
 
-
+// Cell Id, for grid indexing
 union CellId {
 	CellId(int16_t x, int16_t y, int16_t z) {
 		i16[0] = 0;
@@ -157,16 +192,19 @@ namespace std {
 namespace {
 using GridType = std::unordered_map<CellId, std::vector<u_int>>;
 
-void ProcessGrid(
-	const GridType& grid,
-    const Point* points,
-    UnionFind& dsu  // Out param
-) {
-    tbb::mutex dsuMutex; // Protect dsu.unite
+UnionFind ProcessGrid(const GridType& grid, const Point* points, u_int numPoints) {
 
-    tbb::parallel_for(
-        tbb::blocked_range<size_t>(0, grid.size()),
-        [&](const tbb::blocked_range<size_t>& r) {
+	auto partitioner = tbb::affinity_partitioner();
+
+    auto res = tbb::parallel_reduce(
+		// Range
+        tbb::blocked_range<size_t>(0, grid.size(), grid.size()),
+
+		// Init
+		UnionFind(numPoints),
+
+		// Body
+        [&](const tbb::blocked_range<size_t>& r, UnionFind&& dsu) {
             auto it = grid.begin();
             std::advance(it, r.begin());
             for (size_t i = r.begin(); i != r.end(); ++i, ++it) {
@@ -182,22 +220,38 @@ void ProcessGrid(
                             auto adjIt = grid.find(adjCellId);
                             if (adjIt == grid.end()) continue;
 
-                            for (u_int idx : cellPoints) {
-                                for (int adjIdx : adjIt->second) {
+                            for (auto idx : cellPoints) {
+								Point curPoint(points[idx]);
+                                for (auto adjIdx : adjIt->second) {
                                     if (idx >= adjIdx) continue;
-                                    float dist = DistanceSquared(points[idx], points[adjIdx]);
+                                    auto dist = DistanceSquared(curPoint, points[adjIdx]);
                                     if (nearly_equal(dist, 0.f)) {
-                                        tbb::mutex::scoped_lock lock(dsuMutex);
                                         dsu.unite(idx, adjIdx);
                                     }
                                 }
                             }
-                        }
-                    }
-                }
-            }
-        }
+                        }  // for dz
+                    }  // for dy
+                }  // for dx
+            }  // for i
+			return dsu;
+        },  // lambda
+
+		// Reduce
+		[](UnionFind&& dsu1, UnionFind&& dsu2) -> UnionFind {
+			if (dsu1.size() < dsu2.size()) {
+				dsu2 += dsu1;
+				return dsu2;
+			} else {
+				dsu1 += dsu2;
+				return dsu1;
+			}
+		},
+
+		// Partitioner
+		partitioner
     );
+	return res;
 }
 
 // Spatial partioning
@@ -206,13 +260,7 @@ void ProcessGrid(
 // - The number of merged points
 // - A map between old points and new points (vector)
 std::tuple<std::unique_ptr<Point>, u_int, std::vector<u_int>, std::vector<u_int>>
-mergePoints(
-	Point * points,
-	u_int numPoints,
-	float cellSize
-) {
-	UnionFind dsu;
-
+mergePoints(Point * points, u_int numPoints) {
 	// Compute cellSize
 	float minlimit = std::numeric_limits<float>::min();
 	float maxlimit = std::numeric_limits<float>::max();
@@ -306,7 +354,9 @@ mergePoints(
 
 	// For each cell, compare points within the cell and adjacent cells
 	// and gather points in small distance
-	ProcessGrid(grid, points, dsu);
+	SDL_LOG("Before process");
+	auto dsu = ProcessGrid(grid, points, numPoints);
+	SDL_LOG("After process");
 
 	// Group points by their root parent
 	std::unordered_map<u_int, std::vector<u_int>> clusters;
@@ -362,8 +412,7 @@ luxrays::ExtTriangleMesh* slg::MergeOnDistanceShape::ApplyMergeOnDistance(
 	u_int numOldPoints = srcMesh->GetTotalVertexCount();
 	auto [newPoints, numNewPoints, pointMap, histogram] = mergePoints(
 		srcMesh->GetVertices(),
-		numOldPoints,
-		cellSize
+		numOldPoints
 	);
 
 	// Recompute triangles
