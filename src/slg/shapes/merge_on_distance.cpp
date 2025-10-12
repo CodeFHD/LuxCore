@@ -61,7 +61,7 @@ bool nearly_equal(float a, float b, int factor /* a factor of epsilon */)
 class UnionFind {
 public:
     UnionFind() {}
-    UnionFind(size_t count) {
+    explicit UnionFind(size_t count) {
 		reserve(count);
 	}
 	UnionFind(const UnionFind& other) {
@@ -120,7 +120,7 @@ public:
 	}
 
     // Overload the += operator to merge two UnionFind instances
-    UnionFind operator+=(UnionFind& other) {
+    UnionFind operator+=(const UnionFind& other) {
 
         for (const auto& pair : other.parent) {
             unite(pair.first, pair.second);
@@ -227,10 +227,12 @@ ComputeGrid(const Point * points, u_int numPoints) {
 
 	using sixfloats = std::tuple<float, float, float, float, float, float>;
 
+	constexpr size_t grain = 1024;
+
 	// Compute bounding box
 	auto boundingbox = parallel_reduce(
 		// Range
-		blocked_range<const Point*>(points, points+numPoints),
+		blocked_range<const Point*>(points, points+numPoints, grain),
 
 		// Init
 		std::make_tuple(maxlimit, maxlimit, maxlimit, minlimit, minlimit, minlimit),
@@ -250,9 +252,9 @@ ComputeGrid(const Point * points, u_int numPoints) {
 		},
 
 		// Reduce
-		[](const sixfloats& a, const sixfloats& b) {
-			auto& [minXa, minYa, minZa, maxXa, maxYa, maxZa] = a;
-			auto& [minXb, minYb, minZb, maxXb, maxYb, maxZb] = b;
+		[](sixfloats&& a, sixfloats&& b) {
+			auto [minXa, minYa, minZa, maxXa, maxYa, maxZa] = a;
+			auto [minXb, minYb, minZb, maxXb, maxYb, maxZb] = b;
 			return std::make_tuple(
 				std::min(minXa, minXb),
 				std::min(minYa, minYb),
@@ -264,7 +266,7 @@ ComputeGrid(const Point * points, u_int numPoints) {
 		}
 	);
 
-	auto& [minX, minY, minZ, maxX, maxY, maxZ] = boundingbox;
+	auto [minX, minY, minZ, maxX, maxY, maxZ] = boundingbox;
 	Point midPoint((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
 
 	// Compute cell sizes
@@ -278,6 +280,10 @@ ComputeGrid(const Point * points, u_int numPoints) {
 	cellSizeY = std::nextafterf(cellSizeY, INFINITY);
 	cellSizeZ = std::nextafterf(cellSizeZ, INFINITY);
 
+	SDL_LOG("Merge On Distance: Grid dimensions - "
+		<< midPoint << " ("
+		<< cellSizeX << ", " << cellSizeY << ", " << cellSizeZ << ")"
+	)
 
 	return std::tuple(midPoint, cellSizeX, cellSizeY, cellSizeZ);
 
@@ -292,10 +298,12 @@ GridType AssignPointsToGrid(
 	const Point * points,
 	u_int numPoints
 ) {
+	// Avoid tiny sets of data for body
+	constexpr size_t grain = 1024;
 
 	auto grid = tbb::parallel_reduce(
 		// Range
-		blocked_range<u_int>(0, numPoints),
+		blocked_range<u_int>(0, numPoints, grain),
 
 		// Init
 		GridType(numPoints),
@@ -316,9 +324,6 @@ GridType AssignPointsToGrid(
 
 		// Reduce
 		[](GridType&& grid1, GridType&& grid2) -> GridType {
-			if (grid1.size() < grid2.size()) {
-				std::swap(grid1, grid2);
-			}
 			grid1.merge(grid2);
 			for (auto& [cellId, gridBucket2] : grid2) {
 				auto& gridBucket1 = grid1[cellId];
@@ -330,6 +335,18 @@ GridType AssignPointsToGrid(
 			return grid1;
 		}
 	);
+
+	// Debug
+#if 0
+	size_t sup = 0;
+	size_t count = 0;
+	for (auto const& [key, value] : grid) {
+		sup = std::max(value.size(), sup);
+		count += value.size();
+	}
+	SDL_LOG("Grid sup/total: " << sup << " " << count);
+#endif
+
 	return grid;
 }
 
@@ -339,30 +356,49 @@ UnionFind ProcessGrid(const GridType& grid, u_int numPoints) {
 
 	auto partitioner = tbb::auto_partitioner();
 
+	// Debug
+#if 0
+	size_t sup = 0;
+	size_t count = 0;
+	for (auto const& [key, value] : grid) {
+		sup = std::max(value.size(), sup);
+		count += value.size();
+	}
+	SDL_LOG("Grid sup/total: " << sup << " " << count);
+#endif
+
+	// Avoid tiny sets of data for body
+	constexpr size_t grain = 1024;
+
     auto res = tbb::parallel_reduce(
 		// Range
-        tbb::blocked_range<size_t>(0, grid.size()),
+        tbb::blocked_range<size_t>(0, grid.size(), grain),
 
 		// Init
 		UnionFind(numPoints),
 
 		// Body
-        [&](const tbb::blocked_range<size_t>& r, UnionFind&& dsu) {
+        [&grid](const tbb::blocked_range<size_t>& r, UnionFind&& dsu) -> UnionFind {
+			//SDL_LOG("Begin body: " << r.begin() << " / " << r.end() );  // TODO
             auto it = grid.begin();
             std::advance(it, r.begin());
             for (size_t i = r.begin(); i != r.end(); ++i, ++it) {
-                auto& [cellId, cellPoints] = *it;
+                auto [cellId, cellPoints] = *it;
+				//SDL_LOG("#points: " << cellPoints.size()); // TODO
 
                 // Check adjacent cells
                 for (int16_t dx = -1; dx <= 1; ++dx) {
                     for (int16_t dy = -1; dy <= 1; ++dy) {
                         for (int16_t dz = -1; dz <= 1; ++dz) {
+
                             CellId adjCellId(
 								cellId.x() + dx, cellId.y() + dy, cellId.z() + dz
 							);
                             auto adjIt = grid.find(adjCellId);
                             if (adjIt == grid.end()) continue;
 
+							// For each point in current cell and for each point
+							// in adjacent cell, compute distance
                             for (auto [idx, curPoint] : cellPoints) {
                                 for (auto [adjIdx, adjPoint] : adjIt->second) {
                                     if (idx >= adjIdx) continue;
@@ -376,6 +412,7 @@ UnionFind ProcessGrid(const GridType& grid, u_int numPoints) {
                     }  // for dy
                 }  // for dx
             }  // for i
+			//SDL_LOG("End body");  // TODO
 			return dsu;
         },  // lambda
 
@@ -396,7 +433,7 @@ UnionFind ProcessGrid(const GridType& grid, u_int numPoints) {
 	return res;
 }
 
-// Create point clusters
+// Group points into clusters
 tbb::concurrent_vector<std::vector<u_int, tbb::scalable_allocator<u_int>>>
 CreateClusters(const UnionFind& dsu, u_int numPoints) {
 	// Group equivalent points into map
@@ -415,56 +452,74 @@ CreateClusters(const UnionFind& dsu, u_int numPoints) {
 	>;
 	using ClusterMapAndKey = std::tuple<ClusterMap, ClusterKeys>;
 
+	// Avoid tiny sets of data for body
+	constexpr size_t grain = 1024;
+
 	auto [map, keys] = tbb::parallel_reduce(
 		// Range
-		tbb::blocked_range<u_int>(0, numPoints),
+		tbb::blocked_range<u_int>(0, numPoints, grain),
 
 		// Init
-		std::tuple(ClusterMap(numPoints), ClusterKeys(numPoints)),
+		//std::tuple(ClusterMap(numPoints), ClusterKeys(numPoints)),
+		std::tuple(ClusterMap(), ClusterKeys()),
 
 		// Body
-		[&](const tbb::blocked_range<u_int>& r, ClusterMapAndKey&& mapkey)
+		[&dsu](const tbb::blocked_range<u_int>& r, ClusterMapAndKey&& mapkey)
 			-> ClusterMapAndKey
 		{
 			auto [map, keys] = mapkey;
+
+			const auto number_of_elements = r.end() - r.begin();
+			map.reserve(number_of_elements);
+			keys.reserve(number_of_elements);
+
 			for (u_int i = r.begin(); i != r.end(); ++i) {
 				auto clusterIndex = dsu.find_readonly(i);
-				keys.emplace(clusterIndex);
+				keys.insert(clusterIndex);
 				map.emplace(clusterIndex, i);
 			}
-			return std::tuple(map, keys);
+			return std::make_tuple(map, keys);
 		},
 
 		// Reduce
 		[](ClusterMapAndKey&& mapkey1, const ClusterMapAndKey& mapkey2) -> ClusterMapAndKey
 		{
-			auto [map1, key1] = mapkey1;
-			const auto& [map2, key2] = mapkey2;
+			auto [map1, keys1] = mapkey1;
+			const auto& [map2, keys2] = mapkey2;
+
+			map1.reserve(map1.size() + map2.size());
+			keys1.reserve(keys1.size() + keys2.size());
 
 			map1.insert(map2.cbegin(), map2.cend());
-			key1.insert(key2.cbegin(), key2.cend());
+			keys1.insert(keys2.cbegin(), keys2.cend());
 
-			return std::tuple(map1, key1);
+			return std::tuple(map1, keys1);
 		}
 	);
 
-	//std::sort(std::execution::par, keys.begin(), keys.end());
-	//auto last = std::unique(std::execution::par, keys.begin(), keys.end());
-	//keys.erase(last, keys.end());
 	SDL_LOG("Middle group");
 
+	// Copy set to vector
+	using KeyVector = std::vector<u_int>;
+	KeyVector keyvect;
+	keyvect.reserve(keys.size());
+	std::copy(keys.begin(), keys.end(), std::back_inserter(keyvect));
+
 	// Get an array of clusters
+	// TODO Reduce
 	tbb::concurrent_vector<std::vector<u_int, tbb::scalable_allocator<u_int>>> clusters;
 	clusters.reserve(map.size());
-	tbb::parallel_for_each(
-		keys,
-		[&](const auto& key) {
-			const auto& [begin, end] = map.equal_range(key);
-			auto new_cluster = clusters.emplace_back();
-			new_cluster->reserve(std::distance(begin, end));
-			for (auto it = begin; it != end; ++it) {
-				auto [key, value] = *it;
-				new_cluster->push_back(value);
+	tbb::parallel_for(
+		tbb::blocked_range<KeyVector::iterator>(keyvect.begin(), keyvect.end(), grain),
+		[&](const auto& r) {
+			for (auto it = r.begin(); it != r.end(); ++it) {
+				const auto& [begin, end] = map.equal_range(*it);
+				auto new_cluster = clusters.emplace_back();
+				new_cluster->reserve(std::distance(begin, end));
+				for (auto it = begin; it != end; ++it) {
+					auto [key, value] = *it;
+					new_cluster->push_back(value);
+				}
 			}
 		}
 	);
@@ -473,6 +528,7 @@ CreateClusters(const UnionFind& dsu, u_int numPoints) {
 
 
 // Merge point, with spatial partioning acceleration
+// This is the entry point of the algorithm
 // Returns:
 // - The merged points (dynamic array)
 // - The number of merged points
@@ -482,12 +538,16 @@ mergePoints(const Point * points, u_int numPoints) {
 
 	// Compute grid dimensions
 	auto [midPoint, cellSizeX, cellSizeY, cellSizeZ] = ComputeGrid(points, numPoints);
-
+	SDL_LOG("After compute grid");
 	// Assign points to grid cells
 	// We could have written something smarter with tbb::unordered_multimap
 	// but it may not be worth spending time on that, as the most common
 	// use case should be to call it with low or medium poly
-	auto grid = AssignPointsToGrid(midPoint, cellSizeX, cellSizeZ, cellSizeZ, points, numPoints);
+	GridType grid{
+		AssignPointsToGrid(midPoint, cellSizeX, cellSizeZ, cellSizeZ, points, numPoints)
+	};
+
+	SDL_LOG("After assignment");
 
 	// For each cell, compare points within the cell and adjacent cells
 	// and gather points in small distance
@@ -508,8 +568,11 @@ mergePoints(const Point * points, u_int numPoints) {
 	auto newPointsPtr = newPoints.get();
 	std::vector<u_int> histogram(numPoints);
 
+	// Avoid tiny sets of data for body
+	constexpr size_t grain = 1024;
+
 	tbb::parallel_for(
-        tbb::blocked_range<size_t>(0, numNewPoints),
+        tbb::blocked_range<size_t>(0, numNewPoints, grain),
 		[&](tbb::blocked_range<size_t>& r) {
 			for (auto newIdx = r.begin(); newIdx != r.end(); ++newIdx) {
 				auto& cluster = clusters[newIdx];
