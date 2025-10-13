@@ -28,6 +28,7 @@ public:
 		luxrays::ExtTriangleMesh *srcMesh
 	);
 
+	virtual ~MergeOnDistanceShape();
 	virtual ShapeType GetType() const { return MERGEONDISTANCE; }
 
 	static luxrays::ExtTriangleMesh * ApplyMergeOnDistance(

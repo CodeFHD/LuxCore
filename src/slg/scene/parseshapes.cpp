@@ -32,6 +32,7 @@
 #include "slg/shapes/edgedetectoraov.h"
 #include "slg/shapes/bevelshape.h"
 #include "slg/shapes/cameraprojuv.h"
+#include "slg/shapes/merge_on_distance.h"
 
 using namespace std;
 using namespace luxrays;
@@ -385,7 +386,13 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		const u_int uvIndex = Clamp(props.Get(Property(propName + ".uvindex")(0)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
 		shape = new CameraProjUVShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName), uvIndex);
+	} else if (shapeType == "mergeondistance") {
+		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
+		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
+			throw runtime_error("Unknown shape name in a mergeondistance shape: " + shapeName);
+		shape = new MergeOnDistanceShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName));
 	} else
+
 		throw runtime_error("Unknown shape type: " + shapeType);
 
 	ExtTriangleMesh *mesh = shape->Refine(this);

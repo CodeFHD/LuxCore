@@ -881,10 +881,30 @@ luxrays::ExtTriangleMesh* RecreateMesh(
 
 namespace slg {
 
+MergeOnDistanceShape::MergeOnDistanceShape(luxrays::ExtTriangleMesh * srcMesh) {
+
+	SDL_LOG("Merge On Distance - Applying to " << srcMesh->GetName());
+
+	const double startTime = WallClockTime();
+
+	mesh = ApplyMergeOnDistance(srcMesh);
+
+	const double endTime = WallClockTime();
+	SDL_LOG(
+		std::format(
+			"Merge On Distance - Merging time: {:.3f} secs", endTime - startTime
+		)
+	);
+}
+
+MergeOnDistanceShape::~MergeOnDistanceShape() {
+	if (!refined)
+		delete mesh;
+}
+
 luxrays::ExtTriangleMesh*
 MergeOnDistanceShape::ApplyMergeOnDistance(luxrays::ExtTriangleMesh * srcMesh) {
 
-	const double startTime = WallClockTime();
 
 	// Get merged points
 	auto clusters = mergePoints(
@@ -896,18 +916,11 @@ MergeOnDistanceShape::ApplyMergeOnDistance(luxrays::ExtTriangleMesh * srcMesh) {
 
 
 	SDL_LOG(
-		"Merge On Distance - Reducing from "
+		"Merge On Distance - Reduced from "
 		<< srcMesh->GetTotalVertexCount()
 		<< " to "
 		<< dstMesh->GetTotalVertexCount()
 		<< " vertices"
-	);
-
-	const double endTime = WallClockTime();
-	SDL_LOG(
-		std::format(
-			"Merge On Distance - Merging time: {:.3f} secs", endTime - startTime
-		)
 	);
 
 	return dstMesh;
