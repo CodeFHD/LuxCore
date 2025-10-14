@@ -57,21 +57,28 @@ bool nearly_equal(float a, float b, u_int tolerance /* a factor of epsilon */)
 	return min_a <= b && b <= max_a;
 }
 
+float distance(const luxrays::Point& p1, const luxrays::Point& p2) {
+	float m1 = std::fabs(p2[0] - p1[0]);
+	float m2 = std::fabs(p2[1] - p1[1]);
+	float m3 = std::fabs(p2[1] - p1[1]);
+	return std::max({m1, m2, m3});
+}
 
-class UnionFind {
+
+class alignas(std::hardware_destructive_interference_size) UnionFind {
 public:
     UnionFind() {}
     explicit UnionFind(size_t count) {
 		reserve(count);
 	}
-	UnionFind(const UnionFind& other) {
-		parent = other.parent;
-		rank = other.rank;
-	}
-	UnionFind(UnionFind&& other) {
-		parent = std::move(other.parent);
-		rank = std::move(other.rank);
-	}
+	UnionFind(const UnionFind& other) :
+		parent(other.parent, Allocator()),
+		rank(other.rank, Allocator())
+	{}
+	UnionFind(UnionFind&& other) :
+		parent(std::move(other.parent)),
+		rank(std::move(other.rank))
+	{}
 	UnionFind& operator=(const UnionFind& other) {
 		parent = other.parent;
 		rank = other.rank;
@@ -145,7 +152,7 @@ public:
 	}
 
 private:
-	using Allocator = tbb::scalable_allocator<std::pair<const u_int, u_int>>;
+	using Allocator = tbb::cache_aligned_allocator<std::pair<const u_int, u_int>>;
 	using Hash = std::hash<u_int>;
 	using Equal = std::equal_to<u_int>;
     std::unordered_map<u_int, u_int, Hash, Equal, Allocator> parent;
@@ -316,7 +323,7 @@ Grid ComputeGrid(const Point * points, u_int numPoints) {
 // Partition element: a point number and its coordinates
 struct alignas(std::hardware_destructive_interference_size)
 PartitionElem : public std::pair<u_int, luxrays::Point> {
-	PartitionElem(u_int id, const luxrays::Point& point)
+	PartitionElem(u_int id, const luxrays::Point point)
 		: std::pair<u_int, luxrays::Point>(id, point) {}
 };
 
@@ -381,7 +388,7 @@ Partition AssignPointsToGrid(
 	);
 
 	// Debug
-#if 0
+#if 1
 	size_t sup = 0;
 	size_t count = 0;
 	for (auto const& [key, value] : partition) {
@@ -392,6 +399,19 @@ Partition AssignPointsToGrid(
 #endif
 
 	return partition;
+}
+
+constexpr std::array<std::array<int, 3>, 27> adjacency() {
+	std::array<std::array<int, 3>, 27> res;
+	size_t i = 0;
+	for (auto dx : {-1, 0, 1}) {
+		for (auto dy : {-1, 0, 1}) {
+			for (auto dz : {-1, 0, 1}) {
+				res[i] = {dx, dy, dz};
+			}
+		}
+	}
+	return res;
 }
 
 
@@ -416,49 +436,46 @@ UnionFind GroupPoints(const Partition& partition, u_int numPoints, u_int toleran
 #endif
 
 	// Avoid tiny sets of data for body
-	constexpr size_t grain = 1024;
+	//constexpr size_t grain = 1024;
+	constexpr size_t grain = 0;
 
     auto res = tbb::parallel_reduce(
 		// Range
         tbb::blocked_range<size_t>(0, partition.size(), grain),
 
 		// Init
-		UnionFind(numPoints),
+		UnionFind(grain),
 
 		// Body
-        [&partition, tolerance](const tbb::blocked_range<size_t>& r, UnionFind&& dsu)
+        [partition, tolerance](const tbb::blocked_range<size_t>& r, UnionFind&& dsu)
 			-> UnionFind
 		{
             auto it = partition.begin();
             std::advance(it, r.begin());
-            for (size_t i = r.begin(); i != r.end(); ++i, ++it) {
+            for (auto i = r.begin(); i != r.end(); ++i, ++it) {
                 auto [cellId, cellPoints] = *it;
 
                 // Check adjacent cells
-                for (int16_t dx = -1; dx <= 1; ++dx) {
-                    for (int16_t dy = -1; dy <= 1; ++dy) {
-                        for (int16_t dz = -1; dz <= 1; ++dz) {
+				for (auto [dx, dy, dz] : adjacency()) {
+					CellId adjCellId(
+						cellId.x() + dx, cellId.y() + dy, cellId.z() + dz
+					);
+					auto adjIt = partition.find(adjCellId);
+					if (adjIt == partition.end()) continue;
+					auto adjPoints = adjIt->second;
 
-                            CellId adjCellId(
-								cellId.x() + dx, cellId.y() + dy, cellId.z() + dz
-							);
-                            auto adjIt = partition.find(adjCellId);
-                            if (adjIt == partition.end()) continue;
-
-							// For each point in current cell and for each point
-							// in adjacent cell, compute distance
-                            for (auto [idx, curPoint] : cellPoints) {
-                                for (auto [adjIdx, adjPoint] : adjIt->second) {
-                                    if (idx >= adjIdx) continue;
-                                    auto dist = DistanceSquared(curPoint, adjPoint);
-                                    if (nearly_equal(dist, 0.f, tolerance)) {
-                                        dsu.unite(idx, adjIdx);
-                                    }
-                                }
-                            }
-                        }  // for dz
-                    }  // for dy
-                }  // for dx
+					// For each point in current cell and for each point
+					// in adjacent cell, compute distance
+					for (auto [idx, curPoint] : cellPoints) {
+						for (auto [adjIdx, adjPoint] : adjPoints) {
+							if (idx >= adjIdx) continue;
+							auto dist = distance(curPoint, adjPoint);
+							if (nearly_equal(dist, 0.f, tolerance)) {
+								dsu.unite(idx, adjIdx);
+							}
+						}
+					}
+                }  // for dx, dy, dz
             }  // for i
 			return dsu;
         },  // lambda
@@ -601,20 +618,24 @@ ClusterVector mergePoints(const Point * points, u_int numPoints, u_int tolerance
 
 	// Compute grid for spatial partitioning
 	Grid grid{ComputeGrid(points, numPoints)};
+	SDL_LOG("After grid");
 
 	// Assign points to grids cells (in other words: partition)
 	Partition partition{
 		AssignPointsToGrid(grid, points, numPoints)
 	};
+	SDL_LOG("After partition");
 
 	// For each cell, compare points within the cell and adjacent cells
 	// and gather points at (nearly) zero distance from each others.
 	// Gathering is made via a Union Find algo
 	UnionFind dsu{GroupPoints(partition, numPoints, tolerance)};
+	SDL_LOG("After group");
 
 	// Finally, reformat result into convenient cluster format (vector of
 	// vectors)
 	ClusterVector clusters{CreateClusters(dsu, numPoints)};
+	SDL_LOG("After cluster");
 
 	return clusters;
 
