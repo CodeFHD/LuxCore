@@ -58,9 +58,9 @@ bool nearly_equal(float a, float b, u_int tolerance /* a factor of epsilon */)
 }
 
 float distance(const luxrays::Point& p1, const luxrays::Point& p2) {
-	float m1 = std::fabs(p2[0] - p1[0]);
-	float m2 = std::fabs(p2[1] - p1[1]);
-	float m3 = std::fabs(p2[1] - p1[1]);
+	float m0 = std::fabs(p2[0] - p1[0]);
+	float m1 = std::fabs(p2[1] - p1[1]);
+	float m2 = std::fabs(p2[2] - p1[2]);
 	return std::max({m1, m2, m3});
 }
 
