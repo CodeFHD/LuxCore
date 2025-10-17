@@ -465,30 +465,31 @@ constexpr std::array<std::array<int, 3>, 27> adjacency() {
 // 'tolerance' is a parameter for float comparison
 class PointGrouping {
 	const Partition& partition;
-	u_int tolerance;
+	NearlyEqualComparator& comparator;
 	u_int numPoints;
 	static constexpr auto ADJACENCY = adjacency();
-	NearlyEqualComparator comparator;
 
 public:
 
 	UnionFind dsu;
 
 	// Constructor (plain)
-	PointGrouping(const Partition& p_partition, u_int p_tolerance, u_int p_numPoints) :
+	PointGrouping(
+		const Partition& p_partition,
+		NearlyEqualComparator p_comparator,
+		u_int p_numPoints
+	) :
 		partition(p_partition),
-		tolerance(p_tolerance),
+		comparator(p_comparator),
 		numPoints(p_numPoints),
-		comparator(NearlyEqualComparator(p_tolerance)),
 		dsu(UnionFind(numPoints))
 	{}
 
 	// Constructor (split)
 	PointGrouping(PointGrouping& x, tbb::split):
 		partition(x.partition),
-		tolerance(x.tolerance),
-		numPoints(x.numPoints),
 		comparator(x.comparator),
+		numPoints(x.numPoints),
 		dsu(UnionFind(numPoints))
 	{}
 
@@ -553,8 +554,9 @@ UnionFind GroupPoints(const Partition& partition, u_int numPoints, u_int toleran
 	//constexpr size_t grain = 1024;
 	constexpr size_t grain = 512;
 	const auto partition_size = partition.size();
+	const NearlyEqualComparator comparator(tolerance);
 
-	PointGrouping ptg(partition, tolerance, numPoints);
+	PointGrouping ptg(partition, comparator, numPoints);
 	tbb::parallel_reduce(
 		tbb::blocked_range<size_t>(0, partition_size, grain),
 		ptg,
