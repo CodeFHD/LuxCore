@@ -55,8 +55,11 @@ public:
 		boundmax(plus_epsilon * float(tolerance))
 	{}
 	inline bool compare(const float a, const float b) const {
-		float delta = b - a;
-		return (boundmin <= delta and delta <= boundmax);
+		float delta1 = b - a;
+		float delta2 = a - b;
+		bool res1 = (boundmin <= delta1 and delta1 <= boundmax);
+		bool res2 = (boundmin <= delta2 and delta2 <= boundmax);
+		return res1 or res2;
 	}
 
 private:
