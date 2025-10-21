@@ -343,6 +343,7 @@ typedef struct {
 	int usePrimitiveArea;
 	unsigned int frontTranspTexIndex, backTranspTexIndex;
 	Spectrum passThroughShadowTransparency;
+	bool passThroughShadowTransparencyOverride;
 	unsigned int emitTexIndex, bumpTexIndex;
 	// Type of indirect paths where a light source is visible with a direct hit. It is
 	// an OR of DIFFUSE, GLOSSY and SPECULAR.

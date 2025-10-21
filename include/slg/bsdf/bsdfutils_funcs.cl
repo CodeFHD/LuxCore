@@ -68,7 +68,13 @@ OPENCL_FORCE_INLINE float BSDF_GetGlossiness(__global const BSDF *bsdf
 
 OPENCL_FORCE_INLINE float3 BSDF_GetPassThroughShadowTransparency(__global const BSDF *bsdf
 		MATERIALS_PARAM_DECL) {
-	return VLOAD3F(&mats[bsdf->materialIndex].passThroughShadowTransparency.c[0]);
+	const float3 test(1.0f, 0.0f, 0.0f);
+	return test;//VLOAD3F(&mats[bsdf->materialIndex].passThroughShadowTransparency.c[0]);
+}
+
+OPENCL_FORCE_INLINE bool BSDF_GetPassThroughShadowTransparencyOverride(__global const BSDF *bsdf
+		MATERIALS_PARAM_DECL) {
+	return &mats[bsdf->materialIndex].passThroughShadowTransparencyOverride;
 }
 
 OPENCL_FORCE_INLINE float3 BSDF_GetLandingGeometryN(__global const BSDF *bsdf) {
