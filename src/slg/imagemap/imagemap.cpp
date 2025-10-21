@@ -883,7 +883,7 @@ void ImageMap::Init(const string &fileName, const ImageMapConfig &cfg,
 					pixelStorage = AllocImageMapStorage<u_char>(channelCount, width, height,
 							cfg.wrapType, cfg.filterType);
 
-					in->read_image(TypeDesc::UCHAR, pixelStorage->GetPixelsData());
+					in->read_image(0, 0, 0, channelCount, TypeDesc::UCHAR, pixelStorage->GetPixelsData());
 					in->close();
 					in.reset();
 					break;
@@ -892,7 +892,7 @@ void ImageMap::Init(const string &fileName, const ImageMapConfig &cfg,
 					pixelStorage = AllocImageMapStorage<half>(channelCount, width, height,
 							cfg.wrapType, cfg.filterType);
 
-					in->read_image(TypeDesc::HALF, pixelStorage->GetPixelsData());
+					in->read_image(0, 0, 0, channelCount, TypeDesc::HALF, pixelStorage->GetPixelsData());
 					in->close();
 					in.reset();
 					break;
@@ -901,7 +901,7 @@ void ImageMap::Init(const string &fileName, const ImageMapConfig &cfg,
 					pixelStorage = AllocImageMapStorage<float>(channelCount, width, height,
 							cfg.wrapType, cfg.filterType);
 
-					in->read_image(TypeDesc::FLOAT, pixelStorage->GetPixelsData());
+					in->read_image(0, 0, 0, channelCount, TypeDesc::FLOAT, pixelStorage->GetPixelsData());
 					in->close();
 					in.reset();
 					break;
@@ -1220,10 +1220,9 @@ void ImageMap::Resize(const u_int newWidth, const u_int newHeight) {
 	ImageSpec sourceSpec(width, height, channelCount, baseType);
 	ImageBuf source(sourceSpec, (void *)pixelStorage->GetPixelsData());
 
-	ImageBuf dest;
-
+	ImageBufAlgo::KWArgs options = {};
 	ROI roi(0, newWidth, 0, newHeight, 0, 1, 0, source.nchannels());
-	ImageBufAlgo::resize(dest, source, "", 0, roi);
+	ImageBuf dest = ImageBufAlgo::resize(source, options, roi);
 
 	// Save the wrap mode
 	const ImageMapStorage::WrapType wrapType = pixelStorage->wrapType;

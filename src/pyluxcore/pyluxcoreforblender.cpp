@@ -321,7 +321,7 @@ bool Scene_DefineBlenderStrands(
     }
 
     imageData.resize(width * height * channelCount);
-    in->read_image(TypeDesc::FLOAT, &imageData[0]);
+    in->read_image(0, 0, 0, channelCount, TypeDesc::FLOAT, &imageData[0]);
     in->close();
     in.reset();
   }
@@ -771,7 +771,7 @@ bool Scene_DefineBlenderCurveStrands(luxcore::detail::SceneImpl* scene,
     }
 
     imageData.resize(width * height * channelCount);
-    in->read_image(TypeDesc::FLOAT, &imageData[0]);
+    in->read_image(0, 0, 0, channelCount, TypeDesc::FLOAT, &imageData[0]);
     in->close();
     in.reset();
   }
