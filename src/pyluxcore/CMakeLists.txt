@@ -22,8 +22,7 @@
 #
 ################################################################################
 
-set(PYLUXCORE_SRCS
-)
+set(PYLUXCORE_SRCS)
 include_directories(${PROJECT_SOURCE_DIR}/deps/bcd-1.1/include)
 
 pybind11_add_module(pyluxcore MODULE
@@ -36,7 +35,6 @@ target_link_libraries(pyluxcore PRIVATE
     OpenVDB::openvdb
     pybind11::pybind11
     Python::Module
-    onetbb::onetbb
     robin_hood::robin_hood
     openimageio::openimageio
     embree::embree

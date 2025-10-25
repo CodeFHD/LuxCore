@@ -31,7 +31,6 @@
 #include "oneapi/tbb.h"
 #include "oneapi/tbb/scalable_allocator.h"
 #include "oneapi/tbb/cache_aligned_allocator.h"
-#include "oneapi/tbb/tbbmalloc_proxy.h"
 
 #include "luxrays/core/exttrianglemesh.h"
 #include "slg/shapes/merge_on_distance.h"
