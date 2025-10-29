@@ -86,6 +86,7 @@ target_link_libraries(luxcore PRIVATE
     robin_hood::robin_hood
     boost::boost
     spdlog::spdlog_header_only
+    openjph::openjph
     openimageio::openimageio
     openjp2
     embree::embree
