@@ -5,6 +5,8 @@
 """Clear and clean commands."""
 
 import shutil
+import sys
+import subprocess
 
 from .constants import BINARY_DIR
 from .utils import logger
@@ -29,6 +31,16 @@ def clean(
         run_cmake(cmd)
 
 
+def win_rmdir(directory):
+    """(Windows only) Remove directory, using DOS command."""
+    if sys.platform == "win32":
+        try:
+            # Use /s /q to remove directory and all subdirectories/files, quietly
+            subprocess.run(["cmd", "/c", "rmdir", "/s", "/q", directory], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError:
+            pass  # Continue silently if directory does not exist or command fails
+
+
 def clear(
     _,
 ):
@@ -40,12 +52,15 @@ def clear(
         "dependencies",
         "install",
     ):
+        if not BINARY_DIR:
+            raise RuntimeError("Invalid binary directory")
         directory = BINARY_DIR / subdir
         logger.info(
             "Removing '%s'",
             directory,
         )
         try:
+            win_rmdir(directory)
             shutil.rmtree(
                 directory,
                 ignore_errors=True,
