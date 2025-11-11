@@ -23,6 +23,7 @@
 #include <boost/format.hpp>
 
 #include <OpenImageDenoise/oidn.hpp>
+#include <oneapi/tbb.h>
 
 #include "slg/film/imagepipeline/plugins/intel_oidn.h"
 #include "slg/film/framebuffer.h"
@@ -30,6 +31,7 @@
 using namespace std;
 using namespace luxrays;
 using namespace slg;
+using namespace oneapi::tbb;
 
 //------------------------------------------------------------------------------
 //Intel Open Image Denoise
@@ -89,7 +91,7 @@ void IntelOIDN::FilterImage(const string &imageName,
 	filter.set("cleanAux", cleanAux);
 	filter.set("maxMemoryMB", oidnMemLimit);
     filter.setImage("color", colorBuf, oidn::Format::Float3, width, height);
-    if (albedoBuffer) {	
+    if (albedoBuffer) {
         filter.setImage("albedo", albedoBuf, oidn::Format::Float3, width, height);
 
         // Normals can only be used if albedo is supplied as well
@@ -110,6 +112,49 @@ void IntelOIDN::FilterImage(const string &imageName,
          SLG_LOG("IntelOIDNPlugin " + imageName + " filtering error: " << errorMessage);
 }
 
+
+IntelOIDN::float_buffer IntelOIDN::PrepareBuffer (
+	const std::string& imageName,
+	const GenericFrameBuffer<4, 1, float>& channel,
+	const u_int width,
+	const u_int height,
+	bool enablePrefiltering
+) const {
+	IntelOIDN::float_buffer outBuffer(width * height * 3);
+	IntelOIDN::float_buffer tmpBuffer(outBuffer.size());
+	IntelOIDN::float_buffer dummy1(outBuffer.size());
+	IntelOIDN::float_buffer dummy2(outBuffer.size());
+
+	// Extract channel
+	tbb::parallel_for(
+		tbb::blocked_range<u_int>(0, width * height),
+		[&](tbb::blocked_range<u_int>& r) {
+			for (u_int i = r.begin(); i < r.end(); ++i)
+				channel.GetWeightedPixel(i, &tmpBuffer[i * 3]);
+		}
+	);
+
+	// Prefilter
+	if (enablePrefiltering) {
+		FilterImage(
+			imageName,
+			&tmpBuffer[0],
+			&outBuffer[0],
+			&dummy1[0],
+			&dummy2[0],
+			width, height,
+			false
+		);
+	} else {
+		return tmpBuffer;
+	}
+
+	return outBuffer;
+
+}
+
+
+
 void IntelOIDN::Apply(Film &film, const u_int index) {
 	const double totalStartTime = WallClockTime();
 
@@ -121,61 +166,72 @@ void IntelOIDN::Apply(Film &film, const u_int index) {
     const u_int height = film.GetHeight();
     const u_int pixelCount = width * height;
 
-    vector<float> outputBuffer(3 * pixelCount);
-    vector<float> albedoBuffer(3 * pixelCount);
-    vector<float> normalBuffer(3 * pixelCount), dummy1(3 * pixelCount), dummy2(3 * pixelCount);
+	float_buffer outputBuffer(3 * pixelCount);
+	float_buffer albedoBuffer;
+	float_buffer normalBuffer;
 
+	// Prepare functions
+	auto prepareAlbedo = [&]() {
+		albedoBuffer = PrepareBuffer(
+			"Albedo",
+			*film.channel_ALBEDO,
+			width,
+			height,
+			enablePrefiltering
+		);
+	};
+
+	auto prepareNormal = [&]() {
+		normalBuffer = PrepareBuffer(
+			"Normal",
+			*film.channel_AVG_SHADING_NORMAL,
+			width,
+			height,
+			enablePrefiltering
+		);
+	};
+
+	SLG_LOG("IntelOIDNPlugin preparing inputs");
     if (film.HasChannel(Film::ALBEDO)) {
-		albedoBuffer.resize(3 * pixelCount);
-		for (u_int i = 0; i < pixelCount; ++i)
-			film.channel_ALBEDO->GetWeightedPixel(i, &albedoBuffer[i * 3]);
-		
-		//GenericFrameBuffer<3, 0, float>::SaveHDR("debug-albedo0.exr", albedoBuffer, width, height);
-
-		if (enablePrefiltering) {
-			vector<float> albedoBufferTmp(3 * pixelCount);
-			FilterImage("Albedo", &albedoBuffer[0], &albedoBufferTmp[0],
-				&dummy1[0], &dummy2[0], width, height, false);
-			for (u_int i = 0; i < albedoBuffer.size(); ++i)
-				albedoBuffer[i] = albedoBufferTmp[i];
-
-			//GenericFrameBuffer<3, 0, float>::SaveHDR("debug-albedo1.exr", albedoBuffer, width, height);
-		}
-		
-        // Normals can only be used if albedo is supplied as well
         if (film.HasChannel(Film::AVG_SHADING_NORMAL)) {
-            normalBuffer.resize(3 * pixelCount);
-            for (u_int i = 0; i < pixelCount; ++i)
-                film.channel_AVG_SHADING_NORMAL->GetWeightedPixel(i, &normalBuffer[i * 3]);
-			
-				//GenericFrameBuffer<3, 0, float>::SaveHDR("debug-normal.exr", normalBuffer, width, height);
-
-				if (enablePrefiltering) {
-					vector<float> normalBufferTmp(3 * pixelCount);
-					FilterImage("Normal", &normalBuffer[0], &normalBufferTmp[0],
-						&dummy1[0], &dummy2[0], width, height, false);
-					for (u_int i = 0; i < normalBuffer.size(); ++i)
-						normalBuffer[i] = normalBufferTmp[i];
-
-					//GenericFrameBuffer<3, 0, float>::SaveHDR("debug-normal1.exr", normalBuffer, width, height);
-				}            
-        } else
-            SLG_LOG("[IntelOIDNPlugin] Warning: AVG_SHADING_NORMAL AOV not found");
-    } else
+			// Prepare both (and parallelize)
+			tbb::parallel_invoke(prepareAlbedo, prepareNormal);
+		} else {
+			// Prepare only albedo
+			SLG_LOG("[IntelOIDNPlugin] Warning: AVG_SHADING_NORMAL AOV not found");
+			prepareAlbedo();
+			normalBuffer = float_buffer(3 * pixelCount);
+		}
+	} else {
 		SLG_LOG("[IntelOIDNPlugin] Warning: ALBEDO AOV not found");
+		albedoBuffer = float_buffer(3 * pixelCount);
+		normalBuffer = float_buffer(3 * pixelCount);
+	}
 
+
+	SLG_LOG("IntelOIDNPlugin filtering image");
 	FilterImage("Image Pipeline", (float *)pixels, &outputBuffer[0],
 			(albedoBuffer.size() > 0) ? &albedoBuffer[0] : nullptr,
 			(normalBuffer.size() > 0) ? &normalBuffer[0] : nullptr,
 			width, height, enablePrefiltering);
 
     SLG_LOG("IntelOIDNPlugin copying output buffer");
-    for (u_int i = 0; i < pixelCount; ++i) {
-        const u_int i3 = i * 3;
-        pixels[i].c[0] = Lerp(sharpness, outputBuffer[i3], pixels[i].c[0]);
-        pixels[i].c[1] = Lerp(sharpness, outputBuffer[i3 + 1], pixels[i].c[1]);
-        pixels[i].c[2] = Lerp(sharpness, outputBuffer[i3 + 2], pixels[i].c[2]);
-	}
+	tbb::affinity_partitioner aff_p;
+	tbb::parallel_for(
+		tbb::blocked_range2d<size_t, size_t>(0, pixelCount, 0, 3),
+		[&](const blocked_range2d<size_t, size_t>& r) {
+			for (size_t i = r.rows().begin(); i < r.rows().end(); ++i) {
+				for (size_t j = r.cols().begin(); j < r.cols().end(); ++j) {
+					pixels[i].c[j] = std::lerp(
+						outputBuffer[i * 3 + j],
+						pixels[i].c[j],
+						sharpness
+					);
+				}
+			}
+		},
+		aff_p
+	);
 
 	SLG_LOG("IntelOIDNPlugin single execution took a total of " << (boost::format("%.3f") % (WallClockTime() - totalStartTime)) << "secs");
 }
