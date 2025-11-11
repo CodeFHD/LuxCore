@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright 1998-2020 by authors (see AUTHORS.txt)                        *
+ * Copyright 1998-2025 by authors (see AUTHORS.txt)                        *
  *                                                                         *
  *   This file is part of LuxCoreRender.                                   *
  *                                                                         *
@@ -32,6 +32,7 @@
 #include "slg/engines/tilepathocl/tilepathocl.h"
 #include "slg/engines/rtpathocl/rtpathocl.h"
 #include "slg/engines/filesaver/filesaver.h"
+#include "slg/film/imagepipeline/plugins/intel_oidn.h"
 #include "luxcore/luxcore.h"
 #include "luxcore/luxcoreimpl.h"
 
@@ -445,7 +446,7 @@ void FilmImpl::DeleteAllImagePipelines()  {
 		renderSession->renderSession->renderConfig->DeleteAllFilmImagePipelinesProperties();
 	} else
 		standAloneFilm->SetImagePipelines(NULL);
-	
+
 	API_END();
 }
 
@@ -467,7 +468,7 @@ void FilmImpl::AsyncExecuteImagePipeline(const u_int index) {
 		renderSession->renderSession->film->AsyncExecuteImagePipeline(index);
 	} else
 		standAloneFilm->AsyncExecuteImagePipeline(index);
-	
+
 	API_END();
 }
 
@@ -494,10 +495,26 @@ bool FilmImpl::HasDoneAsyncExecuteImagePipeline() {
 		result = renderSession->renderSession->film->HasDoneAsyncExecuteImagePipeline();
 	} else
 		result = standAloneFilm->HasDoneAsyncExecuteImagePipeline();
-	
+
 	API_RETURN("{}", result);
-	
+
 	return result;
+}
+
+
+void FilmImpl::ApplyOIDN(const u_int index) {
+	API_BEGIN("{}", index);
+	slg::IntelOIDN oidn("RT", 6000, 0.f, true);
+
+	if (renderSession) {
+		std::unique_lock<std::mutex> lock(renderSession->renderSession->filmMutex);
+
+		oidn.Apply(*renderSession->renderSession->film, index);
+	} else {
+		oidn.Apply(*standAloneFilm, index);
+	}
+
+	API_END();
 }
 
 //------------------------------------------------------------------------------
@@ -1500,7 +1517,7 @@ RenderState *RenderSessionImpl::GetRenderState() {
 	API_BEGIN_NOARGS();
 
 	RenderState *result = new RenderStateImpl(renderSession->GetRenderState());
-	
+
 	API_RETURN("{}", (void *)result);
 
 	return result;
@@ -1620,7 +1637,7 @@ Film &RenderSessionImpl::GetFilm() {
 	API_BEGIN_NOARGS();
 
 	Film &result = *film;
-	
+
 	API_RETURN("{}", (void *)&result);
 
 	return result;
@@ -1685,8 +1702,9 @@ void RenderSessionImpl::UpdateStats() {
 	double totalPerf = 0.0;
 	for(IntersectionDevice *dev: idevices) {
 		const string &devName = dev->GetName();
-		
-		// Append a device index for the case where the same device is used multiple times
+
+		// Append a device index for the case where the same device is used
+		// multiple times
 		unsigned int index = devCounters[devName]++;
 		const string uniqueName = devName + "-" + ToString(index);
 		devicesNames.Add(uniqueName);
@@ -1706,7 +1724,7 @@ void RenderSessionImpl::UpdateStats() {
 			stats.Set(Property(prefix + ".memory.used")((u_longlong)hardDev->GetUsedMemory()));
 		} else {
 			stats.Set(Property(prefix + ".memory.total")(0ull));
-			stats.Set(Property(prefix + ".memory.used")(0ull));			
+			stats.Set(Property(prefix + ".memory.used")(0ull));
 		}
 	}
 	stats.Set(devicesNames);

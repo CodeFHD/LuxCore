@@ -100,6 +100,8 @@ public:
 	void WaitAsyncExecuteImagePipeline();
 	bool HasDoneAsyncExecuteImagePipeline();
 
+	void ApplyOIDN(const u_int index);
+
 	friend class RenderSessionImpl;
 
 private:

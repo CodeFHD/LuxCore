@@ -22,6 +22,8 @@
 
 #include <boost/format.hpp>
 
+#include <OpenImageDenoise/oidn.hpp>
+
 #include "slg/film/imagepipeline/plugins/intel_oidn.h"
 #include "slg/film/framebuffer.h"
 

@@ -26,7 +26,7 @@
 
 #include <boost/serialization/export.hpp>
 
-#include <OpenImageDenoise/oidn.hpp>
+//#include <OpenImageDenoise/oidn.hpp>
 
 #include "luxrays/luxrays.h"
 #include "luxrays/core/color/color.h"

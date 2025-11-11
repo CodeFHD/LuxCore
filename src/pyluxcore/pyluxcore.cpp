@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright 1998-2020 by authors (see AUTHORS.txt)            *
+ * Copyright 1998-2025 by authors (see AUTHORS.txt)            *
  *                                     *
  *   This file is part of LuxCoreRender.                   *
  *                                     *
@@ -46,6 +46,8 @@
 using namespace std;
 using namespace luxcore;
 namespace py = pybind11;
+
+
 
 namespace luxcore {
 
@@ -950,6 +952,13 @@ static float Film_GetFilmY1(luxcore::detail::FilmImpl *film) {
 
 static float Film_GetFilmY2(luxcore::detail::FilmImpl *film, const size_t imagePipelineIndex) {
   return film->GetFilmY(imagePipelineIndex);
+}
+
+static void Film_ApplyOIDN(
+	luxcore::detail::FilmImpl *film,
+	const size_t imagePipelineIndex
+) {
+	film->ApplyOIDN(imagePipelineIndex);
 }
 
 //------------------------------------------------------------------------------
@@ -2406,6 +2415,7 @@ PYBIND11_MODULE(pyluxcore, m) {
     .def("AsyncExecuteImagePipeline", &luxcore::detail::FilmImpl::AsyncExecuteImagePipeline)
     .def("HasDoneAsyncExecuteImagePipeline", &luxcore::detail::FilmImpl::HasDoneAsyncExecuteImagePipeline)
     .def("WaitAsyncExecuteImagePipeline", &luxcore::detail::FilmImpl::WaitAsyncExecuteImagePipeline)
+	.def("ApplyOIDN", &Film_ApplyOIDN)
   ;
 
   //--------------------------------------------------------------------------
