@@ -31,7 +31,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-static bool MeshPtrCompare(const Mesh *p0, const Mesh *p1) {
+static bool MeshPtrCompare(MeshConstPtr p0, MeshConstPtr p1) {
 	return p0 < p1;
 }
 
@@ -61,7 +61,7 @@ void CompiledScene::CompileGeometry() {
 	//--------------------------------------------------------------------------
 
 	// Not using std::unordered_map because the key is an ExtMesh pointer
-	map<ExtMesh *, u_int, bool (*)(const Mesh *, const Mesh *)> definedMeshs(MeshPtrCompare);
+	map<ExtMeshPtr, u_int, bool (*)(MeshConstPtr , MeshConstPtr )> definedMeshs(MeshPtrCompare);
 
 	u_int vertsOffset = 0;
 	u_int trisOffset = 0;
@@ -124,18 +124,18 @@ void CompiledScene::CompileGeometry() {
 
 	slg::ocl::ExtMesh currentMeshDesc;
 	for (u_int i = 0; i < objCount; ++i) {
-		const ExtMesh *mesh = scene->objDefs.GetSceneObject(i)->GetExtMesh();
+		auto mesh = scene->objDefs.GetSceneObject(i)->GetExtMesh();
 
 		bool isExistingInstance;
-		const ExtTriangleMesh *baseMesh = nullptr;
+		ExtTriangleMeshConstPtr baseMesh = nullptr;
 		switch (mesh->GetType()) {
 			case TYPE_EXT_TRIANGLE_INSTANCE: {
 				// It is an instanced mesh
-				ExtInstanceTriangleMesh *imesh = (ExtInstanceTriangleMesh *)mesh;
+				auto imesh = static_pointer_cast<const ExtInstanceTriangleMesh>(mesh);
 				baseMesh = imesh->GetExtTriangleMesh();
 
 				// Check if is one of the already defined meshes
-				map<ExtMesh *, u_int, bool (*)(Mesh *, Mesh *)>::iterator it = definedMeshs.find(imesh->GetExtTriangleMesh());
+				auto it = definedMeshs.find(imesh->GetExtTriangleMesh());
 				if (it == definedMeshs.end()) {
 					// It is a new one
 					InitMeshDesc(currentMeshDesc, *imesh);
@@ -158,11 +158,11 @@ void CompiledScene::CompileGeometry() {
 			}
 			case TYPE_EXT_TRIANGLE_MOTION: {
 				// It is an instanced mesh
-				ExtMotionTriangleMesh *mmesh = (ExtMotionTriangleMesh *)mesh;
+				auto mmesh = static_pointer_cast<const ExtMotionTriangleMesh>(mesh);
 				baseMesh = mmesh->GetExtTriangleMesh();
 
 				// Check if is one of the already defined meshes
-				map<ExtMesh *, u_int, bool (*)(Mesh *, Mesh *)>::iterator it = definedMeshs.find(mmesh->GetExtTriangleMesh());
+				auto it = definedMeshs.find(mmesh->GetExtTriangleMesh());
 				if (it == definedMeshs.end()) {
 					// It is a new one
 					InitMeshDesc(currentMeshDesc, *mmesh);
@@ -203,7 +203,7 @@ void CompiledScene::CompileGeometry() {
 				break;
 			}
 			case TYPE_EXT_TRIANGLE: {
-				baseMesh = (const ExtTriangleMesh *)mesh;
+				baseMesh = static_pointer_cast<const ExtTriangleMesh>(mesh);
 
 				// It is a not instanced mesh
 				InitMeshDesc(currentMeshDesc, *baseMesh);

@@ -23,19 +23,18 @@
 #include <vector>
 
 #include "luxrays/devices/ocldevice.h"
+#include "slg/usings.h"
 #include "slg/imagemap/imagemap.h"
 #include "slg/imagemap/resizepolicies/resizepolicies.h"
 #include "slg/core/sdl.h"
 
 namespace slg {
 
-class Scene;
-
 //------------------------------------------------------------------------------
 // ImageMapCache
 //------------------------------------------------------------------------------
 
-class ImageMapCache {
+class ImageMapCache : std::enable_shared_from_this<ImageMapCache> {
 public:
 	ImageMapCache();
 	~ImageMapCache();
@@ -43,17 +42,17 @@ public:
 	void SetImageResizePolicy(ImageMapResizePolicy *policy);
 	const ImageMapResizePolicy *GetImageResizePolicy() const { return resizePolicy; }
 
-	void DefineImageMap(ImageMap *im);
+	void DefineImageMap(ImageMapPtr im);
 
-	ImageMap *GetImageMap(const std::string &fileName, const ImageMapConfig &imgCfg,
+	ImageMapPtr GetImageMap(const std::string &fileName, const ImageMapConfig &imgCfg,
 			const bool applyResizePolicy);
 
-	void DeleteImageMap(const ImageMap *im);
+	void DeleteImageMap(ImageMapConstPtr im);
 
-	std::string GetSequenceFileName(const ImageMap *im) const;
-	u_int GetImageMapIndex(const ImageMap *im) const;
+	std::string GetSequenceFileName(ImageMapConstPtr im) const;
+	u_int GetImageMapIndex(ImageMapConstPtr im) const;
 
-	void GetImageMaps(std::vector<const ImageMap *> &ims);
+	void GetImageMaps(std::vector<ImageMapConstPtr > &ims);
 	u_int GetSize()const { return static_cast<u_int>(mapByKey.size()); }
 	bool IsImageMapDefined(const std::string &name) const { return mapByKey.find(name) != mapByKey.end(); }
 
@@ -65,20 +64,20 @@ public:
 
 private:
 	// Used for the support of resize policies
-	void Preprocess(const Scene *scene, const bool useRTMode);
+	void Preprocess(SceneConstPtr scene, const bool useRTMode);
 
 	std::string GetCacheKey(const std::string &fileName,
 				const ImageMapConfig &imgCfg) const;
 	std::string GetCacheKey(const std::string &fileName) const;
-	
+
 	template<class Archive> void save(Archive &ar, const unsigned int version) const;
 	template<class Archive>	void load(Archive &ar, const unsigned int version);
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-	std::unordered_map<std::string, ImageMap *> mapByKey;
+	std::unordered_map<std::string, ImageMapPtr > mapByKey;
 	// Used to preserve insertion order and to retrieve insertion index
 	std::vector<std::string> mapNames;
-	std::vector<ImageMap *> maps;
+	std::vector<ImageMapPtr > maps;
 
 	ImageMapResizePolicy *resizePolicy;
 	std::vector<bool> resizePolicyToApply;

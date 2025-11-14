@@ -35,7 +35,6 @@ public:
 	StereoCamera(const StereoCameraType type,
 			const luxrays::Point &orig, const luxrays::Point &target,
 			const luxrays::Vector &up);
-	virtual ~StereoCamera();
 
 	const luxrays::Transform &GetRasterToCamera(const u_int index = 0) const;
 	const luxrays::Transform &GetCameraToWorld(const u_int index = 0) const;
@@ -60,13 +59,13 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 	StereoCameraType GetStereoType() const { return stereoType; }
-	
+
 	float horizStereoEyesDistance, horizStereoLensDistance;
 
 private:
 	const StereoCameraType stereoType;
-	Camera *leftEye;
-	Camera *rightEye;
+	CameraPtr leftEye;
+	CameraPtr rightEye;
 };
 
 }

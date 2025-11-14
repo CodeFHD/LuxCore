@@ -45,11 +45,11 @@ void CompiledScene::CompileCamera() {
 	// Camera definition
 	//--------------------------------------------------------------------------
 
-	const Camera *sceneCamera = scene->camera;
+	auto sceneCamera = scene->camera;
 
 	delete[] cameraBokehDistribution;
 	cameraBokehDistribution = nullptr;
-	
+
 	// Initialize CameraBase
 
 	camera.base.yon = sceneCamera->clipYon;
@@ -83,7 +83,7 @@ void CompiledScene::CompileCamera() {
 
 	switch (sceneCamera->GetType()) {
 		case Camera::ORTHOGRAPHIC: {
-			const OrthographicCamera *orthoCamera = (OrthographicCamera *)sceneCamera;
+			auto orthoCamera = dynamic_pointer_cast<OrthographicCamera>(sceneCamera);
 			camera.type = slg::ocl::ORTHOGRAPHIC;
 
 			memcpy(camera.base.rasterToCamera.m.m, orthoCamera->GetRasterToCamera().m.m, 4 * 4 * sizeof(float));
@@ -101,7 +101,7 @@ void CompiledScene::CompileCamera() {
 			break;
 		}
 		case Camera::PERSPECTIVE: {
-			const PerspectiveCamera *perspCamera = (PerspectiveCamera *)sceneCamera;
+			auto perspCamera = dynamic_pointer_cast<PerspectiveCamera>(sceneCamera);
 			camera.type = slg::ocl::PERSPECTIVE;
 
 			memcpy(camera.base.rasterToCamera.m.m, perspCamera->GetRasterToCamera().m.m, 4 * 4 * sizeof(float));
@@ -158,20 +158,20 @@ void CompiledScene::CompileCamera() {
 			break;
 		}
 		case Camera::ENVIRONMENT: {
-			const EnvironmentCamera *envCamera = (EnvironmentCamera *)sceneCamera;
+			auto envCamera = dynamic_pointer_cast<EnvironmentCamera>(sceneCamera);
 			camera.type = slg::ocl::ENVIRONMENT;
 
 			memcpy(camera.base.rasterToCamera.m.m, envCamera->GetRasterToCamera().m.m, 4 * 4 * sizeof(float));
 			memcpy(camera.base.cameraToWorld.m.m, envCamera->GetCameraToWorld().m.m, 4 * 4 * sizeof(float));
-			
-			camera.env.degrees = envCamera->degrees;	
-			break;			
-		}		
+
+			camera.env.degrees = envCamera->degrees;
+			break;
+		}
 		case Camera::STEREO: {
-			const StereoCamera *stereoCamera = (StereoCamera *)sceneCamera;
+			auto stereoCamera = dynamic_pointer_cast<const StereoCamera>(sceneCamera);
 
 			camera.type = slg::ocl::STEREO;
-			
+
 			switch(stereoCamera->GetStereoType()) {
 				case StereoCamera::STEREO_PERSPECTIVE:
 					camera.stereo.stereoCameraType = slg::ocl::STEREO_PERSPECTIVE;

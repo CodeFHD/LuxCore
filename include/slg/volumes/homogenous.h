@@ -29,9 +29,9 @@ namespace slg {
 
 class HomogeneousVolume : public Volume {
 public:
-	HomogeneousVolume(const Texture *iorTex, const Texture *emiTex,
-			const Texture *a, const Texture *s,
-			const Texture *g, const bool multiScattering);
+	HomogeneousVolume(TextureConstPtr iorTex, TextureConstPtr emiTex,
+			TextureConstPtr a, TextureConstPtr s,
+			TextureConstPtr g, const bool multiScattering);
 
 	virtual float Scatter(const luxrays::Ray &ray, const float u, const bool scatteredStart,
 		luxrays::Spectrum *connectionThroughput, luxrays::Spectrum *connectionEmission) const;
@@ -54,14 +54,14 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs, TextureConstPtr self) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties() const;
-	
-	const Texture *GetSigmaA() const { return sigmaA; }
-	const Texture *GetSigmaS() const { return sigmaS; }
-	const Texture *GetG() const { return schlickScatter.g; }
+
+	TextureConstPtr GetSigmaA() const { return sigmaA; }
+	TextureConstPtr GetSigmaS() const { return sigmaS; }
+	TextureConstPtr GetG() const { return schlickScatter.g; }
 	bool IsMultiScattering() const { return multiScattering; }
 
 	static float Scatter(const float u, const bool scatterAllowed, const float segmentLength,
@@ -74,7 +74,7 @@ protected:
 	virtual luxrays::Spectrum SigmaS(const HitPoint &hitPoint) const;
 
 private:
-	const Texture *sigmaA, *sigmaS;
+	TextureConstPtr sigmaA, sigmaS;
 	SchlickScatter schlickScatter;
 	const bool multiScattering;
 };

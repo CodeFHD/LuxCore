@@ -29,7 +29,7 @@ namespace slg {
 
 class DistortTexture : public Texture {
 public:
-	DistortTexture(const Texture *tex, const Texture *offset, const float strength) :
+	DistortTexture(TextureConstPtr tex, TextureConstPtr offset, const float strength) :
 		tex(tex), offset(offset), strength(strength) { }
 	virtual ~DistortTexture() { }
 
@@ -43,26 +43,26 @@ public:
 		return tex->Filter();
 	}
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		tex->AddReferencedTextures(referencedTexs);
-		offset->AddReferencedTextures(referencedTexs);
+		tex->AddReferencedTextures(referencedTexs, tex);
+		offset->AddReferencedTextures(referencedTexs, offset);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		tex->AddReferencedImageMaps(referencedImgMaps);
 		offset->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (tex == oldTex)
 			tex = newTex;
 		if (offset == oldTex)
 			offset = newTex;
 	}
 
-	const Texture *GetTex() const { return tex; }
-	const Texture *GetOffset() const { return offset; }
+	TextureConstPtr GetTex() const { return tex; }
+	TextureConstPtr GetOffset() const { return offset; }
 	const float GetStrength() const { return strength; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
@@ -70,8 +70,8 @@ public:
 private:
 	void GetTmpHitPoint(const HitPoint &hitPoint, HitPoint &tmpHitPoint) const;
 
-	const Texture *tex;
-	const Texture *offset;
+	TextureConstPtr tex;
+	TextureConstPtr offset;
 	const float strength;
 };
 

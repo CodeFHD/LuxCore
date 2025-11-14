@@ -45,10 +45,13 @@
 
 class LuxCoreApp {
 public:
-	LuxCoreApp(luxcore::RenderConfig *renderConfig);
+	LuxCoreApp(std::shared_ptr<luxcore::RenderConfig> renderConfig);
 	~LuxCoreApp();
 
-	void RunApp(luxcore::RenderState *startState = NULL, luxcore::Film *startFilm = NULL);
+	void RunApp(
+            std::shared_ptr<luxcore::RenderState> startState = nullptr,
+            std::shared_ptr<luxcore::Film> startFilm = nullptr
+          );
 
 	bool isGPURenderingAvailable() const { return isOpenCLAvailable || isCUDAAvailable; }
 
@@ -107,7 +110,10 @@ private:
 	void CloseAllRenderConfigEditors();
 
 	void LoadRenderConfig(const std::string &configFileName, const std::string &configFilePath);
-	void StartRendering(luxcore::RenderState *startState = NULL, luxcore::Film *startFilm = NULL);
+	void StartRendering(
+            std::shared_ptr<luxcore::RenderState> startState = nullptr,
+            std::shared_ptr<luxcore::Film> startFilm = nullptr
+        );
 	void DeleteRendering();
 
 	void RefreshRenderingTexture();
@@ -134,7 +140,7 @@ private:
 	void MainMenuBar();
 
 	void BakeAllSceneObjects();
-	
+
 	static LogWindow *currentLogWindow;
 
 	bool isOpenCLAvailable, isCUDAAvailable;
@@ -155,9 +161,9 @@ private:
 	HelpWindow helpWindow;
 	UserImportancePaintWindow userImportancePaintWindow;
 
-	luxcore::RenderConfig *config;
+	std::shared_ptr<luxcore::RenderConfig> config;
 
-	luxcore::RenderSession *session;
+	std::shared_ptr<luxcore::RenderSession> session;
 
 	GLuint renderFrameBufferTexID;
 	GLenum renderFrameBufferTexMinFilter, renderFrameBufferTexMagFilter;
@@ -165,7 +171,7 @@ private:
 
 	unsigned int renderImageWidth, renderImageHeight;
 	float *renderImageBuffer;
-	
+
 	GLFWwindow *window;
 
 	AppToolType currentTool;
@@ -177,7 +183,7 @@ private:
 
 	// ImGui inputs
 	int menuFilmWidth, menuFilmHeight;
-	
+
 	int targetFilmWidth, targetFilmHeight;
 
 	bool optRealTimeMode;
@@ -208,13 +214,13 @@ template <class T> inline std::string ToString(const T &t) {
 	std::ostringstream ss;
 
 	ss << t;
-	
+
 	return ss.str();
 }
 
 inline std::string ToString(const float t) {
 	std::ostringstream ss;
-	
+
 	ss << std::setprecision(std::numeric_limits<float>::digits10 + 1) << t;
 
 	return ss.str();
@@ -222,3 +228,4 @@ inline std::string ToString(const float t) {
 
 #endif	/* _LUXCOREAPP_H */
 
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

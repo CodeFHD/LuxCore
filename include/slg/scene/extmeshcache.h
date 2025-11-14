@@ -39,7 +39,7 @@ public:
 	void SetDeleteMeshData(const bool v) { deleteMeshData = v; }
 
 	// This method can be safely called only from Scene::DefineMesh()
-	void DefineExtMesh(luxrays::ExtMesh *mesh);
+	void DefineExtMesh(luxrays::ExtMeshPtr mesh);
 	void SetMeshVertexAOV(const std::string &meshName,
 		const unsigned int index, float *data);
 	void SetMeshTriangleAOV(const std::string &meshName,
@@ -54,13 +54,13 @@ public:
 	u_int GetSize() const;
 	void GetExtMeshNames(std::vector<std::string> &names) const;
 
-	luxrays::ExtMesh *GetExtMesh(const std::string &meshName);
-	luxrays::ExtMesh *GetExtMesh(const u_int index);
+	luxrays::ExtMeshPtr GetExtMesh(const std::string &meshName);
+	luxrays::ExtMeshPtr GetExtMesh(const u_int index);
 	u_int GetExtMeshIndex(const std::string &meshName) const;
-	u_int GetExtMeshIndex(const luxrays::ExtMesh *m) const;
+	u_int GetExtMeshIndex(luxrays::ExtMeshConstPtr m) const;
 
-	std::string GetRealFileName(const luxrays::ExtMesh *m) const;
-	std::string GetSequenceFileName(const luxrays::ExtMesh *m) const;
+	std::string GetRealFileName(luxrays::ExtMeshConstPtr m) const;
+	std::string GetSequenceFileName(luxrays::ExtMeshConstPtr m) const;
 
 	friend class boost::serialization::access;
 

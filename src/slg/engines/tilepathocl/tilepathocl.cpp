@@ -37,7 +37,7 @@ using namespace slg;
 // TilePathOCLRenderEngine
 //------------------------------------------------------------------------------
 
-TilePathOCLRenderEngine::TilePathOCLRenderEngine(const RenderConfig *rcfg,
+TilePathOCLRenderEngine::TilePathOCLRenderEngine(RenderConfigConstRef rcfg,
 		const bool supportsNativeThreads) :
 		PathOCLBaseRenderEngine(rcfg, supportsNativeThreads) {
 	tileRepository = NULL;
@@ -87,7 +87,7 @@ void TilePathOCLRenderEngine::InitTileRepository() {
 
 	// Work on a copy of configuration properties so I can edit tile.size if
 	// required
-	Properties cfgProps = renderConfig->cfg;
+	Properties cfgProps = renderConfig.cfg;
 	if (GetType() == RTPATHOCL) {
 		cfgProps.Delete("tile.size");
 
@@ -123,12 +123,12 @@ void TilePathOCLRenderEngine::InitTileRepository() {
 	InitTaskCount();
 }
 
-RenderState *TilePathOCLRenderEngine::GetRenderState() {
-	return new TilePathOCLRenderState(bootStrapSeed, tileRepository, photonGICache);
+RenderStatePtr TilePathOCLRenderEngine::GetRenderState() {
+	return std::make_shared<TilePathOCLRenderState>(bootStrapSeed, tileRepository, photonGICache);
 }
 
 void TilePathOCLRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
@@ -163,7 +163,7 @@ void TilePathOCLRenderEngine::StartLockLess() {
 		// Check if the render state is of the right type
 		startRenderState->CheckEngineTag(GetObjectTag());
 
-		TilePathOCLRenderState *rs = (TilePathOCLRenderState *)startRenderState;
+		auto rs = static_pointer_cast<TilePathOCLRenderState>(startRenderState);
 
 		// Use a new seed to continue the rendering
 		const u_int newSeed = rs->bootStrapSeed + 1;
@@ -178,9 +178,8 @@ void TilePathOCLRenderEngine::StartLockLess() {
 		photonGICache = rs->photonGICache;
 		rs->photonGICache = nullptr;
 
-		delete startRenderState;
-		startRenderState = NULL;
-		
+		startRenderState = nullptr;
+
 		InitTaskCount();
 	} else {
 		film->Reset();
@@ -240,7 +239,7 @@ Properties TilePathOCLRenderEngine::ToProperties(const Properties &cfg) {
 			PhotonGICache::ToProperties(cfg);
 }
 
-RenderEngine *TilePathOCLRenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *TilePathOCLRenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new TilePathOCLRenderEngine(rcfg, true);
 }
 

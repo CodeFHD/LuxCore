@@ -100,3 +100,4 @@ CMakeUserPresets.json
 # Visual Studio (Code)
 .vs/
 .vscode/
+tags

@@ -30,7 +30,7 @@ using namespace slg::blender;
 // Blender blend texture
 //------------------------------------------------------------------------------
 
-BlenderBlendTexture::BlenderBlendTexture(const TextureMapping3D *mp, const std::string ptype,
+BlenderBlendTexture::BlenderBlendTexture(TextureMapping3DConstPtr mp, const std::string ptype,
 										 const bool direction, float bright, float contrast) :
 		mapping(mp), type(TEX_LIN), direction(direction), bright(bright), contrast(contrast) {
 
@@ -141,7 +141,7 @@ Properties BlenderBlendTexture::ToProperties(const ImageMapCache &imgMapCache, c
 // Blender clouds texture
 //------------------------------------------------------------------------------
 
-BlenderCloudsTexture::BlenderCloudsTexture(const TextureMapping3D *mp, const std::string &pnoisebasis, const float noisesize, const int noisedepth,
+BlenderCloudsTexture::BlenderCloudsTexture(TextureMapping3DConstPtr mp, const std::string &pnoisebasis, const float noisesize, const int noisedepth,
 		bool hard, float bright, float contrast) :
 		mapping(mp), noisebasis(BLENDER_ORIGINAL), noisedepth(noisedepth), noisesize(noisesize),
 		hard(hard), bright(bright), contrast(contrast) {
@@ -243,7 +243,7 @@ Properties BlenderCloudsTexture::ToProperties(const ImageMapCache &imgMapCache, 
 // Blender distorted noise texture
 //------------------------------------------------------------------------------
 
-BlenderDistortedNoiseTexture::BlenderDistortedNoiseTexture(const TextureMapping3D *mp, const std::string &pnoisedistortion,
+BlenderDistortedNoiseTexture::BlenderDistortedNoiseTexture(TextureMapping3DConstPtr mp, const std::string &pnoisedistortion,
 		const std::string &pnoisebasis, float distortion, float noisesize, float bright, float contrast) :
 		mapping(mp), noisedistortion(BLENDER_ORIGINAL), noisebasis(BLENDER_ORIGINAL), distortion(distortion), noisesize(noisesize),
 		bright(bright), contrast(contrast) {
@@ -336,7 +336,7 @@ Properties BlenderDistortedNoiseTexture::ToProperties(const ImageMapCache &imgMa
 // Blender magic texture
 //------------------------------------------------------------------------------
 
-BlenderMagicTexture::BlenderMagicTexture(const TextureMapping3D *mp, const int noisedepth,
+BlenderMagicTexture::BlenderMagicTexture(TextureMapping3DConstPtr mp, const int noisedepth,
 										 const float turbulence, float bright, float contrast) :
 		mapping(mp), noisedepth(noisedepth), turbulence(turbulence), bright(bright), contrast(contrast) {
 
@@ -470,7 +470,7 @@ Properties BlenderMagicTexture::ToProperties(const ImageMapCache &imgMapCache, c
 // Blender marble texture
 //------------------------------------------------------------------------------
 
-BlenderMarbleTexture::BlenderMarbleTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoisebasis,
+BlenderMarbleTexture::BlenderMarbleTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoisebasis,
 		const std::string &pnoise, float noisesize, float turb, int noisedepth, bool hard, float bright, float contrast) :
 		mapping(mp), type(TEX_SOFT), noisebasis(BLENDER_ORIGINAL), noisebasis2(TEX_SIN), noisesize(noisesize),
 		turbulence(turb), noisedepth(noisedepth), hard(hard), bright(bright), contrast(contrast) {
@@ -627,7 +627,7 @@ Properties BlenderMarbleTexture::ToProperties(const ImageMapCache &imgMapCache, 
 // Blender musgrave texture
 //------------------------------------------------------------------------------
 
-BlenderMusgraveTexture::BlenderMusgraveTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoisebasis,
+BlenderMusgraveTexture::BlenderMusgraveTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoisebasis,
 		const float dimension, const float intensity, const float lacunarity, const float offset, const float gain,
 		const float octaves, float noisesize, float bright, float contrast) :
 		mapping(mp), type(TEX_MULTIFRACTAL), noisebasis(BLENDER_ORIGINAL), dimension(dimension), intensity(intensity),
@@ -838,7 +838,7 @@ Properties BlenderNoiseTexture::ToProperties(const ImageMapCache &imgMapCache, c
 // Blender stucci texture
 //------------------------------------------------------------------------------
 
-BlenderStucciTexture::BlenderStucciTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoisebasis,
+BlenderStucciTexture::BlenderStucciTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoisebasis,
 		const float noises, float turb, bool hard, float bright, float contrast) :
 		mapping(mp), type(TEX_PLASTIC), noisebasis(BLENDER_ORIGINAL), noisesize(noises),
 		turbulence(turb), hard(hard), bright(bright), contrast(contrast) {
@@ -980,7 +980,7 @@ Properties BlenderStucciTexture::ToProperties(const ImageMapCache &imgMapCache, 
 // Blender voronoi texture
 //------------------------------------------------------------------------------
 
-BlenderVoronoiTexture::BlenderVoronoiTexture(const TextureMapping3D *mp, const float intensity, const float exponent,
+BlenderVoronoiTexture::BlenderVoronoiTexture(TextureMapping3DConstPtr mp, const float intensity, const float exponent,
         const float fw1, const float fw2, const float fw3, const float fw4, const std::string distmetric, float noisesize,  float bright, float contrast) :
 		mapping(mp), intensity(intensity), feature_weight1(fw1), feature_weight2(fw2), feature_weight3(fw3), feature_weight4(fw4),
 		distancemetric(ACTUAL_DISTANCE), exponent(exponent), noisesize(noisesize), bright(bright), contrast(contrast) {
@@ -1086,7 +1086,7 @@ Properties BlenderVoronoiTexture::ToProperties(const ImageMapCache &imgMapCache,
 // Blender wood texture
 //------------------------------------------------------------------------------
 
-BlenderWoodTexture::BlenderWoodTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoise,
+BlenderWoodTexture::BlenderWoodTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoise,
 		const std::string &pnoisebasis, const float noises, float turb, bool hard, float bright, float contrast) :
 		mapping(mp), type(BANDS), noisebasis(BLENDER_ORIGINAL), noisebasis2(TEX_SIN), noisesize(noises),
 		turbulence(turb), hard(hard), bright(bright), contrast(contrast) {

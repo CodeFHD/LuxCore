@@ -56,7 +56,7 @@ static float nmtolambda(const float nm) {
 	return nm;
 }
 
-FresnelTexture *slg::AllocFresnelSopraTex(const Properties &props, const string &propName) {
+std::shared_ptr<FresnelTexture> slg::AllocFresnelSopraTex(const Properties &props, const string &propName) {
 	const string fileName = props.Get(Property(propName + ".file")("sopra.nk")).Get<string>();
 
 	ifstream fs;
@@ -136,6 +136,6 @@ FresnelTexture *slg::AllocFresnelSopraTex(const Properties &props, const string 
 	const RGBColor Nrgb = colorSpace.ToRGBConstrained(N.ToNormalizedXYZ());
 	const RGBColor Krgb = colorSpace.ToRGBConstrained(K.ToNormalizedXYZ());
 
-	return new FresnelConstTexture(Nrgb, Krgb);
+	return std::make_shared<FresnelConstTexture>(Nrgb, Krgb);
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

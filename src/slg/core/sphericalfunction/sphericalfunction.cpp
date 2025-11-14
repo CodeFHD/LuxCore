@@ -31,11 +31,11 @@ ImageMapSphericalFunction::ImageMapSphericalFunction() {
 	imgMap = NULL;
 }
 
-ImageMapSphericalFunction::ImageMapSphericalFunction(const ImageMap *map) {
+ImageMapSphericalFunction::ImageMapSphericalFunction(ImageMapConstPtr map) {
 	SetImageMap(map);
 }
 
-void ImageMapSphericalFunction::SetImageMap(const ImageMap *map) {
+void ImageMapSphericalFunction::SetImageMap(ImageMapConstPtr map) {
 	imgMap = map;
 }
 
@@ -123,10 +123,9 @@ IESSphericalFunction::IESSphericalFunction(const PhotometricDataIES &data, const
 }
 
 IESSphericalFunction::~IESSphericalFunction() {
-	delete imgMap;
 }
 
-ImageMap *IESSphericalFunction::IES2ImageMap(const PhotometricDataIES &data, const bool flipZ,
+ImageMapPtr IESSphericalFunction::IES2ImageMap(const PhotometricDataIES &data, const bool flipZ,
 			const u_int xRes, const u_int yRes) {
 	// This should be a warning but I have no way to emit that kind of information here
 	if (data.m_PhotometricType != PhotometricDataIES::PHOTOMETRIC_TYPE_C)
@@ -229,7 +228,7 @@ ImageMap *IESSphericalFunction::IES2ImageMap(const PhotometricDataIES &data, con
 	delete[] uFuncY;
 
 	// Resample the irregular functions
-	ImageMap *imgMap = ImageMap::AllocImageMap(1, xRes, yRes, ImageMapConfig());
+	auto imgMap = ImageMap::AllocImageMap(1, xRes, yRes, ImageMapConfig());
 	float *img = (float *)imgMap->GetStorage()->GetPixelsData();
 
 	for (u_int y = 0; y < yRes; ++y) {

@@ -30,12 +30,12 @@ using namespace slg;
 // LuxRender RoughGlass material porting.
 //------------------------------------------------------------------------------
 
-RoughGlassMaterial::RoughGlassMaterial(const Texture *frontTransp, const Texture *backTransp,
-		const Texture *emitted, const Texture *bump,
-		const Texture *refl, const Texture *trans,
-		const Texture *exteriorIorFact, const Texture *interiorIorFact,
-		const Texture *u, const Texture *v,
-		const Texture *filmThickness, const Texture *filmIor) :
+RoughGlassMaterial::RoughGlassMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+		TextureConstPtr emitted, TextureConstPtr bump,
+		TextureConstPtr refl, TextureConstPtr trans,
+		TextureConstPtr exteriorIorFact, TextureConstPtr interiorIorFact,
+		TextureConstPtr u, TextureConstPtr v,
+		TextureConstPtr filmThickness, TextureConstPtr filmIor) :
 			Material(frontTransp, backTransp, emitted, bump), Kr(refl), Kt(trans),
 			exteriorIor(exteriorIorFact), interiorIor(interiorIorFact), nu(u), nv(v),
 			filmThickness(filmThickness), filmIor(filmIor) {
@@ -333,24 +333,24 @@ void RoughGlassMaterial::Pdf(const HitPoint &hitPoint,
 	}
 }
 
-void RoughGlassMaterial::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void RoughGlassMaterial::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs) const {
 	Material::AddReferencedTextures(referencedTexs);
 
-	Kr->AddReferencedTextures(referencedTexs);
-	Kt->AddReferencedTextures(referencedTexs);
+	Kr->AddReferencedTextures(referencedTexs, Kr);
+	Kt->AddReferencedTextures(referencedTexs, Kt);
 	if (exteriorIor)
-		exteriorIor->AddReferencedTextures(referencedTexs);
+		exteriorIor->AddReferencedTextures(referencedTexs, exteriorIor);
 	if (interiorIor)
-		interiorIor->AddReferencedTextures(referencedTexs);
-	nu->AddReferencedTextures(referencedTexs);
-	nv->AddReferencedTextures(referencedTexs);
+		interiorIor->AddReferencedTextures(referencedTexs, interiorIor);
+	nu->AddReferencedTextures(referencedTexs, nu);
+	nv->AddReferencedTextures(referencedTexs, nv);
 	if (filmThickness)
-		filmThickness->AddReferencedTextures(referencedTexs);
+		filmThickness->AddReferencedTextures(referencedTexs, filmThickness);
 	if (filmIor)
-		filmIor->AddReferencedTextures(referencedTexs);
+		filmIor->AddReferencedTextures(referencedTexs, filmIor);
 }
 
-void RoughGlassMaterial::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void RoughGlassMaterial::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	bool updateGlossiness = false;

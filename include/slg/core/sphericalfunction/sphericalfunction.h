@@ -70,15 +70,15 @@ public:
 class ImageMapSphericalFunction : public SphericalFunction {
 public:
 	ImageMapSphericalFunction();
-	ImageMapSphericalFunction(const ImageMap *imgMap);
+	ImageMapSphericalFunction(ImageMapConstPtr imgMap);
 
-	void SetImageMap(const ImageMap *imgMap);
-	const ImageMap *GetImageMap() const { return imgMap; }
+	void SetImageMap(ImageMapConstPtr imgMap);
+	ImageMapConstPtr GetImageMap() const { return imgMap; }
 	
 	virtual luxrays::Spectrum Evaluate(const float phi, const float theta) const;
 
 protected:
-	const ImageMap *imgMap;
+	ImageMapConstPtr imgMap;
 };
 
 /**
@@ -166,7 +166,7 @@ public:
 			const u_int xRes = 512, const u_int yRes = 256);
 	~IESSphericalFunction();
 
-	static ImageMap *IES2ImageMap(const PhotometricDataIES &data, const bool flipZ,
+	static ImageMapPtr IES2ImageMap(const PhotometricDataIES &data, const bool flipZ,
 			const u_int xRes = 512, const u_int yRes = 256);
 };
 

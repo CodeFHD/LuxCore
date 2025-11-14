@@ -30,7 +30,7 @@ using namespace slg;
 // Fresnel cauchy texture
 //------------------------------------------------------------------------------
 
-static FresnelTexture *MakeCauchy(float a, float b)
+static std::shared_ptr<FresnelTexture> MakeCauchy(float a, float b)
 {
 	vector<float> wl;
 	vector<float> n;
@@ -46,10 +46,10 @@ static FresnelTexture *MakeCauchy(float a, float b)
 		1.f / 3.f, 1.f / 3.f, 1.f);
 	const RGBColor Nrgb = colorSpace.ToRGBConstrained(N.ToNormalizedXYZ());
 
-	return new FresnelConstTexture(Nrgb, Spectrum(0.f));
+	return std::make_shared<FresnelConstTexture>(Nrgb, Spectrum(0.f));
 }
 
-FresnelTexture *slg::AllocFresnelCauchyTex(const luxrays::Properties &props, const std::string &propName)
+std::shared_ptr<FresnelTexture> slg::AllocFresnelCauchyTex(const luxrays::Properties &props, const std::string &propName)
 {
 	const float b = props.Get(Property(propName + ".b")(0.f)).Get<double>();
 	const float index = props.Get(Property(propName + ".index")(-1.f)).Get<double>();
@@ -62,7 +62,7 @@ FresnelTexture *slg::AllocFresnelCauchyTex(const luxrays::Properties &props, con
 	return MakeCauchy(a, b);
 }
 
-FresnelTexture *slg::AllocFresnelAbbeTex(const luxrays::Properties &props, const std::string &propName)
+std::shared_ptr<FresnelTexture> slg::AllocFresnelAbbeTex(const luxrays::Properties &props, const std::string &propName)
 {
 	const string mode(props.Get(Property(propName + ".mode")("d")).Get<string>());
 

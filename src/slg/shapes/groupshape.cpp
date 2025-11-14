@@ -24,14 +24,14 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-GroupShape::GroupShape(const vector<const ExtTriangleMesh *> &ms, const vector<Transform> &ts) :
+GroupShape::GroupShape(const vector<ExtTriangleMeshConstPtr > &ms, const vector<Transform> &ts) :
 			meshes(ms), trans(ts) {
 }
 
 GroupShape::~GroupShape() {
 }
 
-ExtTriangleMesh *GroupShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr GroupShape::RefineImpl(SceneConstRef scene) {
 	return ExtTriangleMesh::Merge(meshes, &trans);
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -20,6 +20,7 @@
 #define	_SLG_MIXMAT_H
 
 #include "slg/materials/material.h"
+#include "slg/volumes/volume.h"
 
 namespace slg {
 
@@ -29,9 +30,9 @@ namespace slg {
 
 class MixMaterial : public Material {
 public:
-	MixMaterial(const Texture *frontTransp, const Texture *backTransp,
-			const Texture *emitted, const Texture *bump,
-			const Material *mA, const Material *mB, const Texture *mix);
+	MixMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+			TextureConstPtr emitted, TextureConstPtr bump,
+			MaterialConstPtr mA, MaterialConstPtr mB, TextureConstPtr mix);
 
 	virtual MaterialType GetType() const { return MIX; }
 	virtual BSDFEvent GetEventTypes() const { return eventTypes; };
@@ -43,9 +44,9 @@ public:
 		const luxrays::Vector &localFixedDir, const float passThroughEvent,
 		const bool backTracing) const;
 
-	virtual const Volume *GetInteriorVolume(const HitPoint &hitPoint,
+	virtual VolumeConstPtr GetInteriorVolume(const HitPoint &hitPoint,
 		const float passThroughEvent) const;
-	virtual const Volume *GetExteriorVolume(const HitPoint &hitPoint,
+	virtual VolumeConstPtr GetExteriorVolume(const HitPoint &hitPoint,
 		const float passThroughEvent) const;
 
 	virtual float GetEmittedRadianceY(const float oneOverPrimitiveArea) const;
@@ -65,17 +66,20 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void UpdateMaterialReferences(const Material *oldMat, const Material *newMat);
-	virtual bool IsReferencing(const Material *mat) const;
-	virtual void AddReferencedMaterials(std::unordered_set<const Material *> &referencedMats) const;
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void UpdateMaterialReferences(MaterialConstPtr oldMat, MaterialConstPtr newMat);
+	virtual bool IsReferencing(MaterialConstPtr mat) const;
+	virtual void AddReferencedMaterials(
+		std::unordered_set<MaterialConstPtr> &referencedMats,
+		MaterialConstPtr self
+	) const;
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	const Material *GetMaterialA() const { return matA; }
-	const Material *GetMaterialB() const { return matB; }
-	const Texture *GetMixFactor() const { return mixFactor; }
+	MaterialConstPtr GetMaterialA() const { return matA; }
+	MaterialConstPtr GetMaterialB() const { return matB; }
+	TextureConstPtr GetMixFactor() const { return mixFactor; }
 
 protected:
 	virtual void UpdateAvgPassThroughTransparency();
@@ -88,9 +92,9 @@ private:
 
 	void Preprocess();
 
-	const Material *matA;
-	const Material *matB;
-	const Texture *mixFactor;
+	MaterialConstPtr matA;
+	MaterialConstPtr matB;
+	TextureConstPtr mixFactor;
 
 	// Cached values for performance with very large material node trees
 	BSDFEvent eventTypes;

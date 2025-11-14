@@ -18,6 +18,8 @@
 
 #include <limits>
 
+#include <boost/serialization/shared_ptr.hpp>
+
 #include "slg/film/film.h"
 #include "slg/film/noiseestimation/filmnoiseestimation.h"
 
@@ -31,10 +33,14 @@ using namespace slg;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::FilmNoiseEstimation)
 
-FilmNoiseEstimation::FilmNoiseEstimation(const Film *flm, const u_int warmupVal, 
-		const u_int testStepVal, const u_int filtScale, const u_int index) :
-		warmup(warmupVal),	testStep(testStepVal),
-		filterScale(filtScale), imagePipelineIndex(index), film(flm), referenceImage(NULL) {
+FilmNoiseEstimation::FilmNoiseEstimation(
+	FilmConstPtr flm, const u_int warmupVal,
+	const u_int testStepVal, const u_int filtScale, const u_int index
+) :
+	warmup(warmupVal),	testStep(testStepVal),
+	filterScale(filtScale), imagePipelineIndex(index), film(flm),
+	referenceImage(NULL)
+{
 	Reset();
 }
 

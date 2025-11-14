@@ -31,6 +31,7 @@
 
 #include <bcd/core/SamplesAccumulator.h>
 
+#include "luxrays/usings.h"
 #include "luxrays/core/hardwaredevice.h"
 #include "luxrays/utils/properties.h"
 #include "luxrays/utils/serializationutils.h"
@@ -43,6 +44,8 @@
 #include "slg/utils/varianceclamping.h"
 
 namespace slg {
+
+using JThreadPtr = std::shared_ptr<std::jthread>;
 
 // OpenCL data types
 namespace ocl {
@@ -98,7 +101,11 @@ private:
 class SampleResult;
 class ImagePipeline;
 
-class Film {
+class Film : public std::enable_shared_from_this<Film> {
+
+	// https://en.cppreference.com/w/cpp/memory/enable_shared_from_this.html
+	struct Private{ explicit Private() = default; };
+
 public:
 	typedef enum {
 		RADIANCE_PER_PIXEL_NORMALIZED,
@@ -145,10 +152,21 @@ public:
 		NOISE,
 		USER_IMPORTANCE
 	} FilmChannelType;
-	
+
 	typedef std::unordered_set<FilmChannelType, std::hash<int> > FilmChannels;
 
-	Film(const u_int width, const u_int height, const u_int *subRegion = NULL);
+	static FilmPtr Create(
+		const u_int width,
+		const u_int height,
+		const u_int *subRegion = nullptr
+	);
+
+	Film(
+		Private,
+		const u_int width,
+		const u_int height,
+		const u_int *subRegion = nullptr
+	);
 	~Film();
 
 	void SetThreadCount(const u_int threadCount);
@@ -164,7 +182,7 @@ public:
 	// Dynamic settings
 	//--------------------------------------------------------------------------
 
-	void SetImagePipelines(const u_int index, ImagePipeline *newImagePiepeline);
+	void SetImagePipelines(const u_int index, ImagePipeline *newImagePipeline);
 	void SetImagePipelines(ImagePipeline *newImagePiepeline);
 	void SetImagePipelines(std::vector<ImagePipeline *> &newImagePiepelines);
 	const u_int GetImagePipelineCount() const { return imagePipelines.size(); }
@@ -241,8 +259,12 @@ public:
 	size_t GetOutputSize(const FilmOutputs::FilmOutputType type) const;
 
 	void Output();
-	void Output(const std::string &fileName, const FilmOutputs::FilmOutputType type,
-			const luxrays::Properties *props = NULL, const bool executeImagePipeline = true);
+	void Output(
+		const std::string &fileName,
+		const FilmOutputs::FilmOutputType type,
+		const luxrays::Properties *props = nullptr,
+		const bool executeImagePipeline = true
+	);
 
 	template<class T> void GetOutput(const FilmOutputs::FilmOutputType type, T *buffer,
 			const u_int index = 0, const bool executeImagePipeline = true) {
@@ -294,8 +316,8 @@ public:
 	// Used by BCD denoiser plugin
 	//--------------------------------------------------------------------------
 
-	const FilmDenoiser &GetDenoiser() const { return filmDenoiser; }
-	FilmDenoiser &GetDenoiser() { return filmDenoiser; }
+	const FilmDenoiser &GetDenoiser() const { return *filmDenoiser; }
+	FilmDenoiser &GetDenoiser() { return *filmDenoiser; }
 
 	//--------------------------------------------------------------------------
 	// Samples related methods
@@ -433,7 +455,7 @@ public:
 	int hwDeviceIndex;
 
 	luxrays::Context *ctx;
-	luxrays::DataSet *dataSet;
+	luxrays::DataSetPtr dataSet;
 	luxrays::HardwareDevice *hardwareDevice;
 
 	luxrays::HardwareDeviceBuffer *hw_IMAGEPIPELINE;
@@ -441,23 +463,23 @@ public:
 	luxrays::HardwareDeviceBuffer *hw_OBJECT_ID;
 	luxrays::HardwareDeviceBuffer *hw_ALBEDO;
 	luxrays::HardwareDeviceBuffer *hw_AVG_SHADING_NORMAL;
-	
+
 	luxrays::HardwareDeviceBuffer *hw_mergeBuffer;
-	
+
 	luxrays::HardwareDeviceKernel *mergeInitializeKernel;
 	luxrays::HardwareDeviceKernel *mergeRADIANCE_PER_PIXEL_NORMALIZEDKernel;
 	luxrays::HardwareDeviceKernel *mergeRADIANCE_PER_SCREEN_NORMALIZEDKernel;
 	luxrays::HardwareDeviceKernel *mergeFinalizeKernel;
 
-	static Film *LoadSerialized(const std::string &fileName);
-	static void SaveSerialized(const std::string &fileName, const Film *film);
+	static FilmPtr LoadSerialized(const std::string &fileName);
+	static void SaveSerialized(const std::string &fileName, FilmConstPtr film);
 
 	static bool GetFilmSize(const luxrays::Properties &cfg,
 		u_int *filmFullWidth, u_int *filmFullHeight,
 		u_int *filmSubRegion);
 
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static Film *FromProperties(const luxrays::Properties &cfg);
+	static FilmPtr FromProperties(const luxrays::Properties &cfg);
 
 	static FilmChannelType String2FilmChannelType(const std::string &type);
 	static const std::string FilmChannelType2String(const FilmChannelType type);
@@ -472,6 +494,8 @@ private:
 	template<class Archive> void save(Archive &ar, const unsigned int version) const;
 	template<class Archive>	void load(Archive &ar, const unsigned int version);
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+	void InitFilmDenoiser();
 
 	void FreeChannels();
 	void MergeSampleBuffers(const u_int imagePipelineIndex);
@@ -514,14 +538,14 @@ private:
 	FilmSamplesCounts samplesCounts;
 
 	std::vector<ImagePipeline *> imagePipelines;
-	std::jthread *imagePipelineThread;
+	JThreadPtr imagePipelineThread;
 	bool isAsyncImagePipelineRunning;
 
 	// Halt conditions
 	FilmConvTest *convTest;
 	double haltTime;
 	u_int haltSPP, haltSPP_PixelNormalized, haltSPP_ScreenNormalized;
-	
+
 	float haltNoiseThreshold;
 	u_int haltNoiseThresholdWarmUp, haltNoiseThresholdTestStep, haltNoiseThresholdImagePipelineIndex;
 	bool haltNoiseThresholdUseFilter, haltNoiseThresholdStopRendering;
@@ -535,8 +559,8 @@ private:
 
 	FilmOutputs filmOutputs;
 
-	FilmDenoiser filmDenoiser;
-	
+	std::unique_ptr<FilmDenoiser> filmDenoiser;
+
 	bool initialized;
 };
 

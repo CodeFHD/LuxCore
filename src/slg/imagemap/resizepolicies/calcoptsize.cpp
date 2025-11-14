@@ -33,7 +33,7 @@ using namespace slg;
 // Optimal resize preprocess rendering thread
 //------------------------------------------------------------------------------
 
-static void GenerateEyeRay(const Camera *camera, const UV &sampleOffestUV, Ray &eyeRay,
+static void GenerateEyeRay(CameraConstPtr camera, const UV &sampleOffestUV, Ray &eyeRay,
 		PathVolumeInfo &volInfo, Sampler *sampler, SampleResult &sampleResult) {
 	const u_int *subRegion = camera->filmSubRegion;
 	// Removed the +1 from region width to have room for sampleOffestUV
@@ -54,7 +54,7 @@ static void GenerateEyeRay(const Camera *camera, const UV &sampleOffestUV, Ray &
 
 void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int threadIndex,
 		ImageMapCache *imc, const vector<u_int> *imgMapsIndices, u_int *workCounter,
-		const Scene *scene, SobolSamplerSharedData *sobolSharedData,
+		SceneConstPtr scene, SobolSamplerSharedData *sobolSharedData,
 		std::barrier<completion_t> *threadsSyncBarrier) {
 	// Hard coded parameters
 	const u_int passesCount = 1;
@@ -72,21 +72,21 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 	// Setup thread image maps instrumentation
 	for (auto i : *imgMapsIndices)
 		imc->maps[i]->instrumentationInfo->ThreadSetUp();
-	
+
 	threadsSyncBarrier->arrive_and_wait();
 
-	const Camera *camera = scene->camera;
+	CameraConstPtr camera = scene->camera;
 
 	// Initialize the sampler
 	RandomGenerator rnd(1 + threadIndex);
 	SobolSampler sampler(&rnd, NULL, NULL, true, 0.f, 0.f,
 			16, 16, 1, 1,
 			sobolSharedData);
-	
+
 	// Request the samples
 	const u_int sampleBootSize = 5;
 	const u_int sampleStepSize = 3;
-	const u_int sampleSize = 
+	const u_int sampleSize =
 		sampleBootSize + // To generate eye ray
 		maxPathDepth * sampleStepSize; // For each path vertex
 	sampler.RequestSamples(PIXEL_NORMALIZED_ONLY, sampleSize);
@@ -249,11 +249,11 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 //------------------------------------------------------------------------------
 
 
-void ImageMapResizePolicy::CalcOptimalImageMapSizes(ImageMapCache &imc, const Scene *scene,
+void ImageMapResizePolicy::CalcOptimalImageMapSizes(ImageMapCache &imc, SceneConstPtr scene,
 		const vector<u_int> &imgMapsIndices) {
 	// Do a test render to establish the optimal image maps sizes
 	const size_t renderThreadCount = GetHardwareThreadCount();
-	vector<std::jthread *> renderThreads(renderThreadCount, nullptr);
+	std::vector<JThreadPtr> renderThreads(renderThreadCount);
 	SLG_LOG("Optimal image map size preprocess thread count: " << renderThreadCount);
 
 	std::barrier threadsSyncBarrier(renderThreadCount, completion_t());
@@ -263,14 +263,14 @@ void ImageMapResizePolicy::CalcOptimalImageMapSizes(ImageMapCache &imc, const Sc
 	// Start the preprocessing threads
 	u_int workCounter = 0;
 	for (size_t i = 0; i < renderThreadCount; ++i)
-		renderThreads[i] = new std::jthread(&RenderFunc, i, &imc, &imgMapsIndices,
-				&workCounter, scene, &sobolSharedData, &threadsSyncBarrier);
+		renderThreads[i] = std::make_shared<std::jthread>(
+			&RenderFunc, i, &imc, &imgMapsIndices,
+			&workCounter, scene, &sobolSharedData, &threadsSyncBarrier
+		);
 
 	// Wait for the end of threads
 	for (size_t i = 0; i < renderThreadCount; ++i) {
 		renderThreads[i]->join();
-
-		delete renderThreads[i];
 	}
 
 	for (auto i : imgMapsIndices) {

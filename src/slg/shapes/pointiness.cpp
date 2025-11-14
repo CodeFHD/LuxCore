@@ -67,7 +67,7 @@ protected:
 	const Point *verts_;
 };
 
-PointinessShape::PointinessShape(ExtTriangleMesh *srcMesh, const u_int destAOVIndex) {
+PointinessShape::PointinessShape(ExtTriangleMeshPtr srcMesh, const u_int destAOVIndex) {
 	SDL_LOG("Pointiness shape " << srcMesh->GetName());
 
 	const double startTime = WallClockTime();
@@ -79,15 +79,14 @@ PointinessShape::PointinessShape(ExtTriangleMesh *srcMesh, const u_int destAOVIn
 
 	// Find duplicate vertices
 	auto compareVerts = [](const TriangleMesh &mesh, const u_int vertIndex1, const u_int vertIndex2) {
-		const ExtTriangleMesh *triMesh = dynamic_cast<const ExtTriangleMesh *>(&mesh);
-		assert (triMesh);
+		auto triMesh = dynamic_cast<const ExtTriangleMesh&>(mesh);
 
 		return (DistanceSquared(
-					triMesh->GetVertex(Transform::TRANS_IDENTITY, vertIndex1),
-					triMesh->GetVertex(Transform::TRANS_IDENTITY, vertIndex2)) < DEFAULT_EPSILON_STATIC) &&
-				(triMesh->HasNormals() && Dot(
-					triMesh->GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex1),
-					triMesh->GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex2)));
+					triMesh.GetVertex(Transform::TRANS_IDENTITY, vertIndex1),
+					triMesh.GetVertex(Transform::TRANS_IDENTITY, vertIndex2)) < DEFAULT_EPSILON_STATIC) &&
+				(triMesh.HasNormals() && Dot(
+					triMesh.GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex1),
+					triMesh.GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex2)));
 	};
 	vector<u_int> uniqueVertices;
 	const u_int uniqueVertCount = srcMesh->GetUniqueVerticesMapping(uniqueVertices, compareVerts);
@@ -185,11 +184,9 @@ PointinessShape::PointinessShape(ExtTriangleMesh *srcMesh, const u_int destAOVIn
 }
 
 PointinessShape::~PointinessShape() {
-	if (!refined)
-		delete mesh;
 }
 
-ExtTriangleMesh *PointinessShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr PointinessShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

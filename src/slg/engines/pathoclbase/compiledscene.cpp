@@ -31,7 +31,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-CompiledScene::CompiledScene(Scene *scn, const PathTracer *pt) {
+CompiledScene::CompiledScene(ScenePtr scn, const PathTracer *pt) {
 	scene = scn;
 	pathTracer = pt;
 	maxMemPageSize = numeric_limits<size_t>::max();

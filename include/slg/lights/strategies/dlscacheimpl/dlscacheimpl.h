@@ -162,7 +162,7 @@ public:
 	const DLSCParams &GetParams() const { return params; }
 	const DLSCBvh *GetBVH() const { return cacheEntriesBVH; }
 
-	void Build(const Scene *scene);
+	void Build(SceneConstPtr scene);
 	
 	const luxrays::Distribution1D *GetLightDistribution(const luxrays::Point &p, const luxrays::Normal &n,
 			const bool isVolume) const;
@@ -171,14 +171,14 @@ public:
 
 private:
 	float SampleLight(const DLSCVisibilityParticle &visibilityParticle,
-		const LightSource *light, const u_int pass) const;
+		LightSourceConstPtr light, const u_int pass, SceneConstPtr scene) const;
 	
-	float EvaluateBestRadius();
-	void TraceVisibilityParticles();
+	float EvaluateBestRadius(SceneConstPtr scene);
+	void TraceVisibilityParticles(SceneConstPtr);
 	void InitCacheEntry(const u_int entryIndex);
-	void ComputeCacheEntryReceivedLuminance(const u_int entryIndex);
-	void BuildCacheEntryLightDistribution(const u_int entryIndex, const DLSCBvh &bvh);
-	void BuildCacheEntries();
+	void ComputeCacheEntryReceivedLuminance(const u_int entryIndex, SceneConstPtr);
+	void BuildCacheEntryLightDistribution(const u_int entryIndex, const DLSCBvh &bvh, SceneConstPtr);
+	void BuildCacheEntries(SceneConstPtr scene);
 
 	void DebugExport(const std::string &fileName, const float sphereRadius) const;
 
@@ -188,7 +188,7 @@ private:
 	DLSCParams params;
 
 	// Used only during the building phase
-	const Scene *scene;
+	//SceneConstRef scene;
 	std::vector<DLSCVisibilityParticle> visibilityParticles;
 	std::vector<std::vector<float> > cacheEntriesReceivedLuminance;
 

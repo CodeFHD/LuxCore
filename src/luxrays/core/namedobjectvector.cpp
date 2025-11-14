@@ -29,19 +29,16 @@ using namespace luxrays;
 // NamedObjectVector
 //------------------------------------------------------------------------------
 
+
 NamedObjectVector::NamedObjectVector() {
 }
 
-NamedObjectVector::~NamedObjectVector() {
-	for(NamedObject *o: objs)
-		delete o;
-}
 
-NamedObject *NamedObjectVector::DefineObj(NamedObject *newObj) {
+NamedObjectPtr NamedObjectVector::DefineObj(NamedObjectPtr newObj) {
 	const string &name = newObj->GetName();
 
 	if (IsObjDefined(name)) {
-		NamedObject *oldObj = objs[GetIndex(name)];
+		auto oldObj = objs[GetIndex(name)];
 
 		// Update name/object definition
 		const u_int index = GetIndex(name);
@@ -51,7 +48,7 @@ NamedObject *NamedObjectVector::DefineObj(NamedObject *newObj) {
 		name2index.insert(Name2IndexType::value_type(name, index));
 
 		index2obj.left.erase(index);
-		index2obj.insert(Index2ObjType::value_type(index, newObj));
+		index2obj.insert(Index2ObjType::value_type(index, newObj.get()));
 
 		return oldObj;
 	} else {
@@ -59,9 +56,9 @@ NamedObject *NamedObjectVector::DefineObj(NamedObject *newObj) {
 		const u_int index = objs.size();
 		objs.push_back(newObj);
 		name2index.insert(Name2IndexType::value_type(name, index));
-		index2obj.insert(Index2ObjType::value_type(index, newObj));
+		index2obj.insert(Index2ObjType::value_type(index, newObj.get()));
 
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -69,19 +66,19 @@ bool NamedObjectVector::IsObjDefined(const string &name) const {
 	return (name2index.left.count(name) > 0);
 }
 
-const NamedObject *NamedObjectVector::GetObj(const string &name) const {
+NamedObjectConstPtr NamedObjectVector::GetObj(const string &name) const {
 	return objs[GetIndex(name)];
 }
 
-NamedObject *NamedObjectVector::GetObj(const string &name) {
+NamedObjectPtr NamedObjectVector::GetObj(const string &name) {
 	return objs[GetIndex(name)];
 }
 
-const NamedObject *NamedObjectVector::GetObj(const u_int index) const {
+NamedObjectConstPtr NamedObjectVector::GetObj(const u_int index) const {
 	return objs[index];
 }
 
-NamedObject *NamedObjectVector::GetObj(const u_int index) {
+NamedObjectPtr NamedObjectVector::GetObj(const u_int index) {
 	return objs[index];
 }
 
@@ -89,16 +86,20 @@ u_int NamedObjectVector::GetIndex(const string &name) const {
 	Name2IndexType::left_const_iterator it = name2index.left.find(name);
 
 	if (it == name2index.left.end())
-		throw runtime_error("Reference to an undefined NamedObject name: " + name);
+		throw UndefinedNamedObjectError(
+			"Reference to an undefined NamedObject name: " + name
+		);
 	else
 		return it->second;
 }
 
-u_int NamedObjectVector::GetIndex(const NamedObject *o) const {
-	Index2ObjType::right_const_iterator it = index2obj.right.find(o);
+u_int NamedObjectVector::GetIndex(NamedObjectConstPtr o) const {
+	Index2ObjType::right_const_iterator it = index2obj.right.find(o.get());
 
 	if (it == index2obj.right.end())
-		throw runtime_error("Reference to an undefined NamedObject pointer: " + luxrays::ToString(o));
+		throw UndefinedNamedObjectError(
+			"Reference to an undefined NamedObject pointer: " + luxrays::ToString(o)
+		);
 	else
 		return it->second;
 }
@@ -107,17 +108,20 @@ const string &NamedObjectVector::GetName(const u_int index) const {
 	Name2IndexType::right_const_iterator it = name2index.right.find(index);
 
 	if (it == name2index.right.end())
-		throw runtime_error("Reference to an undefined NamedObject index: " + luxrays::ToString(index));
+		throw UndefinedNamedObjectError(
+			"Reference to an undefined NamedObject index: " + luxrays::ToString(index)
+		);
 	else
 		return it->second;
-	
 }
 
-const string &NamedObjectVector::GetName(const NamedObject *o) const {
+const string &NamedObjectVector::GetName(NamedObjectConstPtr o) const {
 	Name2IndexType::right_const_iterator it = name2index.right.find(GetIndex(o));
 
 	if (it == name2index.right.end())
-		throw runtime_error("Reference to an undefined NamedObject: " + luxrays::ToString(o));
+		throw UndefinedNamedObjectError(
+			"Reference to an undefined NamedObject: " + luxrays::ToString(o)
+		);
 	else
 		return it->second;
 }
@@ -134,38 +138,50 @@ void NamedObjectVector::GetNames(vector<string> &names) const {
 		names[i] = GetName(i);
 }
 
-vector<NamedObject *> &NamedObjectVector::GetObjs() {
+std::vector<NamedObjectPtr>& NamedObjectVector::GetObjs() {
 	return objs;
 }
 
 void NamedObjectVector::DeleteObj(const string &name) {
-	const u_int index = GetIndex(name);
+	// We swap remove target and last object, and pop back
 
 	if (objs.size() > 0)
 	{
-		NamedObject* removedObj = objs[index];
-		int lastIndex = objs.size() - 1;
-		if (lastIndex != index)
+		// Record index
+		auto removeObjIndex = GetIndex(name);
+		auto lastObjIndex = objs.size() - 1;
+
+		// Record names
+		const string removeObjName{objs[removeObjIndex]->GetName()};
+		const string lastObjName{objs[lastObjIndex]->GetName()};
+
+		if (lastObjIndex != removeObjIndex)
 		{
-			NamedObject* lastObj = objs[lastIndex];
-			int newIndex = index;
-			objs[index] = lastObj;
+
+			std::swap(objs[removeObjIndex], objs[lastObjIndex]);
+
+			//TODO
+			//NamedObject* lastObj = objs[lastIndex];
+			////int newIndex = index;
+			//objs[index] = lastObj;
 
 			// redo links
-			name2index.left.erase(removedObj->GetName());
-			name2index.left.erase(lastObj->GetName());
-			name2index.insert(Name2IndexType::value_type(lastObj->GetName(), index));
+			name2index.left.erase(removeObjName);
+			name2index.left.erase(lastObjName);
+			name2index.insert(Name2IndexType::value_type(lastObjName, removeObjIndex));
 
-			index2obj.left.erase(lastIndex);
-			index2obj.left.erase(index);
-			index2obj.insert(Index2ObjType::value_type(index, lastObj));
+			index2obj.left.erase(lastObjIndex);
+			index2obj.left.erase(removeObjIndex);
+			index2obj.insert(
+				Index2ObjType::value_type(removeObjIndex, objs[removeObjIndex].get())
+			);
 
 		}
 		else
 		{
 			// last
-			name2index.left.erase(removedObj->GetName());
-			index2obj.left.erase(index);
+			name2index.left.erase(removeObjName);
+			index2obj.left.erase(removeObjIndex);
 		}
 	}
 
@@ -173,7 +189,7 @@ void NamedObjectVector::DeleteObj(const string &name) {
 	objs.pop_back();
 }
 
-void NamedObjectVector::DeleteObjs(const vector<string> &names) {
+void NamedObjectVector::DeleteObjs(const std::vector<string> &names) {
 
 	for (const string& name : names) {
 		DeleteObj(name);

@@ -33,7 +33,7 @@ using namespace slg;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::BackgroundImgPlugin)
 
-BackgroundImgPlugin::BackgroundImgPlugin(ImageMap *map) {
+BackgroundImgPlugin::BackgroundImgPlugin(ImageMapPtr map) {
 	imgMap = map;
 	filmImageMap = nullptr;
 
@@ -62,8 +62,6 @@ BackgroundImgPlugin::~BackgroundImgPlugin() {
 		hardwareDevice->FreeBuffer(&hwFilmImageMap);
 	}
 
-	delete imgMap;
-	delete filmImageMap;
 }
 
 ImagePipelinePlugin *BackgroundImgPlugin::Copy() const {
@@ -77,9 +75,6 @@ void BackgroundImgPlugin::UpdateFilmImageMap(const Film &film) {
 	// Check if I have to resample the image map
 	if ((!filmImageMap) ||
 			(filmImageMap->GetWidth() != width) || (filmImageMap->GetHeight() != height)) {
-		delete filmImageMap;
-		filmImageMap = nullptr;
-
 		filmImageMap = imgMap->Copy();
 		filmImageMap->Resize(width, height);
 		filmImageMap->Preprocess();

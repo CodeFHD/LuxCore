@@ -26,10 +26,10 @@ using namespace slg;
 // Velvet material
 //------------------------------------------------------------------------------
 
-VelvetMaterial::VelvetMaterial(const Texture *frontTransp, const Texture *backTransp,
-		const Texture *emitted, const Texture *bump,
-		const Texture *kd, const Texture *p1, const Texture *p2, const Texture *p3,
-		const Texture *thickness) :
+VelvetMaterial::VelvetMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+		TextureConstPtr emitted, TextureConstPtr bump,
+		TextureConstPtr kd, TextureConstPtr p1, TextureConstPtr p2, TextureConstPtr p3,
+		TextureConstPtr thickness) :
 			Material(frontTransp, backTransp, emitted, bump), Kd(kd),
 			P1(p1), P2(p2), P3(p3), Thickness(thickness) {
 	glossiness = 1.f;
@@ -125,17 +125,17 @@ void VelvetMaterial::Pdf(const HitPoint &hitPoint,
 		*reversePdfW = fabsf((hitPoint.fromLight ? localLightDir.z : localEyeDir.z) * INV_PI);
 }
 
-void VelvetMaterial::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void VelvetMaterial::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs) const {
 	Material::AddReferencedTextures(referencedTexs);
 
-	Kd->AddReferencedTextures(referencedTexs);
-	P1->AddReferencedTextures(referencedTexs);
-	P2->AddReferencedTextures(referencedTexs);
-	P3->AddReferencedTextures(referencedTexs);
-	Thickness->AddReferencedTextures(referencedTexs);
+	Kd->AddReferencedTextures(referencedTexs, Kd);
+	P1->AddReferencedTextures(referencedTexs, P1);
+	P2->AddReferencedTextures(referencedTexs, P2);
+	P3->AddReferencedTextures(referencedTexs, P3);
+	Thickness->AddReferencedTextures(referencedTexs, Thickness);
 }
 
-void VelvetMaterial::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void VelvetMaterial::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	if (Kd == oldTex)

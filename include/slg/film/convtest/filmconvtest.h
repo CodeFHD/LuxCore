@@ -30,12 +30,17 @@ namespace slg {
 // FilmConvTest
 //------------------------------------------------------------------------------
 
-class Film;
 
 class FilmConvTest {
 public:
-	FilmConvTest(const Film *film, const float threshold, const u_int warmup,
-			const u_int testStep, const bool useFilter, const u_int imagePipelineIndex);
+	FilmConvTest(
+		FilmConstPtr film,
+		const float threshold,
+		const u_int warmup,
+		const u_int testStep,
+		const bool useFilter,
+		const u_int imagePipelineIndex
+	);
 	~FilmConvTest();
 
 	bool IsTestUpdateRequired() const;
@@ -45,7 +50,7 @@ public:
 
 	u_int todoPixelsCount;
 	float maxError;
-	
+
 	friend class boost::serialization::access;
 
 private:
@@ -60,7 +65,7 @@ private:
 	bool useFilter;
 	u_int imagePipelineIndex;
 
-	const Film *film;
+	FilmConstPtr film;
 
 	GenericFrameBuffer<3, 0, float> *referenceImage;
 	double lastSamplesCount;

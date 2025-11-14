@@ -24,7 +24,7 @@ namespace luxrays {
 // IntersectionDevice
 //------------------------------------------------------------------------------
 
-IntersectionDevice::IntersectionDevice() : dataSet(NULL) {
+IntersectionDevice::IntersectionDevice() : dataSet(nullptr) {
 }
 
 IntersectionDevice::~IntersectionDevice() {
@@ -32,7 +32,7 @@ IntersectionDevice::~IntersectionDevice() {
 		Stop();
 }
 
-void IntersectionDevice::SetDataSet(DataSet *newDataSet) {
+void IntersectionDevice::SetDataSet(DataSetPtr newDataSet) {
 	assert (!started);
 
 	dataSet = newDataSet;

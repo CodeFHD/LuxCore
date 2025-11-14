@@ -27,15 +27,15 @@ namespace slg {
 
 class BevelShape : public Shape {
 public:
-	BevelShape(luxrays::ExtTriangleMesh *mesh, const float bevelRadius);
+	BevelShape(luxrays::ExtTriangleMeshPtr mesh, const float bevelRadius);
 	virtual ~BevelShape();
 
 	virtual ShapeType GetType() const { return BEVEL; }
 	
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }

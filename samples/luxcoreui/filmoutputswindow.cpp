@@ -71,8 +71,8 @@ void FilmOutputWindow::CopyAlpha(const float *filmPixels, float *pixels,
 void FilmOutputWindow::RefreshTexture() {
 	app->session->UpdateStats();
 
-	const unsigned int filmWidth = app->session->GetFilm().GetWidth();
-	const unsigned int filmHeight = app->session->GetFilm().GetHeight();
+	const unsigned int filmWidth = app->session->GetFilm()->GetWidth();
+	const unsigned int filmHeight = app->session->GetFilm()->GetHeight();
 	
 	unique_ptr<float[]> pixels(new float[filmWidth * filmHeight * 3]);
 	switch (type) {
@@ -102,15 +102,15 @@ void FilmOutputWindow::RefreshTexture() {
 		case Film::OUTPUT_BY_OBJECT_ID:
 		case Film::OUTPUT_AVG_SHADING_NORMAL:
 		case Film::OUTPUT_CAUSTIC: {
-			app->session->GetFilm().GetOutput<float>(type, pixels.get(), index);
+			app->session->GetFilm()->GetOutput<float>(type, pixels.get(), index);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
 			AutoLinearToneMap(pixels.get(), pixels.get(), filmWidth, filmHeight);
 			break;
 		}
 		case Film::OUTPUT_RGBA: {
 			unique_ptr<float[]> filmPixels;
-			filmPixels.reset(new float[app->session->GetFilm().GetOutputSize(type)]);
-			app->session->GetFilm().GetOutput<float>(type, filmPixels.get(), index);
+			filmPixels.reset(new float[app->session->GetFilm()->GetOutputSize(type)]);
+			app->session->GetFilm()->GetOutput<float>(type, filmPixels.get(), index);
 			
 			CopyAlpha(filmPixels.get(), pixels.get(), filmWidth, filmHeight);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
@@ -120,14 +120,14 @@ void FilmOutputWindow::RefreshTexture() {
 		case Film::OUTPUT_MATERIAL_ID_COLOR:
 		case Film::OUTPUT_ALBEDO:
 		case Film::OUTPUT_RGB_IMAGEPIPELINE: {
-			app->session->GetFilm().GetOutput<float>(type, pixels.get(), index);
+			app->session->GetFilm()->GetOutput<float>(type, pixels.get(), index);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
 			break;
 		}
 		case Film::OUTPUT_RGBA_IMAGEPIPELINE: {
 			unique_ptr<float[]> filmPixels;
-			filmPixels.reset(new float[app->session->GetFilm().GetOutputSize(type)]);
-			app->session->GetFilm().GetOutput<float>(type, filmPixels.get(), index);
+			filmPixels.reset(new float[app->session->GetFilm()->GetOutputSize(type)]);
+			app->session->GetFilm()->GetOutput<float>(type, filmPixels.get(), index);
 			
 			CopyAlpha(filmPixels.get(), pixels.get(), filmWidth, filmHeight);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
@@ -143,8 +143,8 @@ void FilmOutputWindow::RefreshTexture() {
 		case Film::OUTPUT_CONVERGENCE:
 		case Film::OUTPUT_NOISE: {
 			unique_ptr<float[]> filmPixels;
-			filmPixels.reset(new float[app->session->GetFilm().GetOutputSize(type)]);
-			app->session->GetFilm().GetOutput<float>(type, filmPixels.get(), index);
+			filmPixels.reset(new float[app->session->GetFilm()->GetOutputSize(type)]);
+			app->session->GetFilm()->GetOutput<float>(type, filmPixels.get(), index);
 			
 			Copy1(filmPixels.get(), pixels.get(), filmWidth, filmHeight);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
@@ -154,8 +154,8 @@ void FilmOutputWindow::RefreshTexture() {
 		case Film::OUTPUT_MATERIAL_ID:
 		case Film::OUTPUT_OBJECT_ID: {
 			unique_ptr<unsigned int> filmPixels;
-			filmPixels.reset(new unsigned int[app->session->GetFilm().GetOutputSize(type)]);
-			app->session->GetFilm().GetOutput<unsigned int>(type, filmPixels.get(), index);
+			filmPixels.reset(new unsigned int[app->session->GetFilm()->GetOutputSize(type)]);
+			app->session->GetFilm()->GetOutput<unsigned int>(type, filmPixels.get(), index);
 
 			Copy1UINT(filmPixels.get(), pixels.get(), filmWidth, filmHeight);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
@@ -164,8 +164,8 @@ void FilmOutputWindow::RefreshTexture() {
 		}
 		case Film::OUTPUT_SAMPLECOUNT: {
 			unique_ptr<unsigned int> filmPixels;
-			filmPixels.reset(new unsigned int[app->session->GetFilm().GetOutputSize(type)]);
-			app->session->GetFilm().GetOutput<unsigned int>(type, filmPixels.get(), index);
+			filmPixels.reset(new unsigned int[app->session->GetFilm()->GetOutputSize(type)]);
+			app->session->GetFilm()->GetOutput<unsigned int>(type, filmPixels.get(), index);
 
 			Copy1UINT2FLOAT(filmPixels.get(), pixels.get(), filmWidth, filmHeight);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
@@ -174,8 +174,8 @@ void FilmOutputWindow::RefreshTexture() {
 		}
 		case Film::OUTPUT_UV: {
 			unique_ptr<float[]> filmPixels;
-			filmPixels.reset(new float[app->session->GetFilm().GetOutputSize(type)]);
-			app->session->GetFilm().GetOutput<float>(type, filmPixels.get(), index);
+			filmPixels.reset(new float[app->session->GetFilm()->GetOutputSize(type)]);
+			app->session->GetFilm()->GetOutput<float>(type, filmPixels.get(), index);
 
 			Copy2(filmPixels.get(), pixels.get(), filmWidth, filmHeight);
 			UpdateStats(pixels.get(), filmWidth, filmHeight);
@@ -261,7 +261,7 @@ Properties FilmOutputsWindow::GetFilmOutputsProperties(const Properties &cfgProp
 }
 
 void FilmOutputsWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = GetFilmOutputsProperties(config->ToProperties());
 	} catch(exception &ex) {
@@ -395,14 +395,14 @@ bool FilmOutputsWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("%s", (prefix + ".id").c_str());
 		} else if (tag == "RADIANCE_GROUP") {
-			const unsigned int count = app->session->GetFilm().GetRadianceGroupCount();
+			const unsigned int count = app->session->GetFilm()->GetRadianceGroupCount();
 			string list;
 			for (unsigned int i = 0; i < count; ++i) {
 				list.append(ToString(i));
 				list.push_back(0);
 			}
 			list.push_back(0);
-			
+
 			ImGui::Combo("Group", &newID, list.c_str());
 			ImGui::SameLine();
 			ImGui::TextDisabled("(?)");
@@ -512,130 +512,130 @@ bool FilmOutputsWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {
 	//--------------------------------------------------------------------------
 
 	if (ImGui::CollapsingHeader("Current Film channel(s)", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen)) {
-		const Film &film = app->session->GetFilm();
+		auto film = app->session->GetFilm();
 		unsigned int count;
 
-		count = film.GetChannelCount(Film::CHANNEL_RADIANCE_PER_PIXEL_NORMALIZED);
+		count = film->GetChannelCount(Film::CHANNEL_RADIANCE_PER_PIXEL_NORMALIZED);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_RADIANCE_PER_PIXEL_NORMALIZED:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_RADIANCE_PER_SCREEN_NORMALIZED);
+		count = film->GetChannelCount(Film::CHANNEL_RADIANCE_PER_SCREEN_NORMALIZED);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_RADIANCE_PER_SCREEN_NORMALIZED:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_ALPHA);
+		count = film->GetChannelCount(Film::CHANNEL_ALPHA);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_ALPHA:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_IMAGEPIPELINE);
+		count = film->GetChannelCount(Film::CHANNEL_IMAGEPIPELINE);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_IMAGEPIPELINE:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_DEPTH);
+		count = film->GetChannelCount(Film::CHANNEL_DEPTH);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_DEPTH:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_POSITION);
+		count = film->GetChannelCount(Film::CHANNEL_POSITION);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_POSITION:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_GEOMETRY_NORMAL);
+		count = film->GetChannelCount(Film::CHANNEL_GEOMETRY_NORMAL);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_GEOMETRY_NORMAL:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_SHADING_NORMAL);
+		count = film->GetChannelCount(Film::CHANNEL_SHADING_NORMAL);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_SHADING_NORMAL:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_MATERIAL_ID);
+		count = film->GetChannelCount(Film::CHANNEL_MATERIAL_ID);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_MATERIAL_ID:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_DIRECT_DIFFUSE);
+		count = film->GetChannelCount(Film::CHANNEL_DIRECT_DIFFUSE);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_DIRECT_DIFFUSE:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_DIRECT_GLOSSY);
+		count = film->GetChannelCount(Film::CHANNEL_DIRECT_GLOSSY);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_DIRECT_GLOSSY:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_EMISSION);
+		count = film->GetChannelCount(Film::CHANNEL_EMISSION);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_EMISSION:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_INDIRECT_DIFFUSE);
+		count = film->GetChannelCount(Film::CHANNEL_INDIRECT_DIFFUSE);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_INDIRECT_DIFFUSE:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_INDIRECT_GLOSSY);
+		count = film->GetChannelCount(Film::CHANNEL_INDIRECT_GLOSSY);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_INDIRECT_GLOSSY:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_INDIRECT_SPECULAR);
+		count = film->GetChannelCount(Film::CHANNEL_INDIRECT_SPECULAR);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_INDIRECT_SPECULAR:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_MATERIAL_ID_MASK);
+		count = film->GetChannelCount(Film::CHANNEL_MATERIAL_ID_MASK);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_MATERIAL_ID_MASK:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_DIRECT_SHADOW_MASK);
+		count = film->GetChannelCount(Film::CHANNEL_DIRECT_SHADOW_MASK);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_DIRECT_SHADOW_MASK:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_INDIRECT_SHADOW_MASK);
+		count = film->GetChannelCount(Film::CHANNEL_INDIRECT_SHADOW_MASK);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_INDIRECT_SHADOW_MASK:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_UV);
+		count = film->GetChannelCount(Film::CHANNEL_UV);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_UV:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_RAYCOUNT);
+		count = film->GetChannelCount(Film::CHANNEL_RAYCOUNT);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_RAYCOUNT:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_BY_MATERIAL_ID);
+		count = film->GetChannelCount(Film::CHANNEL_BY_MATERIAL_ID);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_BY_MATERIAL_ID:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_IRRADIANCE);
+		count = film->GetChannelCount(Film::CHANNEL_IRRADIANCE);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_IRRADIANCE:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_OBJECT_ID);
+		count = film->GetChannelCount(Film::CHANNEL_OBJECT_ID);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_OBJECT_ID:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_OBJECT_ID_MASK);
+		count = film->GetChannelCount(Film::CHANNEL_OBJECT_ID_MASK);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_OBJECT_ID_MASK:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_BY_OBJECT_ID);
+		count = film->GetChannelCount(Film::CHANNEL_BY_OBJECT_ID);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_BY_OBJECT_ID:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_SAMPLECOUNT);
+		count = film->GetChannelCount(Film::CHANNEL_SAMPLECOUNT);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_SAMPLECOUNT:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_CONVERGENCE);
+		count = film->GetChannelCount(Film::CHANNEL_CONVERGENCE);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_CONVERGENCE:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_MATERIAL_ID_COLOR);
+		count = film->GetChannelCount(Film::CHANNEL_MATERIAL_ID_COLOR);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_MATERIAL_ID_COLOR:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_ALBEDO);
+		count = film->GetChannelCount(Film::CHANNEL_ALBEDO);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_ALBEDO:", "%d", count);
 
-		count = film.GetChannelCount(Film::CHANNEL_AVG_SHADING_NORMAL);
+		count = film->GetChannelCount(Film::CHANNEL_AVG_SHADING_NORMAL);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_AVG_SHADING_NORMAL:", "%d", count);
 		
-		count = film.GetChannelCount(Film::CHANNEL_NOISE);
+		count = film->GetChannelCount(Film::CHANNEL_NOISE);
 		if (count)
 			LuxCoreApp::ColoredLabelText("CHANNEL_NOISE:", "%d", count);
 	}

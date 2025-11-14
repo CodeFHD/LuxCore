@@ -23,6 +23,7 @@
 #include "slg/film/imagepipeline/plugins/gammacorrection.h"
 #include "slg/film/imagepipeline/plugins/tonemaps/linear.h"
 #include "slg/film/imagepipeline/plugins/tonemaps/autolinear.h"
+#include "slg/volumes/volume.h"
 
 using namespace std;
 using namespace luxrays;
@@ -60,12 +61,10 @@ Tile::Tile() {
 }
 
 Tile::~Tile() {
-	delete allPassFilm;
-	delete evenPassFilm;
 }
 
-void Tile::InitTileFilm(const Film &film, Film **tileFilm) {
-	(*tileFilm) = new Film(coord.width, coord.height);
+void Tile::InitTileFilm(const Film &film, FilmPtr *tileFilm) {
+	(*tileFilm) = Film::Create(coord.width, coord.height);
 	(*tileFilm)->CopyDynamicSettings(film);
 
 	// Remove all channels but RADIANCE_PER_PIXEL_NORMALIZED and IMAGEPIPELINE
@@ -307,7 +306,7 @@ void TileRepository::Clear() {
 	convergedTiles.clear();
 }
 
-void TileRepository::Restart(Film *film, const u_int startPass, const u_int multipassIndex) {
+void TileRepository::Restart(FilmPtr film, const u_int startPass, const u_int multipassIndex) {
 	todoTiles.clear();
 	pendingTiles.clear();
 	convergedTiles.clear();
@@ -418,7 +417,7 @@ void TileRepository::InitTiles(const Film &film) {
 	SLG_LOG(boost::format("Tiles initialization time: %.2f secs") % elapsedTime);
 }
 
-void TileRepository::SetDone(Film *film) {
+void TileRepository::SetDone(FilmPtr film) {
 	// Rendering done
 	if (!done) {
 		if (enableRenderingDonePrint) {
@@ -478,8 +477,8 @@ bool TileRepository::GetNewTileWork(TileWork &tileWork) {
 	return true;
 }
 
-bool TileRepository::NextTile(Film *film, std::mutex *filmMutex,
-		TileWork &tileWork, Film *tileFilm) {
+bool TileRepository::NextTile(FilmPtr film, std::mutex *filmMutex,
+		TileWork &tileWork, FilmPtr tileFilm) {
 	// Now I have to lock the repository
 	std::unique_lock<std::mutex> lock(tileMutex);
 

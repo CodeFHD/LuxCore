@@ -246,11 +246,19 @@ bool Film::HasOutput(const FilmOutputs::FilmOutputType type) const {
 
 void Film::Output() {
 	for (u_int i = 0; i < filmOutputs.GetCount(); ++i)
-		Output(filmOutputs.GetFileName(i), filmOutputs.GetType(i),&filmOutputs.GetProperties(i));
+		Output(
+			filmOutputs.GetFileName(i),
+			filmOutputs.GetType(i),
+			&filmOutputs.GetProperties(i)
+		);
 }
 
-void Film::Output(const string &fileName,const FilmOutputs::FilmOutputType type,
-		const Properties *props, const bool executeImagePipeline) { 
+void Film::Output(
+	const string &fileName,
+	const FilmOutputs::FilmOutputType type,
+	const Properties *props,
+	const bool executeImagePipeline
+) {
 	// Handle the special case of the serialized film output
 	if (type == FilmOutputs::SERIALIZED_FILM) {
 		if (!filmOutputs.HasType(FilmOutputs::SERIALIZED_FILM))
@@ -261,12 +269,12 @@ void Film::Output(const string &fileName,const FilmOutputs::FilmOutputType type,
 		if (filmOutputs.UseSafeSave()) {
 			SafeSave safeSave(fileName);
 
-			Film::SaveSerialized(safeSave.GetSaveFileName(), this);
+			Film::SaveSerialized(safeSave.GetSaveFileName(), shared_from_this());
 
 			safeSave.Process();
 		} else
-			Film::SaveSerialized(fileName, this);
-		
+			Film::SaveSerialized(fileName, shared_from_this());
+
 		return;
 	}
 

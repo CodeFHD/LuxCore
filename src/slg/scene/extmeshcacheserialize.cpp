@@ -16,6 +16,7 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
+#include <boost/serialization/shared_ptr.hpp>
 #include "slg/scene/extmeshcache.h"
 
 using namespace std;
@@ -35,7 +36,7 @@ template<class Archive> void ExtMeshCache::load(Archive &ar, const u_int version
 
 	for (u_int i = 0; i < size; ++i) {
 		// Load the mesh
-		luxrays::ExtMesh *m;
+		luxrays::ExtMeshPtr m;
 		ar & m;
 		SDL_LOG("Loading serialized mesh: " << m->GetName());
 
@@ -51,7 +52,7 @@ template<class Archive> void ExtMeshCache::save(Archive &ar, const u_int version
 	ar & size;
 
 	for (u_int i = 0; i < size; ++i) {
-		const luxrays::ExtMesh *m = static_cast<const luxrays::ExtMesh *>(meshes.GetObj(i));
+		auto m = static_pointer_cast<const luxrays::ExtMesh>(meshes.GetObj(i));
 		SDL_LOG("Saving serialized mesh: " << m->GetName());
 
 		// Save the mesh

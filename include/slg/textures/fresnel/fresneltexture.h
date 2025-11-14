@@ -19,6 +19,7 @@
 #ifndef _SLG_FRESNELTEXTURE_H
 #define	_SLG_FRESNELTEXTURE_H
 
+#include "slg/usings.h"
 #include "slg/textures/texture.h"
 
 namespace slg {
@@ -51,6 +52,7 @@ private:
 	static float FrDiel2(const float cosi, const float cost,
 			const float eta);
 };
+
 
 }
 

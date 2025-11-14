@@ -88,7 +88,7 @@ void SpotLight::GetPreprocessedData(float *emittedFactorData, float *absolutePos
 		*alignedLight2WorldData = &alignedLight2World;
 }
 
-float SpotLight::GetPower(const Scene &scene) const {
+float SpotLight::GetPower(SceneConstPtr scene) const {
 	return emittedFactor.Y() * 2.f * M_PI * (1.f - .5f * (cosFalloffStart + cosTotalWidth));
 }
 
@@ -103,7 +103,7 @@ static float LocalFalloff(const Vector &w, const float cosTotalWidth, const floa
 	return powf(delta, 4);
 }
 
-Spectrum SpotLight::Emit(const Scene &scene,
+Spectrum SpotLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -123,7 +123,7 @@ Spectrum SpotLight::Emit(const Scene &scene,
 	return emittedFactor * (LocalFalloff(localFromLight, cosTotalWidth, cosFalloffStart) / fabsf(CosTheta(localFromLight)));
 }
 
-Spectrum SpotLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum SpotLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
@@ -151,7 +151,7 @@ Spectrum SpotLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 	return emittedFactor * (falloff / fabsf(CosTheta(localFromLight)));
 }
 
-bool SpotLight::IsAlwaysInShadow(const Scene &scene,
+bool SpotLight::IsAlwaysInShadow(SceneConstPtr scene,
 			const luxrays::Point &p, const luxrays::Normal &n) const {
 	const Vector toLight(absolutePos - p);
 	const float distance = toLight.Length();

@@ -51,10 +51,10 @@ void UserImportancePaintWindow::Draw() {
 			fill(importanceMap.begin(), importanceMap.end(), 0.f);
 
 		if (ImGui::Button("Set map"))
-			app->session->GetFilm().UpdateOutput<float>(Film::OUTPUT_USER_IMPORTANCE, &importanceMap[0], 0, false);
+			app->session->GetFilm()->UpdateOutput<float>(Film::OUTPUT_USER_IMPORTANCE, &importanceMap[0], 0, false);
 		ImGui::SameLine();
 		if (ImGui::Button("Get map"))
-			app->session->GetFilm().GetOutput(Film::OUTPUT_USER_IMPORTANCE, &importanceMap[0], 0, false);
+			app->session->GetFilm()->GetOutput(Film::OUTPUT_USER_IMPORTANCE, &importanceMap[0], 0, false);
 
 		ImGui::PopStyleVar();
 	}
@@ -63,8 +63,8 @@ void UserImportancePaintWindow::Draw() {
 
 void UserImportancePaintWindow::Init() {
 	if (app->session) {
-		const Film &film = app->session->GetFilm();
-		const unsigned int pixelsCount = film.GetWidth() * film.GetHeight();
+		auto film = app->session->GetFilm();
+		const unsigned int pixelsCount = film->GetWidth() * film->GetHeight();
 
 		importanceMap.resize(pixelsCount);
 		fill(importanceMap.begin(), importanceMap.end(), 1.f);
@@ -83,9 +83,9 @@ void UserImportancePaintWindow::BlendImportanceMap(const float *srcPixels, float
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize(app->window, &frameBufferWidth, &frameBufferHeight);
 
-	const Film &film = app->session->GetFilm();
-	const int filmWidth = film.GetWidth();
-	const int filmHeight = film.GetHeight();
+	auto film = app->session->GetFilm();
+	const int filmWidth = film->GetWidth();
+	const int filmHeight = film->GetHeight();
 	const unsigned int pixelsCount = filmWidth * filmHeight;
 
 	// Blend the user importance map with the rendering image
@@ -136,9 +136,9 @@ void UserImportancePaintWindow::Paint(const bool addValues) {
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize(app->window, &frameBufferWidth, &frameBufferHeight);
 
-	const Film &film = app->session->GetFilm();
-	const int filmWidth = film.GetWidth();
-	const int filmHeight = film.GetHeight();
+	auto film = app->session->GetFilm();
+	const int filmWidth = film->GetWidth();
+	const int filmHeight = film->GetHeight();
 
 	const ImVec2 imGuiScale(filmWidth /  (float)frameBufferWidth,  filmHeight / (float)frameBufferHeight);
 	const int mouseX = Floor2Int(ImGui::GetIO().MousePos.x * imGuiScale.x);

@@ -38,7 +38,7 @@ ImVec4 LuxCoreApp::colLabel = ImVec4(1.f, .5f, 0.f, 1.f);
 // LuxCoreApp
 //------------------------------------------------------------------------------
 
-LuxCoreApp::LuxCoreApp(luxcore::RenderConfig *renderConfig) :
+LuxCoreApp::LuxCoreApp(std::shared_ptr<luxcore::RenderConfig> renderConfig) :
 		// Note: isOpenCLAvailable and isCUDAAvailable have to be initialized before
 		// ObjectEditorWindow constructors call (it is used by RenderEngineWindow).
 		isOpenCLAvailable(GetPlatformDesc().Get(Property("compile.LUXRAYS_ENABLE_OPENCL")(false)).Get<bool>()),
@@ -59,7 +59,7 @@ LuxCoreApp::LuxCoreApp(luxcore::RenderConfig *renderConfig) :
 	renderImageBuffer = NULL;
 	renderImageWidth = 0xffffffffu;
 	renderImageHeight = 0xffffffffu;
-			
+
 	currentTool = TOOL_CAMERA_EDIT;
 
 	menuBarHeight = 0;
@@ -99,9 +99,6 @@ LuxCoreApp::LuxCoreApp(luxcore::RenderConfig *renderConfig) :
 LuxCoreApp::~LuxCoreApp() {
 	currentLogWindow = NULL;
 	delete[] renderImageBuffer;
-
-	delete session;
-	delete config;
 }
 
 static int MaximumExtent(const float pMin[3], const float pMax[3]) {
@@ -191,11 +188,10 @@ void LuxCoreApp::SetRenderingEngineType(const string &engineType) {
 void LuxCoreApp::RenderConfigParse(const Properties &props) {
 	if (session) {
 		// Delete the session
-		delete session;
-		session = NULL;
+		session.reset();
 	}
 
-	// Change the configuration	
+	// Change the configuration
 	try {
 		config->Parse(props);
 	} catch(exception &ex) {
@@ -214,8 +210,8 @@ void LuxCoreApp::RenderSessionParse(const Properties &props) {
 	} catch(exception &ex) {
 		LA_LOG("RenderSession parse error: " << endl << ex.what());
 
-		delete session;
-		session = NULL;
+		session.reset();
+		session = nullptr;
 	}
 }
 
@@ -269,7 +265,7 @@ void LuxCoreApp::LoadRenderConfig(const std::string &fileName, const std::string
 			//LA_LOG("RenderConfig: \n" << renderConfigProps);
 			//LA_LOG("Scene: \n" << sceneProps);
 
-			Scene *scene = Scene::Create();
+			auto scene = Scene::Create();
 			scene->Parse(sceneProps);
 			config = RenderConfig::Create(renderConfigProps, scene);
 			config->DeleteSceneOnExit();
@@ -287,9 +283,9 @@ void LuxCoreApp::LoadRenderConfig(const std::string &fileName, const std::string
 			StartRendering();
 		} else if (ext == ".rsm") {
 			// It is a LuxCore resume file
-			RenderState *startState;
-			Film *startFilm;
-			config = RenderConfig::Create(fileName, &startState, &startFilm);
+			std::shared_ptr<RenderState> startState;
+			std::shared_ptr<Film> startFilm;
+			config = RenderConfig::Create(fileName, startState, startFilm);
 
 			StartRendering(startState, startFilm);
 		} else
@@ -297,22 +293,24 @@ void LuxCoreApp::LoadRenderConfig(const std::string &fileName, const std::string
 	} catch(exception &ex) {
 		LA_LOG("RenderConfig loading error: " << endl << ex.what());
 
-		delete session;
-		session = NULL;
-		delete config;
-		config = NULL;
+		session.reset();
+		session = nullptr;
+		config.reset();
+		config = nullptr;
 	}
-	
+
 	popupMenuBar = true;
 }
 
-void LuxCoreApp::StartRendering(RenderState *startState, Film *startFilm) {
+void LuxCoreApp::StartRendering(
+    std::shared_ptr<RenderState> startState, std::shared_ptr<Film> startFilm
+) {
 	CloseAllRenderConfigEditors();
 
-	if (session)
-		delete session;
-	session = NULL;
-	
+	if (session) {
+		session.reset();
+	}
+
 	const string engineType = config->ToProperties().Get("renderengine.type").Get<string>();
 	if (engineType.starts_with("RT")) {
 		if (config->ToProperties().Get("screen.refresh.interval").Get<unsigned int>() > 25)
@@ -355,31 +353,32 @@ void LuxCoreApp::StartRendering(RenderState *startState, Film *startFilm) {
 
 	LA_LOG("RenderConfig has cached kernels: " << (config->HasCachedKernels() ? "True" : "False"));
 
-	try {
-		session = RenderSession::Create(config, startState, startFilm);
+	// TODO
+	//try {
+		session = RenderSession::Create(config, &startState, &startFilm);
 
 		// Re-start the rendering
 		session->Start();
 
 		UpdateMoveStep();
-		
+
 		if (currentTool == TOOL_USER_IMPORTANCE_PAINT)
 			userImportancePaintWindow.Init();
-	} catch(exception &ex) {
-		LA_LOG("RenderSession starting error: " << endl << ex.what());
+	//} catch(exception &ex) {
+		//LA_LOG("RenderSession starting error: " << endl << ex.what());
 
-		delete session;
-		session = NULL;
-	}
+		//session.reset();
+		//session = NULL;
+	//}
 }
 
 void LuxCoreApp::DeleteRendering() {
 	CloseAllRenderConfigEditors();
 
-	delete session;
-	session = NULL;
-	delete config;
-	config = NULL;
+	session.reset();
+	session = nullptr;
+	config.reset();
+	config = nullptr;
 }
 
 //------------------------------------------------------------------------------
@@ -423,3 +422,4 @@ void LuxCoreApp::HelpMarker(const char *desc) {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("%s", desc);
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

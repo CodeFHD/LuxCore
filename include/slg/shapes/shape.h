@@ -21,6 +21,8 @@
 
 #include <vector>
 
+#include "slg/usings.h"
+
 namespace luxrays {
 	class ExtTriangleMesh;
 }
@@ -55,11 +57,11 @@ public:
 
 	// Note: this method can be called only once and the object is not usable
 	// anymore (this is mostly due to optimize memory management).
-	luxrays::ExtTriangleMesh *Refine(const Scene *scene);
+	luxrays::ExtTriangleMeshPtr Refine(SceneConstRef scene);
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene) = 0;
-	
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene) = 0;
+
 	bool refined;
 };
 

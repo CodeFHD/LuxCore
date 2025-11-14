@@ -31,6 +31,13 @@ namespace slg {
 
 class ImageMapTexture : public Texture {
 public:
+	ImageMapTexture(
+		const std::string &texName,
+		ImageMapConstPtr img,
+		TextureMapping2DConstPtr mp,
+		const float g,
+		const bool rt);
+
 	virtual TextureType GetType() const { return IMAGEMAP; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
 	virtual luxrays::Spectrum GetSpectrumValue(const HitPoint &hitPoint) const;
@@ -38,41 +45,38 @@ public:
 	virtual float Y() const { return gain * imageMap->GetSpectrumMeanY(); }
 	virtual float Filter() const { return gain * imageMap->GetSpectrumMean(); }
 
-	const ImageMap *GetImageMap() const { return imageMap; }
-	const TextureMapping2D *GetTextureMapping() const { return mapping; }
+	ImageMapConstPtr GetImageMap() const { return imageMap; }
+	TextureMapping2DConstPtr GetTextureMapping() const { return mapping; }
 	const float GetGain() const { return gain; }
 
 	bool HasRandomizedTiling() const { return randomizedTiling; }
-	const ImageMap *GetRandomizedTilingLUT() const { return randomizedTilingLUT; }
-	const ImageMap *GetRandomizedTilingInvLUT() const { return randomizedTilingInvLUT; }
+	ImageMapConstPtr GetRandomizedTilingLUT() const { return randomizedTilingLUT; }
+	ImageMapConstPtr GetRandomizedTilingInvLUT() const { return randomizedTilingInvLUT; }
 
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const;
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr> &referencedImgMaps) const;
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	static ImageMapTexture *AllocImageMapTexture(const std::string &texName,
-			ImageMapCache &imgMapCache, const ImageMap *img,
-			const TextureMapping2D *mp, const float g, const bool rt);
+	static std::shared_ptr<ImageMapTexture> AllocImageMapTexture(const std::string &texName,
+		ImageMapCache &imgMapCache, ImageMapConstPtr img,
+		TextureMapping2DConstPtr mp, const float g, const bool rt);
 
-	static std::unique_ptr<ImageMap> randomImageMap;
+	static std::shared_ptr<ImageMap> randomImageMap;
 
-private:
-	ImageMapTexture(const std::string &texName, const ImageMap *img,
-			const TextureMapping2D *mp, const float g,
-			const bool rt);
 	virtual ~ImageMapTexture();
 
+private:
 	luxrays::Spectrum SampleTile(const luxrays::UV &vertex, const luxrays::UV &offset) const;
 	luxrays::Spectrum RandomizedTilingGetSpectrumValue(const luxrays::UV &pos) const;
 
-	const ImageMap *imageMap;
-	const TextureMapping2D *mapping;
+	ImageMapConstPtr imageMap;
+	TextureMapping2DConstPtr mapping;
 	float gain;
 
 	// Used for randomized tiling
 	bool randomizedTiling;
-	ImageMap *randomizedTilingLUT;
-	ImageMap *randomizedTilingInvLUT;
+	ImageMapPtr randomizedTilingLUT;
+	ImageMapPtr randomizedTilingInvLUT;
 };
 
 }

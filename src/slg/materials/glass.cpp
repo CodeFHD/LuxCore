@@ -28,11 +28,11 @@ using namespace slg;
 // Glass material
 //------------------------------------------------------------------------------
 
-GlassMaterial::GlassMaterial(const Texture *frontTransp, const Texture *backTransp,
-		const Texture *emitted, const Texture *bump,
-		const Texture *refl, const Texture *trans,
-		const Texture *exteriorIorFact, const Texture *interiorIorFact,
-		const Texture *B, const Texture *filmThickness, const Texture *filmIor) :
+GlassMaterial::GlassMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+		TextureConstPtr emitted, TextureConstPtr bump,
+		TextureConstPtr refl, TextureConstPtr trans,
+		TextureConstPtr exteriorIorFact, TextureConstPtr interiorIorFact,
+		TextureConstPtr B, TextureConstPtr filmThickness, TextureConstPtr filmIor) :
 			Material(frontTransp, backTransp, emitted, bump),
 			Kr(refl), Kt(trans), exteriorIor(exteriorIorFact), interiorIor(interiorIorFact),
 			cauchyB(B), filmThickness(filmThickness), filmIor(filmIor) {
@@ -265,22 +265,22 @@ void GlassMaterial::Pdf(const HitPoint &hitPoint,
 		*reversePdfW = 0.f;
 }
 
-void GlassMaterial::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void GlassMaterial::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs) const {
 	Material::AddReferencedTextures(referencedTexs);
 
-	Kr->AddReferencedTextures(referencedTexs);
-	Kt->AddReferencedTextures(referencedTexs);
+	Kr->AddReferencedTextures(referencedTexs, Kr);
+	Kt->AddReferencedTextures(referencedTexs, Kt);
 	if (exteriorIor)
-		exteriorIor->AddReferencedTextures(referencedTexs);
+		exteriorIor->AddReferencedTextures(referencedTexs, exteriorIor);
 	if (interiorIor)
-		interiorIor->AddReferencedTextures(referencedTexs);
+		interiorIor->AddReferencedTextures(referencedTexs, interiorIor);
 	if (filmThickness)
-		filmThickness->AddReferencedTextures(referencedTexs);
+		filmThickness->AddReferencedTextures(referencedTexs, filmThickness);
 	if (filmIor)
-		filmIor->AddReferencedTextures(referencedTexs);
+		filmIor->AddReferencedTextures(referencedTexs, filmIor);
 }
 
-void GlassMaterial::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void GlassMaterial::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	if (Kr == oldTex)

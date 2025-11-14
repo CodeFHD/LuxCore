@@ -50,7 +50,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-void CompiledScene::CompileDLSC(const LightStrategyDLSCache *dlscLightStrategy) {
+void CompiledScene::CompileDLSC(std::shared_ptr<const LightStrategyDLSCache> dlscLightStrategy) {
 	if (dlscLightStrategy->UseRTMode()) {
 		dlscAllEntries.clear();
 		dlscAllEntries.shrink_to_fit();
@@ -68,7 +68,7 @@ void CompiledScene::CompileDLSC(const LightStrategyDLSCache *dlscLightStrategy) 
 	dlscNormalCosAngle = cosf(Radians(dlscLightStrategy->GetEntryNormalAngle()));
 
 	// Compile all cache entries
-	const DLSCBvh *bvh = dlscLightStrategy->GetBVH();
+	auto bvh = dlscLightStrategy->GetBVH();
 	if (bvh) {
 		const std::vector<DLSCacheEntry> *allEntries = bvh->GetAllEntries();
 		const u_int entriesCount = allEntries->size();
@@ -128,10 +128,10 @@ void CompiledScene::CompileLightStrategy() {
 	// Compile lightDistribution
 	//--------------------------------------------------------------------------
 
-	const LightStrategy *illuminateLightStrategy = scene->lightDefs.GetIlluminateLightStrategy();
+	auto illuminateLightStrategy = scene->lightDefs.GetIlluminateLightStrategy();
 	
 	// Check if it is an DistributionLightStrategy
-	const DistributionLightStrategy *distributionIllumLightStrategy = dynamic_cast<const DistributionLightStrategy *>(illuminateLightStrategy);
+	auto distributionIllumLightStrategy = dynamic_pointer_cast<const DistributionLightStrategy>(illuminateLightStrategy);
 	if (distributionIllumLightStrategy) {
 		delete[] lightsDistribution;
 		lightsDistribution = nullptr;
@@ -144,7 +144,7 @@ void CompiledScene::CompileLightStrategy() {
 	} else {
 		// Check if it is an LightStrategyDLSCache
 		
-		const LightStrategyDLSCache *dlscLightStrategy = dynamic_cast<const LightStrategyDLSCache *>(illuminateLightStrategy);
+		auto dlscLightStrategy = dynamic_pointer_cast<const LightStrategyDLSCache>(illuminateLightStrategy);
 		if (dlscLightStrategy) {
 			delete[] lightsDistribution;
 			lightsDistribution = nullptr;
@@ -168,10 +168,10 @@ void CompiledScene::CompileLightStrategy() {
 	infiniteLightSourcesDistribution = nullptr;
 	infiniteLightSourcesDistributionSize = 0;
 
-	const LightStrategy *infiniteLightStrategy = scene->lightDefs.GetInfiniteLightStrategy();
+	auto infiniteLightStrategy = scene->lightDefs.GetInfiniteLightStrategy();
 
 	// Check if it is an DistributionLightStrategy
-	const DistributionLightStrategy *distributionInfLightStrategy = dynamic_cast<const DistributionLightStrategy *>(infiniteLightStrategy);
+	auto distributionInfLightStrategy = dynamic_pointer_cast<const DistributionLightStrategy>(infiniteLightStrategy);
 	if (distributionInfLightStrategy) {
 		if (distributionInfLightStrategy->GetLightsDistribution()) {
 			infiniteLightSourcesDistribution = CompileDistribution1D(distributionInfLightStrategy->GetLightsDistribution(),
@@ -180,7 +180,7 @@ void CompiledScene::CompileLightStrategy() {
 	} else {
 		// Check if it is an LightStrategyDLSCache
 		
-		const LightStrategyDLSCache *dlscLightStrategy = dynamic_cast<const LightStrategyDLSCache *>(illuminateLightStrategy);
+		auto dlscLightStrategy = dynamic_pointer_cast<const LightStrategyDLSCache>(illuminateLightStrategy);
 		if (dlscLightStrategy) {
 			if (dlscLightStrategy->GetLightsDistribution()) {
 				infiniteLightSourcesDistribution = CompileDistribution1D(dlscLightStrategy->GetLightsDistribution(),
@@ -212,7 +212,7 @@ void CompiledScene::CompileELVC(const EnvLightVisibilityCache *visibilityMapCach
 	elvcNormalCosAngle = cosf(Radians(visibilityMapCache->GetParams().visibility.lookUpNormalAngle));
 
 	// Compile all cache entries
-	const ELVCBvh *bvh = visibilityMapCache->GetBVH();
+	auto bvh = visibilityMapCache->GetBVH();
 	if (bvh) {
 		const std::vector<ELVCacheEntry> *allEntries = bvh->GetAllEntries();
 		const u_int entriesCount = allEntries->size();
@@ -263,7 +263,7 @@ void CompiledScene::CompileELVC(const EnvLightVisibilityCache *visibilityMapCach
 			elvcTileDistributionOffsets.resize(totalTileCount);
 
 			for (u_int i = 0; i < totalTileCount; ++i) {
-				const Distribution2D *tileDist = visibilityMapCache->GetTileDistribution(i);
+				auto tileDist = visibilityMapCache->GetTileDistribution(i);
 
 				// Compile the tile Distribution2D
 				const u_int size = elvcDistributions.size();
@@ -304,17 +304,16 @@ void CompiledScene::CompileLights() {
 	//--------------------------------------------------------------------------
 
 	const double tStart = WallClockTime();
-	
-	const vector<LightSource *> &lightSources = scene->lightDefs.GetLightSources();
-	const u_int lightCount = lightSources.size();
+
+	const u_int lightCount = scene->lightDefs.GetSize();
 	lightDefs.resize(lightCount);
 	envLightIndices.clear();
 	envLightDistributions.clear();
-	
+
 	CompileELVC(nullptr);
 
-	for (u_int i = 0; i < lightSources.size(); ++i) {
-		const LightSource *l = lightSources[i];
+	for (u_int i = 0; i < lightCount; ++i) {
+		auto l = scene->lightDefs.GetLightSource(i);
 
 		slg::ocl::LightSource *oclLight = &lightDefs[i];
 		oclLight->lightSceneIndex = l->lightSceneIndex;
@@ -327,7 +326,7 @@ void CompiledScene::CompileLights() {
 
 		switch (l->GetType()) {
 			case TYPE_TRIANGLE: {
-				const TriangleLight *tl = (const TriangleLight *)l;
+				auto tl = static_pointer_cast<const TriangleLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_TRIANGLE;
@@ -341,11 +340,12 @@ void CompiledScene::CompileLights() {
 				oclLight->triangle.meshIndex = tl->meshIndex;
 				oclLight->triangle.triangleIndex = tl->triangleIndex;
 
-				const SampleableSphericalFunction *emissionFunc = tl->lightMaterial->GetEmissionFunc();
+				auto emissionFunc = tl->lightMaterial->GetEmissionFunc();
 				if (emissionFunc) {
 					oclLight->triangle.average = emissionFunc->Average();
 					oclLight->triangle.imageMapIndex = scene->imgMapCache.GetImageMapIndex(
 							// I use only ImageMapSphericalFunction
+
 							((const ImageMapSphericalFunction *)(emissionFunc->GetFunc()))->GetImageMap());
 				} else {
 					oclLight->triangle.average = 0.f;
@@ -354,7 +354,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_IL: {
-				const InfiniteLight *il = (const InfiniteLight *)l;
+				auto il = static_pointer_cast<const InfiniteLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_IL;
@@ -369,8 +369,8 @@ void CompiledScene::CompileLights() {
 				oclLight->notIntersectable.infinite.imageMapIndex = scene->imgMapCache.GetImageMapIndex(il->imageMap);
 
 				// Compile the image map Distribution2D
-				const Distribution2D *dist;
-				const EnvLightVisibilityCache *visibilityMapCache;
+				const Distribution2D* dist;
+				const EnvLightVisibilityCache* visibilityMapCache;
 				il->GetPreprocessedData(&dist, &visibilityMapCache);
 
 				oclLight->notIntersectable.infinite.useVisibilityMapCache = false;
@@ -385,7 +385,7 @@ void CompiledScene::CompileLights() {
 				}
 
 				u_int distributionSize;
-				const float *infiniteLightDistribution = CompileDistribution2D(dist,
+				auto infiniteLightDistribution = CompileDistribution2D(dist,
 						&distributionSize);
 				// distributionSize is expressed in bytes while I'm working with float
 				const u_int distributionSize4 = distributionSize / sizeof(float);
@@ -400,7 +400,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_IL_SKY2: {
-				const SkyLight2 *sl = (const SkyLight2 *)l;
+				auto sl = static_pointer_cast<const SkyLight2>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_IL_SKY2;
@@ -413,7 +413,7 @@ void CompiledScene::CompileLights() {
 
 				// SkyLight2 data
 				const Distribution2D *dist;
-				const EnvLightVisibilityCache *visibilityMapCache;
+				const EnvLightVisibilityCache* visibilityMapCache;
 				sl->GetPreprocessedData(
 						&oclLight->notIntersectable.sky2.absoluteSunDir.x,
 						&oclLight->notIntersectable.sky2.absoluteUpDir.x,
@@ -446,7 +446,7 @@ void CompiledScene::CompileLights() {
 				oclLight->notIntersectable.sky2.hasGround = sl->hasGround;
 				
 				u_int distributionSize;
-				const float *skyDistribution = CompileDistribution2D(dist,
+				auto skyDistribution = CompileDistribution2D(dist,
 						&distributionSize);
 				// distributionSize is expressed in bytes while I'm working with float
 				const u_int distributionSize4 = distributionSize / sizeof(float);
@@ -461,7 +461,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_SUN: {
-				const SunLight *sl = (const SunLight *)l;
+				auto sl = static_pointer_cast<const SunLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_SUN;
@@ -485,7 +485,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_POINT: {
-				const PointLight *pl = (const PointLight *)l;
+				auto pl = static_pointer_cast<const PointLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_POINT;
@@ -504,7 +504,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_MAPPOINT: {
-				const MapPointLight *mpl = (const MapPointLight *)l;
+				auto mpl = static_pointer_cast<const MapPointLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_MAPPOINT;
@@ -527,7 +527,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_SPOT: {
-				const SpotLight *sl = (const SpotLight *)l;
+				auto sl = static_pointer_cast<const SpotLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_SPOT;
@@ -552,7 +552,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_PROJECTION: {
-				const ProjectionLight *pl = (const ProjectionLight *)l;
+				auto pl = static_pointer_cast<const ProjectionLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_PROJECTION;
@@ -586,7 +586,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_IL_CONSTANT: {
-				const ConstantInfiniteLight *cil = (const ConstantInfiniteLight *)l;
+				auto cil = static_pointer_cast<const ConstantInfiniteLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_IL_CONSTANT;
@@ -617,7 +617,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 		case TYPE_SHARPDISTANT: {
-				const SharpDistantLight *sdl = (const SharpDistantLight *)l;
+				auto sdl = static_pointer_cast<const SharpDistantLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_SHARPDISTANT;
@@ -634,7 +634,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_DISTANT: {
-				const DistantLight *dl = (const DistantLight *)l;
+				auto dl = static_pointer_cast<const DistantLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_DISTANT;
@@ -656,7 +656,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_LASER: {
-				const LaserLight *ll = (const LaserLight *)l;
+				auto ll = static_pointer_cast<const LaserLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_LASER;
@@ -677,7 +677,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_SPHERE: {
-				const SphereLight *sl = (const SphereLight *)l;
+				auto sl = static_pointer_cast<const SphereLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_SPHERE;
@@ -698,7 +698,7 @@ void CompiledScene::CompileLights() {
 				break;
 			}
 			case TYPE_MAPSPHERE: {
-				const MapSphereLight *msl = (const MapSphereLight *)l;
+				auto msl = static_pointer_cast<const MapSphereLight>(l);
 
 				// LightSource data
 				oclLight->type = slg::ocl::TYPE_MAPSPHERE;

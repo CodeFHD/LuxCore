@@ -20,6 +20,7 @@
 #define	_LUXRAYS_INTERSECTIONDEVICE_H
 
 #include "luxrays/luxrays.h"
+#include "luxrays/usings.h"
 #include "luxrays/core/device.h"
 
 namespace luxrays {
@@ -33,13 +34,15 @@ public:
 	// Returns true if it support HardwareDevice ray tracing
 	virtual bool HasHWSupport() const { return false; }
 
-	const Accelerator *GetAccelerator() const { return accel; }
+	AcceleratorConstPtr GetAccelerator() const { return accel; }
 
 	//--------------------------------------------------------------------------
 	// Statistics
 	//--------------------------------------------------------------------------
 
-	virtual double GetTotalRaysCount() const { return statsTotalSerialRayCount + statsTotalDataParallelRayCount; }
+	virtual double GetTotalRaysCount() const {
+		return statsTotalSerialRayCount + statsTotalDataParallelRayCount;
+	}
 	virtual double GetTotalPerformance() const {
 		const double statsTotalRayTime = WallClockTime() - statsStartTime;
 		return (statsTotalRayTime == 0.0) ?	1.0 : ((statsTotalSerialRayCount + statsTotalDataParallelRayCount) / statsTotalRayTime);
@@ -73,11 +76,13 @@ protected:
 	IntersectionDevice();
 	virtual ~IntersectionDevice();
 
-	virtual void SetDataSet(DataSet *newDataSet);
+	virtual void SetDataSet(DataSetPtr);
 	virtual void Start();
 
-	DataSet *dataSet;
-	const Accelerator *accel;
+	//DataSet *dataSet;
+	//const Accelerator *accel;
+	DataSetPtr dataSet;
+	AcceleratorConstPtr accel;
 	double statsStartTime;
 	u_longlong statsTotalSerialRayCount, statsTotalDataParallelRayCount;
 };

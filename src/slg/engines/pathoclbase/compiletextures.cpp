@@ -89,12 +89,15 @@ using namespace luxrays;
 using namespace slg;
 using namespace slg::blender;
 
-void CompiledScene::CompileTextureMapping2D(slg::ocl::TextureMapping2D *mapping, const TextureMapping2D *m) {
+void CompiledScene::CompileTextureMapping2D(
+		slg::ocl::TextureMapping2D* mapping,
+		std::shared_ptr<const TextureMapping2D> m
+) {
 	switch (m->GetType()) {
 		case UVMAPPING2D: {
 			mapping->type = slg::ocl::UVMAPPING2D;
 
-			const UVMapping2D *uvm = static_cast<const UVMapping2D *>(m);
+			auto uvm = dynamic_pointer_cast<const UVMapping2D>(m);
 			mapping->dataIndex = uvm->GetDataIndex();
 
 			mapping->uvMapping2D.sinTheta = uvm->sinTheta;
@@ -108,7 +111,7 @@ void CompiledScene::CompileTextureMapping2D(slg::ocl::TextureMapping2D *mapping,
 		case UVRANDOMMAPPING2D: {
 			mapping->type = slg::ocl::UVRANDOMMAPPING2D;
 
-			const UVRandomMapping2D *uvm = static_cast<const UVRandomMapping2D *>(m);
+			auto uvm = dynamic_pointer_cast<const UVRandomMapping2D>(m);
 			mapping->dataIndex = uvm->GetDataIndex();
 
 			switch (uvm->seedType) {
@@ -124,7 +127,7 @@ void CompiledScene::CompileTextureMapping2D(slg::ocl::TextureMapping2D *mapping,
 					mapping->uvRandomMapping2D.objectIDOffset = uvm->objectIDOffset;
 					break;
 				default:
-					throw runtime_error("Unknown seed type in CompiledScene::CompileTextureMapping2D: " + ToString(uvm->seedType));
+					throw runtime_error("Unknown seed type in CompiledScene::CompileTextureMapping2D : " + ToString(uvm->seedType));
 			}
 
 			mapping->uvRandomMapping2D.uvRotationMin = uvm->uvRotationMin;
@@ -146,12 +149,15 @@ void CompiledScene::CompileTextureMapping2D(slg::ocl::TextureMapping2D *mapping,
 	}
 }
 
-void CompiledScene::CompileTextureMapping3D(slg::ocl::TextureMapping3D *mapping, const TextureMapping3D *m) {
+void CompiledScene::CompileTextureMapping3D(
+	slg::ocl::TextureMapping3D *mapping,
+	std::shared_ptr<const TextureMapping3D> m
+) {
 	switch (m->GetType()) {
 		case UVMAPPING3D: {
 			mapping->type = slg::ocl::UVMAPPING3D;
 
-			const UVMapping3D *uvm = static_cast<const UVMapping3D *>(m);
+			auto uvm = dynamic_pointer_cast<const UVMapping3D>(m);
 			memcpy(&mapping->worldToLocal.m, &uvm->worldToLocal.m, sizeof(float[4][4]));
 			memcpy(&mapping->worldToLocal.mInv, &uvm->worldToLocal.mInv, sizeof(float[4][4]));
 
@@ -161,7 +167,7 @@ void CompiledScene::CompileTextureMapping3D(slg::ocl::TextureMapping3D *mapping,
 		case GLOBALMAPPING3D: {
 			mapping->type = slg::ocl::GLOBALMAPPING3D;
 
-			const GlobalMapping3D *gm = static_cast<const GlobalMapping3D *>(m);
+			auto gm = dynamic_pointer_cast<const GlobalMapping3D>(m);
 			memcpy(&mapping->worldToLocal.m, &gm->worldToLocal.m, sizeof(float[4][4]));
 			memcpy(&mapping->worldToLocal.mInv, &gm->worldToLocal.mInv, sizeof(float[4][4]));
 			break;
@@ -169,7 +175,7 @@ void CompiledScene::CompileTextureMapping3D(slg::ocl::TextureMapping3D *mapping,
 		case LOCALMAPPING3D: {
 			mapping->type = slg::ocl::LOCALMAPPING3D;
 
-			const LocalMapping3D *gm = static_cast<const LocalMapping3D *>(m);
+			auto gm = dynamic_pointer_cast<const LocalMapping3D>(m);
 			memcpy(&mapping->worldToLocal.m, &gm->worldToLocal.m, sizeof(float[4][4]));
 			memcpy(&mapping->worldToLocal.mInv, &gm->worldToLocal.mInv, sizeof(float[4][4]));
 			break;
@@ -177,10 +183,12 @@ void CompiledScene::CompileTextureMapping3D(slg::ocl::TextureMapping3D *mapping,
 		case LOCALRANDOMMAPPING3D: {
 			mapping->type = slg::ocl::LOCALRANDOMMAPPING3D;
 
-			const LocalRandomMapping3D *gm = static_cast<const LocalRandomMapping3D *>(m);
+			auto gm = dynamic_pointer_cast<const LocalRandomMapping3D>(m);
+			assert(gm);
+
 			memcpy(&mapping->worldToLocal.m, &gm->worldToLocal.m, sizeof(float[4][4]));
 			memcpy(&mapping->worldToLocal.mInv, &gm->worldToLocal.mInv, sizeof(float[4][4]));
-			
+
 			switch (gm->seedType) {
 				case RandomMappingSeedType::OBJECT_ID:
 					mapping->localRandomMapping.seedType = slg::ocl::RandomMappingSeedType::OBJECT_ID;
@@ -254,8 +262,9 @@ float *CompiledScene::CompileDistribution2D(const Distribution2D *dist, u_int *s
 	u_int condSize;
 	vector<float *> condDists;
 	for (u_int i = 0; i < dist->GetHeight(); ++i) {
-		condDists.push_back(CompileDistribution1D(dist->GetConditionalDistribution(i),
-			&condSize));
+		condDists.push_back(
+			CompileDistribution1D(dist->GetConditionalDistribution(i), &condSize)
+		);
 	}
 
 	// Here, I assume sizeof(u_int) = sizeof(float)
@@ -307,10 +316,10 @@ u_int CompiledScene::CompileTextureOpsGenericBumpMap(const u_int texIndex) {
 
 	// Eval texture at hit point + offset V
 	evalOpStackSize += CompileTextureOps(texIndex, slg::ocl::TextureEvalOpType::EVAL_FLOAT);
-	
+
 	return evalOpStackSize;
 }
-					
+
 u_int CompiledScene::CompileTextureOps(const u_int texIndex,
 		const slg::ocl::TextureEvalOpType opType) {
 	// Translate textures to texture evaluate ops
@@ -1163,29 +1172,29 @@ void CompiledScene::CompileTextures() {
 	texs.resize(texturesCount);
 
 	for (u_int i = 0; i < texturesCount; ++i) {
-		const Texture *t = scene->texDefs.GetTexture(i);
+		auto t = scene->texDefs.GetTexture(i);
 		slg::ocl::Texture *tex = &texs[i];
 
 		switch (t->GetType()) {
 			case CONST_FLOAT: {
-				const ConstFloatTexture *cft = static_cast<const ConstFloatTexture *>(t);
+				auto cft = dynamic_pointer_cast<const ConstFloatTexture>(t);
 
 				tex->type = slg::ocl::CONST_FLOAT;
 				tex->constFloat.value = cft->GetValue();
 				break;
 			}
 			case CONST_FLOAT3: {
-				const ConstFloat3Texture *cft = static_cast<const ConstFloat3Texture *>(t);
+				auto cft = dynamic_pointer_cast<const ConstFloat3Texture>(t);
 
 				tex->type = slg::ocl::CONST_FLOAT3;
 				ASSIGN_SPECTRUM(tex->constFloat3.color, cft->GetColor());
 				break;
 			}
 			case IMAGEMAP: {
-				const ImageMapTexture *imt = static_cast<const ImageMapTexture *>(t);
+				auto imt = dynamic_pointer_cast<const ImageMapTexture>(t);
 
 				tex->type = slg::ocl::IMAGEMAP;
-				const ImageMap *im = imt->GetImageMap();
+				auto im = imt->GetImageMap();
 				tex->imageMapTex.gain = imt->GetGain();
 				CompileTextureMapping2D(&tex->imageMapTex.mapping, imt->GetTextureMapping());
 				tex->imageMapTex.imageMapIndex = scene->imgMapCache.GetImageMapIndex(im);
@@ -1195,7 +1204,7 @@ void CompiledScene::CompileTextures() {
 
 					tex->imageMapTex.randomizedTilingLUTIndex = scene->imgMapCache.GetImageMapIndex(imt->GetRandomizedTilingLUT());
 					tex->imageMapTex.randomizedTilingInvLUTIndex = scene->imgMapCache.GetImageMapIndex(imt->GetRandomizedTilingInvLUT());
-					tex->imageMapTex.randomImageMapIndex = scene->imgMapCache.GetImageMapIndex(ImageMapTexture::randomImageMap.get());
+					tex->imageMapTex.randomImageMapIndex = scene->imgMapCache.GetImageMapIndex(ImageMapTexture::randomImageMap);
 				} else {
 					tex->imageMapTex.randomizedTiling = false;
 					tex->imageMapTex.randomizedTilingLUTIndex = NULL_INDEX;
@@ -1205,71 +1214,71 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case SCALE_TEX: {
-				const ScaleTexture *st = static_cast<const ScaleTexture *>(t);
+				auto st = dynamic_pointer_cast<const ScaleTexture>(t);
 
 				tex->type = slg::ocl::SCALE_TEX;
-				const Texture *tex1 = st->GetTexture1();
+				TextureConstPtr tex1 = st->GetTexture1();
 				tex->scaleTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = st->GetTexture2();
+				TextureConstPtr tex2 = st->GetTexture2();
 				tex->scaleTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case FRESNEL_APPROX_N: {
-				const FresnelApproxNTexture *ft = static_cast<const FresnelApproxNTexture *>(t);
+				auto ft = dynamic_pointer_cast<const FresnelApproxNTexture>(t);
 
 				tex->type = slg::ocl::FRESNEL_APPROX_N;
-				const Texture *tx = ft->GetTexture();
+				auto tx = ft->GetTexture();
 				tex->fresnelApproxN.texIndex = scene->texDefs.GetTextureIndex(tx);
 				break;
 			}
 			case FRESNEL_APPROX_K: {
-				const FresnelApproxKTexture *ft = static_cast<const FresnelApproxKTexture *>(t);
+				auto ft = dynamic_pointer_cast<const FresnelApproxKTexture>(t);
 
 				tex->type = slg::ocl::FRESNEL_APPROX_K;
-				const Texture *tx = ft->GetTexture();
+				TextureConstPtr tx = ft->GetTexture();
 				tex->fresnelApproxK.texIndex = scene->texDefs.GetTextureIndex(tx);
 				break;
 			}
 			case CHECKERBOARD2D: {
-				const CheckerBoard2DTexture *cb = static_cast<const CheckerBoard2DTexture *>(t);
+				auto cb = dynamic_pointer_cast<const CheckerBoard2DTexture>(t);
 
 				tex->type = slg::ocl::CHECKERBOARD2D;
 				CompileTextureMapping2D(&tex->checkerBoard2D.mapping, cb->GetTextureMapping());
-				const Texture *tex1 = cb->GetTexture1();
+				TextureConstPtr tex1 = cb->GetTexture1();
 				tex->checkerBoard2D.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = cb->GetTexture2();
+				TextureConstPtr tex2 = cb->GetTexture2();
 				tex->checkerBoard2D.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case CHECKERBOARD3D: {
-				const CheckerBoard3DTexture *cb = static_cast<const CheckerBoard3DTexture *>(t);
+				auto cb = dynamic_pointer_cast<const CheckerBoard3DTexture>(t);
 
 				tex->type = slg::ocl::CHECKERBOARD3D;
 				CompileTextureMapping3D(&tex->checkerBoard3D.mapping, cb->GetTextureMapping());
-				const Texture *tex1 = cb->GetTexture1();
+				TextureConstPtr tex1 = cb->GetTexture1();
 				tex->checkerBoard3D.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = cb->GetTexture2();
+				TextureConstPtr tex2 = cb->GetTexture2();
 				tex->checkerBoard3D.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case MIX_TEX: {
-				const MixTexture *mt = static_cast<const MixTexture *>(t);
+				auto mt = dynamic_pointer_cast<const MixTexture>(t);
 
 				tex->type = slg::ocl::MIX_TEX;
-				const Texture *amount = mt->GetAmountTexture();
+				TextureConstPtr amount = mt->GetAmountTexture();
 				tex->mixTex.amountTexIndex = scene->texDefs.GetTextureIndex(amount);
 
-				const Texture *tex1 = mt->GetTexture1();
+				TextureConstPtr tex1 = mt->GetTexture1();
 				tex->mixTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
-				const Texture *tex2 = mt->GetTexture2();
+				TextureConstPtr tex2 = mt->GetTexture2();
 				tex->mixTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case CLOUD_TEX: {
-				const CloudTexture *ft = static_cast<const CloudTexture *>(t);
+				auto ft = dynamic_pointer_cast<const CloudTexture>(t);
 
 				tex->type = slg::ocl::CLOUD_TEX;
 				CompileTextureMapping3D(&tex->cloud.mapping, ft->GetTextureMapping());
@@ -1289,7 +1298,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case FBM_TEX: {
-				const FBMTexture *ft = static_cast<const FBMTexture *>(t);
+				auto ft = dynamic_pointer_cast<const FBMTexture>(t);
 
 				tex->type = slg::ocl::FBM_TEX;
 				CompileTextureMapping3D(&tex->fbm.mapping, ft->GetTextureMapping());
@@ -1298,7 +1307,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case MARBLE: {
-				const MarbleTexture *mt = static_cast<const MarbleTexture *>(t);
+				auto mt = dynamic_pointer_cast<const MarbleTexture>(t);
 
 				tex->type = slg::ocl::MARBLE;
 				CompileTextureMapping3D(&tex->marble.mapping, mt->GetTextureMapping());
@@ -1309,27 +1318,27 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case DOTS: {
-				const DotsTexture *dt = static_cast<const DotsTexture *>(t);
+				auto dt = dynamic_pointer_cast<const DotsTexture>(t);
 
 				tex->type = slg::ocl::DOTS;
 				CompileTextureMapping2D(&tex->dots.mapping, dt->GetTextureMapping());
-				const Texture *insideTex = dt->GetInsideTex();
+				TextureConstPtr insideTex = dt->GetInsideTex();
 				tex->dots.insideIndex = scene->texDefs.GetTextureIndex(insideTex);
 
-				const Texture *outsideTex = dt->GetOutsideTex();
+				TextureConstPtr outsideTex = dt->GetOutsideTex();
 				tex->dots.outsideIndex = scene->texDefs.GetTextureIndex(outsideTex);
 				break;
 			}
 			case BRICK: {
-				const BrickTexture *bt = static_cast<const BrickTexture *>(t);
+				auto bt = dynamic_pointer_cast<const BrickTexture>(t);
 
 				tex->type = slg::ocl::BRICK;
 				CompileTextureMapping3D(&tex->brick.mapping, bt->GetTextureMapping());
-				const Texture *tex1 = bt->GetTexture1();
+				TextureConstPtr tex1 = bt->GetTexture1();
 				tex->brick.tex1Index = scene->texDefs.GetTextureIndex(tex1);
-				const Texture *tex2 = bt->GetTexture2();
+				TextureConstPtr tex2 = bt->GetTexture2();
 				tex->brick.tex2Index = scene->texDefs.GetTextureIndex(tex2);
-				const Texture *tex3 = bt->GetTexture3();
+				TextureConstPtr tex3 = bt->GetTexture3();
 				tex->brick.tex3Index = scene->texDefs.GetTextureIndex(tex3);
 
 				switch (bt->GetBond()) {
@@ -1371,59 +1380,59 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case ADD_TEX: {
-				const AddTexture *st = static_cast<const AddTexture *>(t);
+				auto st = dynamic_pointer_cast<const AddTexture>(t);
 
 				tex->type = slg::ocl::ADD_TEX;
-				const Texture *tex1 = st->GetTexture1();
+				TextureConstPtr tex1 = st->GetTexture1();
 				tex->addTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = st->GetTexture2();
+				TextureConstPtr tex2 = st->GetTexture2();
 				tex->addTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case SUBTRACT_TEX: {
-				const SubtractTexture *st = static_cast<const SubtractTexture *>(t);
+				auto st = dynamic_pointer_cast<const SubtractTexture>(t);
 
 				tex->type = slg::ocl::SUBTRACT_TEX;
-				const Texture *tex1 = st->GetTexture1();
+				TextureConstPtr tex1 = st->GetTexture1();
 				tex->subtractTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = st->GetTexture2();
+				TextureConstPtr tex2 = st->GetTexture2();
 				tex->subtractTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
             case ROUNDING_TEX: {
-                const RoundingTexture *rt = static_cast<const RoundingTexture *>(t);
+                auto rt = dynamic_pointer_cast<const RoundingTexture>(t);
 
                 tex->type = slg::ocl::ROUNDING_TEX;
-                const Texture *texture = rt->GetTexture();
+                TextureConstPtr texture = rt->GetTexture();
                 tex->roundingTex.textureIndex = scene->texDefs.GetTextureIndex(texture);
 
-                const Texture *increment = rt->GetIncrement();
+                TextureConstPtr increment = rt->GetIncrement();
                 tex->roundingTex.incrementIndex = scene->texDefs.GetTextureIndex(increment);
                 break;
             }
             case MODULO_TEX: {
-                const ModuloTexture *mt = static_cast<const ModuloTexture *>(t);
+                auto mt = dynamic_pointer_cast<const ModuloTexture>(t);
 
                 tex->type = slg::ocl::MODULO_TEX;
-                const Texture *texture = mt->GetTexture();
+                TextureConstPtr texture = mt->GetTexture();
                 tex->moduloTex.textureIndex = scene->texDefs.GetTextureIndex(texture);
 
-                const Texture *modulo = mt->GetModulo();
+                TextureConstPtr modulo = mt->GetModulo();
                 tex->moduloTex.moduloIndex = scene->texDefs.GetTextureIndex(modulo);
                 break;
             }
 
 			case WINDY: {
-				const WindyTexture *wt = static_cast<const WindyTexture *>(t);
+				auto wt = dynamic_pointer_cast<const WindyTexture>(t);
 
 				tex->type = slg::ocl::WINDY;
 				CompileTextureMapping3D(&tex->windy.mapping, wt->GetTextureMapping());
 				break;
 			}
 			case WRINKLED: {
-				const WrinkledTexture *wt = static_cast<const WrinkledTexture *>(t);
+				auto wt = dynamic_pointer_cast<const WrinkledTexture>(t);
 
 				tex->type = slg::ocl::WRINKLED;
 				CompileTextureMapping3D(&tex->wrinkled.mapping, wt->GetTextureMapping());
@@ -1432,7 +1441,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_BLEND: {
-				const BlenderBlendTexture *wt = static_cast<const BlenderBlendTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderBlendTexture>(t);
 				tex->type = slg::ocl::BLENDER_BLEND;
 				CompileTextureMapping3D(&tex->blenderBlend.mapping, wt->GetTextureMapping());
 				tex->blenderBlend.direction = wt->GetDirection();
@@ -1466,7 +1475,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_CLOUDS: {
-				const BlenderCloudsTexture *wt = static_cast<const BlenderCloudsTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderCloudsTexture>(t);
 				tex->type = slg::ocl::BLENDER_CLOUDS;
 				CompileTextureMapping3D(&tex->blenderClouds.mapping, wt->GetTextureMapping());
 				tex->blenderClouds.noisesize = wt->GetNoiseSize();
@@ -1510,7 +1519,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_DISTORTED_NOISE: {
-				const BlenderDistortedNoiseTexture *wt = static_cast<const BlenderDistortedNoiseTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderDistortedNoiseTexture>(t);
 				tex->type = slg::ocl::BLENDER_DISTORTED_NOISE;
 				CompileTextureMapping3D(&tex->blenderDistortedNoise.mapping, wt->GetTextureMapping());
 				tex->blenderDistortedNoise.distortion = wt->GetDistortion();
@@ -1588,7 +1597,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_MAGIC: {
-				const BlenderMagicTexture *wt = static_cast<const BlenderMagicTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderMagicTexture>(t);
 				tex->type = slg::ocl::BLENDER_MAGIC;
 				CompileTextureMapping3D(&tex->blenderMagic.mapping, wt->GetTextureMapping());
 				tex->blenderMagic.noisedepth = wt->GetNoiseDepth();
@@ -1598,7 +1607,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_MARBLE: {
-				const BlenderMarbleTexture *wt = static_cast<const BlenderMarbleTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderMarbleTexture>(t);
 				tex->type = slg::ocl::BLENDER_MARBLE;
 				CompileTextureMapping3D(&tex->blenderMarble.mapping, wt->GetTextureMapping());
 				tex->blenderMarble.turbulence = wt->GetTurbulence();
@@ -1670,7 +1679,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_MUSGRAVE: {
-				const BlenderMusgraveTexture *wt = static_cast<const BlenderMusgraveTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderMusgraveTexture>(t);
 				tex->type = slg::ocl::BLENDER_MUSGRAVE;
 				CompileTextureMapping3D(&tex->blenderMusgrave.mapping, wt->GetTextureMapping());
 				tex->blenderMusgrave.dimension = wt->GetDimension();
@@ -1738,7 +1747,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_NOISE: {
-				const BlenderNoiseTexture *nt = static_cast<const BlenderNoiseTexture *>(t);
+				auto nt = dynamic_pointer_cast<const BlenderNoiseTexture>(t);
 				tex->type = slg::ocl::BLENDER_NOISE;
 				tex->blenderNoise.noisedepth = nt->GetNoiseDepth();
 				tex->blenderNoise.bright = nt->GetBright();
@@ -1746,7 +1755,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_STUCCI: {
-				const BlenderStucciTexture *wt = static_cast<const BlenderStucciTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderStucciTexture>(t);
 				tex->type = slg::ocl::BLENDER_STUCCI;
 				CompileTextureMapping3D(&tex->blenderStucci.mapping, wt->GetTextureMapping());
 				tex->blenderStucci.noisesize = wt->GetNoiseSize();
@@ -1805,7 +1814,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_WOOD: {
-				const BlenderWoodTexture *wt = static_cast<const BlenderWoodTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderWoodTexture>(t);
 
 				tex->type = slg::ocl::BLENDER_WOOD;
 				CompileTextureMapping3D(&tex->blenderWood.mapping, wt->GetTextureMapping());
@@ -1878,7 +1887,7 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case BLENDER_VORONOI: {
-				const BlenderVoronoiTexture *wt = static_cast<const BlenderVoronoiTexture *>(t);
+				auto wt = dynamic_pointer_cast<const BlenderVoronoiTexture>(t);
 
 				tex->type = slg::ocl::BLENDER_VORONOI;
 				CompileTextureMapping3D(&tex->blenderVoronoi.mapping, wt->GetTextureMapping());
@@ -1919,14 +1928,14 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
             case UV_TEX: {
-				const UVTexture *uvt = static_cast<const UVTexture *>(t);
+				auto uvt = dynamic_pointer_cast<const UVTexture>(t);
 
 				tex->type = slg::ocl::UV_TEX;
 				CompileTextureMapping2D(&tex->uvTex.mapping, uvt->GetTextureMapping());
 				break;
 			}
 			case BAND_TEX: {
-				const BandTexture *bt = static_cast<const BandTexture *>(t);
+				auto bt = dynamic_pointer_cast<const BandTexture>(t);
 
 				tex->type = slg::ocl::BAND_TEX;
 
@@ -1943,7 +1952,7 @@ void CompiledScene::CompileTextures() {
 						break;
 				}
 
-				const Texture *amount = bt->GetAmountTexture();
+				TextureConstPtr amount = bt->GetAmountTexture();
 				tex->band.amountTexIndex = scene->texDefs.GetTextureIndex(amount);
 
 				const vector<float> &offsets = bt->GetOffsets();
@@ -1965,21 +1974,21 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case HITPOINTCOLOR: {
-				const HitPointColorTexture *hpc = static_cast<const HitPointColorTexture *>(t);
+				auto hpc = dynamic_pointer_cast<const HitPointColorTexture>(t);
 
 				tex->type = slg::ocl::HITPOINTCOLOR;
 				tex->hitPointColor.dataIndex = hpc->GetDataIndex();
 				break;
 			}
 			case HITPOINTALPHA: {
-				const HitPointAlphaTexture *hpa = static_cast<const HitPointAlphaTexture *>(t);
+				auto hpa = dynamic_pointer_cast<const HitPointAlphaTexture>(t);
 
 				tex->type = slg::ocl::HITPOINTALPHA;
 				tex->hitPointAlpha.dataIndex = hpa->GetDataIndex();
 				break;
 			}
 			case HITPOINTGREY: {
-				const HitPointGreyTexture *hpg = static_cast<const HitPointGreyTexture *>(t);
+				auto hpg = dynamic_pointer_cast<const HitPointGreyTexture>(t);
 
 				tex->type = slg::ocl::HITPOINTGREY;
 				tex->hitPointGrey.dataIndex = hpg->GetDataIndex();
@@ -1987,44 +1996,44 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case HITPOINTVERTEXAOV: {
-				const HitPointVertexAOVTexture *hpv = static_cast<const HitPointVertexAOVTexture *>(t);
+				auto hpv = dynamic_pointer_cast<const HitPointVertexAOVTexture>(t);
 
 				tex->type = slg::ocl::HITPOINTVERTEXAOV;
 				tex->hitPointVertexAOV.dataIndex = hpv->GetDataIndex();
 				break;
 			}
 			case HITPOINTTRIANGLEAOV: {
-				const HitPointTriangleAOVTexture *hpt = static_cast<const HitPointTriangleAOVTexture *>(t);
+				auto hpt = dynamic_pointer_cast<const HitPointTriangleAOVTexture>(t);
 
 				tex->type = slg::ocl::HITPOINTTRIANGLEAOV;
 				tex->hitPointTriangleAOV.dataIndex = hpt->GetDataIndex();
 				break;
 			}
             case NORMALMAP_TEX: {
-                const NormalMapTexture *nmt = static_cast<const NormalMapTexture *>(t);
+                auto nmt = dynamic_pointer_cast<const NormalMapTexture>(t);
 
                 tex->type = slg::ocl::NORMALMAP_TEX;
-                const Texture *normalTex = nmt->GetTexture();
+                auto normalTex = nmt->GetTexture();
 				tex->normalMap.texIndex = scene->texDefs.GetTextureIndex(normalTex);
 				tex->normalMap.scale = nmt->GetScale();
 				break;
             }
 			case BLACKBODY_TEX: {
-				const BlackBodyTexture *bbt = static_cast<const BlackBodyTexture *>(t);
+				auto bbt = dynamic_pointer_cast<const BlackBodyTexture>(t);
 
 				tex->type = slg::ocl::BLACKBODY_TEX;
 				ASSIGN_SPECTRUM(tex->blackBody.rgb, bbt->GetRGB());
 				break;
 			}
 			case IRREGULARDATA_TEX: {
-				const IrregularDataTexture *idt = static_cast<const IrregularDataTexture *>(t);
+				auto idt = dynamic_pointer_cast<const IrregularDataTexture>(t);
 
 				tex->type = slg::ocl::IRREGULARDATA_TEX;
 				ASSIGN_SPECTRUM(tex->irregularData.rgb, idt->GetRGB());
 				break;
 			}
 			case DENSITYGRID_TEX: {
-				const DensityGridTexture *dgt = static_cast<const DensityGridTexture *>(t);
+				auto dgt = dynamic_pointer_cast<const DensityGridTexture>(t);
 
 				tex->type = slg::ocl::DENSITYGRID_TEX;
 				CompileTextureMapping3D(&tex->densityGrid.mapping, dgt->GetTextureMapping());
@@ -2036,15 +2045,15 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case FRESNELCOLOR_TEX: {
-				const FresnelColorTexture *fct = static_cast<const FresnelColorTexture *>(t);
+				auto fct = dynamic_pointer_cast<const FresnelColorTexture>(t);
 
 				tex->type = slg::ocl::FRESNELCOLOR_TEX;
-				const Texture *krTex = fct->GetKr();
+				TextureConstPtr krTex = fct->GetKr();
 				tex->fresnelColor.krIndex = scene->texDefs.GetTextureIndex(krTex);
 				break;
 			}
 			case FRESNELCONST_TEX: {
-				const FresnelConstTexture *fct = static_cast<const FresnelConstTexture *>(t);
+				auto fct = dynamic_pointer_cast<const FresnelConstTexture>(t);
 
 				tex->type = slg::ocl::FRESNELCONST_TEX;
 				ASSIGN_SPECTRUM(tex->fresnelConst.n, fct->GetN());
@@ -2052,30 +2061,30 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case ABS_TEX: {
-				const AbsTexture *at = static_cast<const AbsTexture *>(t);
+				auto at = dynamic_pointer_cast<const AbsTexture>(t);
 
 				tex->type = slg::ocl::ABS_TEX;
-				const Texture *refTex = at->GetTexture();
+				TextureConstPtr refTex = at->GetTexture();
 				tex->absTex.texIndex = scene->texDefs.GetTextureIndex(refTex);
 				break;
 			}
 			case CLAMP_TEX: {
-				const ClampTexture *ct = static_cast<const ClampTexture *>(t);
+				auto ct = dynamic_pointer_cast<const ClampTexture>(t);
 
 				tex->type = slg::ocl::CLAMP_TEX;
-				const Texture *refTex = ct->GetTexture();
+				TextureConstPtr refTex = ct->GetTexture();
 				tex->clampTex.texIndex = scene->texDefs.GetTextureIndex(refTex);
 				tex->clampTex.minVal = ct->GetMinVal();
 				tex->clampTex.maxVal = ct->GetMaxVal();
 				break;
 			}
 			case BILERP_TEX: {
-				const BilerpTexture *bt = static_cast<const BilerpTexture *>(t);
+				auto bt = dynamic_pointer_cast<const BilerpTexture>(t);
 				tex->type = slg::ocl::BILERP_TEX;
-				const Texture *t00 = bt->GetTexture00();
-				const Texture *t01 = bt->GetTexture01();
-				const Texture *t10 = bt->GetTexture10();
-				const Texture *t11 = bt->GetTexture11();
+				TextureConstPtr t00 = bt->GetTexture00();
+				TextureConstPtr t01 = bt->GetTexture01();
+				TextureConstPtr t10 = bt->GetTexture10();
+				TextureConstPtr t11 = bt->GetTexture11();
 				tex->bilerpTex.t00Index = scene->texDefs.GetTextureIndex(t00);
 				tex->bilerpTex.t01Index = scene->texDefs.GetTextureIndex(t01);
 				tex->bilerpTex.t10Index = scene->texDefs.GetTextureIndex(t10);
@@ -2083,16 +2092,16 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case COLORDEPTH_TEX: {
-				const ColorDepthTexture *ct = static_cast<const ColorDepthTexture *>(t);
+				auto ct = dynamic_pointer_cast<const ColorDepthTexture>(t);
 
 				tex->type = slg::ocl::COLORDEPTH_TEX;
-				const Texture *ktTex = ct->GetKt();
+				TextureConstPtr ktTex = ct->GetKt();
 				tex->colorDepthTex.ktIndex = scene->texDefs.GetTextureIndex(ktTex);
 				tex->colorDepthTex.dVal = ct->GetD();
 				break;
 			}
 			case HSV_TEX: {
-				const HsvTexture *ht = static_cast<const HsvTexture *>(t);
+				auto ht = dynamic_pointer_cast<const HsvTexture>(t);
 
 				tex->type = slg::ocl::HSV_TEX;
 				tex->hsvTex.texIndex = scene->texDefs.GetTextureIndex(ht->GetTexture());
@@ -2102,29 +2111,29 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case DIVIDE_TEX: {
-				const DivideTexture *dt = static_cast<const DivideTexture *>(t);
+				auto dt = dynamic_pointer_cast<const DivideTexture>(t);
 
 				tex->type = slg::ocl::DIVIDE_TEX;
-				const Texture *tex1 = dt->GetTexture1();
+				TextureConstPtr tex1 = dt->GetTexture1();
 				tex->divideTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = dt->GetTexture2();
+				TextureConstPtr tex2 = dt->GetTexture2();
 				tex->divideTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case REMAP_TEX: {
-				const RemapTexture *rt = static_cast<const RemapTexture *>(t);
+				auto rt = dynamic_pointer_cast<const RemapTexture>(t);
 
 				tex->type = slg::ocl::REMAP_TEX;
-				const Texture *valueTex = rt->GetValueTex();
+				auto valueTex = rt->GetValueTex();
 				tex->remapTex.valueTexIndex = scene->texDefs.GetTextureIndex(valueTex);
-				const Texture *sourceMinTex = rt->GetSourceMinTex();
+				auto sourceMinTex = rt->GetSourceMinTex();
 				tex->remapTex.sourceMinTexIndex = scene->texDefs.GetTextureIndex(sourceMinTex);
-				const Texture *sourceMaxTex = rt->GetSourceMaxTex();
+				auto sourceMaxTex = rt->GetSourceMaxTex();
 				tex->remapTex.sourceMaxTexIndex = scene->texDefs.GetTextureIndex(sourceMaxTex);
-				const Texture *targetMinTex = rt->GetTargetMinTex();
+				auto targetMinTex = rt->GetTargetMinTex();
 				tex->remapTex.targetMinTexIndex = scene->texDefs.GetTextureIndex(targetMinTex);
-				const Texture *targetMaxTex = rt->GetTargetMaxTex();
+				auto targetMaxTex = rt->GetTargetMaxTex();
 				tex->remapTex.targetMaxTexIndex = scene->texDefs.GetTextureIndex(targetMaxTex);
 				break;
 			}
@@ -2141,46 +2150,46 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case DOT_PRODUCT_TEX: {
-				const DotProductTexture *dpt = static_cast<const DotProductTexture *>(t);
+				auto dpt = dynamic_pointer_cast<const DotProductTexture>(t);
 
 				tex->type = slg::ocl::DOT_PRODUCT_TEX;
-				const Texture *tex1 = dpt->GetTexture1();
+				auto tex1 = dpt->GetTexture1();
 				tex->dotProductTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = dpt->GetTexture2();
+				auto tex2 = dpt->GetTexture2();
 				tex->dotProductTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case GREATER_THAN_TEX: {
-				const GreaterThanTexture *gtt = static_cast<const GreaterThanTexture *>(t);
+				auto gtt = dynamic_pointer_cast<const GreaterThanTexture>(t);
 
 				tex->type = slg::ocl::GREATER_THAN_TEX;
-				const Texture *tex1 = gtt->GetTexture1();
+				auto tex1 = gtt->GetTexture1();
 				tex->greaterThanTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = gtt->GetTexture2();
+				auto tex2 = gtt->GetTexture2();
 				tex->greaterThanTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case LESS_THAN_TEX: {
-				const LessThanTexture *ltt = static_cast<const LessThanTexture *>(t);
+				auto ltt = dynamic_pointer_cast<const LessThanTexture>(t);
 
 				tex->type = slg::ocl::LESS_THAN_TEX;
-				const Texture *tex1 = ltt->GetTexture1();
+				auto tex1 = ltt->GetTexture1();
 				tex->lessThanTex.tex1Index = scene->texDefs.GetTextureIndex(tex1);
 
-				const Texture *tex2 = ltt->GetTexture2();
+				auto tex2 = ltt->GetTexture2();
 				tex->lessThanTex.tex2Index = scene->texDefs.GetTextureIndex(tex2);
 				break;
 			}
 			case POWER_TEX: {
-				const PowerTexture *pt = static_cast<const PowerTexture *>(t);
+				auto pt = dynamic_pointer_cast<const PowerTexture>(t);
 
 				tex->type = slg::ocl::POWER_TEX;
-				const Texture *base = pt->GetBase();
+				auto base = pt->GetBase();
 				tex->powerTex.baseTexIndex = scene->texDefs.GetTextureIndex(base);
 
-				const Texture *exponent = pt->GetExponent();
+				auto exponent = pt->GetExponent();
 				tex->powerTex.exponentTexIndex = scene->texDefs.GetTextureIndex(exponent);
 				break;
 			}
@@ -2193,104 +2202,104 @@ void CompiledScene::CompileTextures() {
 				break;
 			}
 			case SPLIT_FLOAT3: {
-				const SplitFloat3Texture *sf3t = static_cast<const SplitFloat3Texture *>(t);
+				auto sf3t = dynamic_pointer_cast<const SplitFloat3Texture>(t);
 
 				tex->type = slg::ocl::SPLIT_FLOAT3;
-				const Texture *t = sf3t->GetTexture();
+				auto t = sf3t->GetTexture();
 				tex->splitFloat3Tex.texIndex = scene->texDefs.GetTextureIndex(t);
 
 				tex->splitFloat3Tex.channelIndex = sf3t->GetChannel();
 				break;
 			}
 			case MAKE_FLOAT3: {
-				const MakeFloat3Texture *mf3t = static_cast<const MakeFloat3Texture *>(t);
+				auto mf3t = dynamic_pointer_cast<const MakeFloat3Texture>(t);
 
 				tex->type = slg::ocl::MAKE_FLOAT3;
-				const Texture *t1 = mf3t->GetTexture1();
+				auto t1 = mf3t->GetTexture1();
 				tex->makeFloat3Tex.tex1Index = scene->texDefs.GetTextureIndex(t1);
-				const Texture *t2 = mf3t->GetTexture2();
+				auto t2 = mf3t->GetTexture2();
 				tex->makeFloat3Tex.tex2Index = scene->texDefs.GetTextureIndex(t2);
-				const Texture *t3 = mf3t->GetTexture3();
+				auto t3 = mf3t->GetTexture3();
 				tex->makeFloat3Tex.tex3Index = scene->texDefs.GetTextureIndex(t3);
 				break;
 			}
 			case BRIGHT_CONTRAST_TEX: {
-				const BrightContrastTexture *bct = static_cast<const BrightContrastTexture *>(t);
+				auto bct = dynamic_pointer_cast<const BrightContrastTexture>(t);
 
 				tex->type = slg::ocl::BRIGHT_CONTRAST_TEX;
-				const Texture *t = bct->GetTex();
+				auto t = bct->GetTex();
 				tex->brightContrastTex.texIndex = scene->texDefs.GetTextureIndex(t);
-				const Texture *b = bct->GetBrightnessTex();
+				auto b = bct->GetBrightnessTex();
 				tex->brightContrastTex.brightnessTexIndex = scene->texDefs.GetTextureIndex(b);
-				const Texture *c = bct->GetContrastTex();
+				auto c = bct->GetContrastTex();
 				tex->brightContrastTex.contrastTexIndex = scene->texDefs.GetTextureIndex(c);
 				break;
 			}
 			case TRIPLANAR_TEX: {
-				const TriplanarTexture *trit = static_cast<const TriplanarTexture *>(t);
+				auto trit = dynamic_pointer_cast<const TriplanarTexture>(t);
 
 				tex->type = slg::ocl::TRIPLANAR_TEX;
 				CompileTextureMapping3D(&tex->triplanarTex.mapping, trit->GetTextureMapping());
-				const Texture *t1 = trit->GetTexture1();
+				auto t1 = trit->GetTexture1();
 				tex->triplanarTex.tex1Index = scene->texDefs.GetTextureIndex(t1);
-				const Texture *t2 = trit->GetTexture2();
+				auto t2 = trit->GetTexture2();
 				tex->triplanarTex.tex2Index = scene->texDefs.GetTextureIndex(t2);
-				const Texture *t3 = trit->GetTexture3();
+				auto t3 = trit->GetTexture3();
 				tex->triplanarTex.tex3Index = scene->texDefs.GetTextureIndex(t3);
 				tex->triplanarTex.enableUVlessBumpMap = trit->IsUVlessBumpMap();
 				break;
 			}
 			case RANDOM_TEX: {
-				const RandomTexture *rt = static_cast<const RandomTexture *>(t);
+				auto rt = dynamic_pointer_cast<const RandomTexture>(t);
 
 				tex->type = slg::ocl::RANDOM_TEX;
-				const Texture *t1 = rt->GetTexture();
+				auto t1 = rt->GetTexture();
 				tex->randomTex.texIndex = scene->texDefs.GetTextureIndex(t1);
 				break;
 			}
 			case WIREFRAME_TEX: {
-				const WireFrameTexture *wft = static_cast<const WireFrameTexture *>(t);
+				auto wft = dynamic_pointer_cast<const WireFrameTexture>(t);
 
 				tex->type = slg::ocl::WIREFRAME_TEX;
 				tex->wireFrameTex.width = wft->GetWidth();
-				const Texture *borderTex = wft->GetBorderTex();
+				auto borderTex = wft->GetBorderTex();
 				tex->wireFrameTex.borderTexIndex = scene->texDefs.GetTextureIndex(borderTex);
 
-				const Texture *insideTex = wft->GetInsideTex();
+				auto insideTex = wft->GetInsideTex();
 				tex->wireFrameTex.insideTexIndex = scene->texDefs.GetTextureIndex(insideTex);
 				break;
 			}
 			case DISTORT_TEX: {
-				const DistortTexture *dt = static_cast<const DistortTexture *>(t);
+				auto dt = dynamic_pointer_cast<const DistortTexture>(t);
 
 				tex->type = slg::ocl::DISTORT_TEX;
 				tex->distortTex.strength = dt->GetStrength();
-				const Texture *texture = dt->GetTex();
+				auto texture = dt->GetTex();
 				tex->distortTex.texIndex = scene->texDefs.GetTextureIndex(texture);
 
-				const Texture *offsetTex = dt->GetOffset();
+				auto offsetTex = dt->GetOffset();
 				tex->distortTex.offsetTexIndex = scene->texDefs.GetTextureIndex(offsetTex);
 				break;
 			}
 			case BOMBING_TEX: {
-				const BombingTexture *bt = static_cast<const BombingTexture *>(t);
+				auto bt = dynamic_pointer_cast<const BombingTexture>(t);
 
 				tex->type = slg::ocl::BOMBING_TEX;
-				
+
 				CompileTextureMapping2D(&tex->bombingTex.mapping, bt->GetTextureMapping());
-				
+
 				tex->bombingTex.randomScaleFactor = bt->GetRandomScaleFactor();
 				tex->bombingTex.useRandomRotation = bt->GetUseRandomRotation();
 				tex->bombingTex.multiBulletCount = bt->GetMultiBulletCount();
 
-				const Texture *backgroundTex = bt->GetBackgroundTex();
+				auto backgroundTex = bt->GetBackgroundTex();
 				tex->bombingTex.backgroundTex = scene->texDefs.GetTextureIndex(backgroundTex);
-				const Texture *bulletTexIndex = bt->GetBulletTex();
+				auto bulletTexIndex = bt->GetBulletTex();
 				tex->bombingTex.bulletTexIndex = scene->texDefs.GetTextureIndex(bulletTexIndex);
-				const Texture *bulletMaskTexIndex = bt->GetBulletMaskTex();
+				auto bulletMaskTexIndex = bt->GetBulletMaskTex();
 				tex->bombingTex.bulletMaskTexIndex = scene->texDefs.GetTextureIndex(bulletMaskTexIndex);
 
-				tex->bombingTex.randomImageMapIndex = scene->imgMapCache.GetImageMapIndex(ImageMapTexture::randomImageMap.get());
+				tex->bombingTex.randomImageMapIndex = scene->imgMapCache.GetImageMapIndex(ImageMapTexture::randomImageMap);
 				break;
 			}
 			default:

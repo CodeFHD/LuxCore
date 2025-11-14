@@ -180,7 +180,7 @@ BVHTreeNode *BuildBVH(u_int *nNodes, const BVHParams &params, vector<BVHTreeNode
 	return BuildBVH(nNodes, params, leafList, 0, leafList.size(), 2);
 }
 
-u_int BuildBVHArray(const deque<const Mesh *> *meshes, BVHTreeNode *node,
+u_int BuildBVHArray(const deque<MeshConstPtr> *meshes, BVHTreeNode *node,
 		u_int offset, luxrays::ocl::BVHArrayNode *bvhArrayTree) {
 	// Build array by recursively traversing the tree depth-first
 	while (node) {
@@ -222,7 +222,7 @@ u_int BuildBVHArray(const deque<const Mesh *> *meshes, BVHTreeNode *node,
 }
 
 luxrays::ocl::BVHArrayNode *BuildBVH(const BVHParams &params,
-		u_int *nNodes, const std::deque<const Mesh *> *meshes,
+		u_int *nNodes, const std::deque<MeshConstPtr> *meshes,
 		std::vector<BVHTreeNode *> &leafList) {
 	*nNodes = 0;
 	BVHTreeNode *rootNode = BuildBVH(nNodes, params, leafList);

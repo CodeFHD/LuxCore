@@ -104,7 +104,7 @@ Properties RenderEngineWindow::GetAllRenderEngineProperties(const Properties &cf
 }
 
 void RenderEngineWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = GetAllRenderEngineProperties(config->ToProperties());
 	} catch(exception &ex) {
@@ -125,7 +125,7 @@ void RenderEngineWindow::DrawVarianceClampingSuggestedValue(const string &prefix
 	// Note: I should estimate a value only if clamping is disabled
 	ImGui::SameLine();
 	if (ImGui::Button("Estimate")) {
-		const float Y = app->session->GetFilm().GetFilmY();
+		const float Y = app->session->GetFilm()->GetFilmY();
 		LA_LOG("Image luminance: " << Y);
 		if (Y <= 0.f)
 			suggestedVerianceClampingValue = 0.f;

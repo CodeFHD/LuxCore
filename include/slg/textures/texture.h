@@ -89,13 +89,15 @@ public:
 	// Used for bump/normal mapping support
 	virtual luxrays::Normal Bump(const HitPoint &hitPoint, const float sampleDistance) const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		referencedTexs.insert(this);
+	virtual void AddReferencedTextures(
+		std::unordered_set<std::shared_ptr<const Texture>>  &referencedTexs, std::shared_ptr<const Texture> self
+	) const {
+		referencedTexs.insert(self);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(std::shared_ptr<const Texture> oldTex, std::shared_ptr<const Texture> newTex) {
 	}
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const = 0;
@@ -115,6 +117,7 @@ extern float Noise(float x, float y = .5f, float z = .5f);
 inline float Noise(const luxrays::Point &P) {
 	return Noise(P.x, P.y, P.z);
 }
+
 
 }
 

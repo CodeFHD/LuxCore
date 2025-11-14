@@ -36,11 +36,11 @@ ImageMapCache::ImageMapCache() {
 }
 
 ImageMapCache::~ImageMapCache() {
-	for(ImageMap *m: maps) {
-		// I avoid to free the static global ImageMapTexture::randomImageMap
-		if (m != ImageMapTexture::randomImageMap.get())
-			delete m;
-	}
+	//for(ImageMapPtr m: maps) {
+		//// I avoid to free the static global ImageMapTexture::randomImageMap
+		//if (m != ImageMapTexture::randomImageMap)
+			//delete m;
+	//}
 
 	delete resizePolicy;
 }
@@ -81,17 +81,17 @@ string ImageMapCache::GetCacheKey(const string &fileName) const {
 	return fileName;
 }
 
-ImageMap *ImageMapCache::GetImageMap(const string &fileName, const ImageMapConfig &imgCfg,
+ImageMapPtr ImageMapCache::GetImageMap(const string &fileName, const ImageMapConfig &imgCfg,
 		const bool applyResizePolicy) {
 	// Compose the cache key
 	string key = GetCacheKey(fileName);
 
 	// Check if the image map has been already defined
-	std::unordered_map<std::string, ImageMap *>::const_iterator it = mapByKey.find(key);
+	std::unordered_map<std::string, ImageMapPtr >::const_iterator it = mapByKey.find(key);
 
 	if (it != mapByKey.end()) {
 		//SDL_LOG("Cached defined image map: " << fileName);
-		ImageMap *im = (it->second);
+		ImageMapPtr im = (it->second);
 		return im;
 	}
 
@@ -101,13 +101,13 @@ ImageMap *ImageMapCache::GetImageMap(const string &fileName, const ImageMapConfi
 
 	if (it != mapByKey.end()) {
 		//SDL_LOG("Cached file image map: " << fileName);
-		ImageMap *im = (it->second);
+		ImageMapPtr im = (it->second);
 		return im;
 	}
 
 	// I haven't yet loaded the file
 
-	ImageMap *im;
+	ImageMapPtr im;
 	if (applyResizePolicy) {
 		// Scale the image if required
 		bool toApply;
@@ -115,7 +115,7 @@ ImageMap *ImageMapCache::GetImageMap(const string &fileName, const ImageMapConfi
 		
 		resizePolicyToApply.push_back(toApply);
 	} else {
-		im = new ImageMap(fileName, imgCfg);
+		im = std::make_shared<ImageMap>(fileName, imgCfg);
 
 		resizePolicyToApply.push_back(false);
 	}
@@ -127,7 +127,7 @@ ImageMap *ImageMapCache::GetImageMap(const string &fileName, const ImageMapConfi
 	return im;
 }
 
-void ImageMapCache::DefineImageMap(ImageMap *im) {
+void ImageMapCache::DefineImageMap(ImageMapPtr im) {
 	const string &name = im->GetName();
 
 	SDL_LOG("Define ImageMap: " << name);
@@ -135,7 +135,7 @@ void ImageMapCache::DefineImageMap(ImageMap *im) {
 	// Compose the cache key
 	const string key = GetCacheKey(name);
 
-	std::unordered_map<std::string, ImageMap *>::const_iterator it = mapByKey.find(key);
+	std::unordered_map<std::string, ImageMapPtr >::const_iterator it = mapByKey.find(key);
 	if (it == mapByKey.end()) {
 		// Add the new image definition
 		mapByKey.insert(make_pair(key, im));
@@ -146,7 +146,6 @@ void ImageMapCache::DefineImageMap(ImageMap *im) {
 	} else {
 		// Overwrite the existing image definition
 		const u_int index = GetImageMapIndex(it->second);
-		delete maps[index];
 		maps[index] = im;
 
 		resizePolicyToApply[index] = false;
@@ -158,10 +157,9 @@ void ImageMapCache::DefineImageMap(ImageMap *im) {
 	}
 }
 
-void ImageMapCache::DeleteImageMap(const ImageMap *im) {
-	for (std::unordered_map<std::string, ImageMap *>::iterator it = mapByKey.begin(); it != mapByKey.end(); ++it) {
+void ImageMapCache::DeleteImageMap(ImageMapConstPtr im) {
+	for (std::unordered_map<std::string, ImageMapPtr >::iterator it = mapByKey.begin(); it != mapByKey.end(); ++it) {
 		if (it->second == im) {
-			delete it->second;
 			mapByKey.erase(it);
 
 			for (u_int i = 0; i < maps.size(); ++i) {
@@ -178,12 +176,12 @@ void ImageMapCache::DeleteImageMap(const ImageMap *im) {
 	}
 }
 
-string ImageMapCache::GetSequenceFileName(const ImageMap *im) const {
+string ImageMapCache::GetSequenceFileName(ImageMapConstPtr im) const {
 	return ("imagemap-" + ((boost::format("%05d") % GetImageMapIndex(im)).str()) +
 			"." + im->GetFileExtension());
 }
 
-u_int ImageMapCache::GetImageMapIndex(const ImageMap *im) const {
+u_int ImageMapCache::GetImageMapIndex(ImageMapConstPtr im) const {
 	for (u_int i = 0; i < maps.size(); ++i) {
 		if (maps[i] == im)
 			return i;
@@ -192,14 +190,14 @@ u_int ImageMapCache::GetImageMapIndex(const ImageMap *im) const {
 	throw runtime_error("Unknown image map: " + ToString(im));
 }
 
-void ImageMapCache::GetImageMaps(vector<const ImageMap *> &ims) {
+void ImageMapCache::GetImageMaps(vector<ImageMapConstPtr > &ims) {
 	ims.reserve(maps.size());
 
-	for(ImageMap *im: maps)
+	for(ImageMapPtr im: maps)
 		ims.push_back(im);
 }
 
-void ImageMapCache::Preprocess(const Scene *scene, const bool useRTMode) {
+void ImageMapCache::Preprocess(SceneConstPtr scene, const bool useRTMode) {
 	resizePolicy->Preprocess(*this, scene, useRTMode);
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

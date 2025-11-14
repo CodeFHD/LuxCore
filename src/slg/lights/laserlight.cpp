@@ -83,11 +83,11 @@ void LaserLight::GetPreprocessedData(float *emittedFactorData, float *absolutePo
 	}
 }
 
-float LaserLight::GetPower(const Scene &scene) const {
+float LaserLight::GetPower(SceneConstPtr scene) const {
 	return emittedFactor.Y() * M_PI * radius * radius;
 }
 
-Spectrum LaserLight::Emit(const Scene &scene,
+Spectrum LaserLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -109,7 +109,7 @@ Spectrum LaserLight::Emit(const Scene &scene,
 	return emittedFactor;
 }
 
-Spectrum LaserLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum LaserLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
@@ -155,7 +155,7 @@ Spectrum LaserLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 	return emittedFactor;
 }
 
-bool LaserLight::IsAlwaysInShadow(const Scene &scene,
+bool LaserLight::IsAlwaysInShadow(SceneConstPtr scene,
 			const luxrays::Point &p, const luxrays::Normal &n) const {
 	const Point &rayOrig = p;
 	const Vector &rayDir = -absoluteLightDir;

@@ -30,8 +30,8 @@ namespace slg {
 	
 class DensityGridTexture : public Texture {
 public:
-	DensityGridTexture(const TextureMapping3D *mp, const u_int nx, const u_int ny, const u_int nz,
-            const ImageMap *imageMap);
+	DensityGridTexture(TextureMapping3DConstPtr mp, const u_int nx, const u_int ny, const u_int nz,
+            ImageMapConstPtr imageMap);
 	virtual ~DensityGridTexture() { }
 
 	virtual TextureType GetType() const { return DENSITYGRID_TEX; }
@@ -43,21 +43,21 @@ public:
 	u_int GetWidth() const { return nx; }
 	u_int GetHeight() const { return ny; }
 	u_int GetDepth() const { return nz; }
-	const ImageMap *GetImageMap() const { return imageMap; }
+	ImageMapConstPtr GetImageMap() const { return imageMap; }
 
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr> &referencedImgMaps) const {
 		referencedImgMaps.insert(imageMap);
 	}
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 
-	static ImageMap *ParseData(const luxrays::Property &Property,
+	static ImageMapPtr ParseData(const luxrays::Property &Property,
 			const bool isRGB,
 			const u_int nx, const u_int ny, const u_int nz,
 			const ImageMapStorage::StorageType storageType,
 			const ImageMapStorage::WrapType wrapMode);
-	static ImageMap *ParseOpenVDB(const std::string &fileName, const std::string &gridName,
+	static ImageMapPtr ParseOpenVDB(const std::string &fileName, const std::string &gridName,
 			const u_int nx, const u_int ny, const u_int nz,
 			const ImageMapStorage::StorageType storageType,
 			const ImageMapStorage::WrapType wrapMode);
@@ -65,10 +65,10 @@ public:
 private:
 	luxrays::Spectrum D(int x, int y, int z) const;
 
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
     const int nx, ny, nz;
 
-	const ImageMap *imageMap;
+	ImageMapConstPtr imageMap;
 };
 
 }

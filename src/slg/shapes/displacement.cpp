@@ -26,7 +26,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-DisplacementShape::DisplacementShape(luxrays::ExtTriangleMesh *srcMesh, const Texture &dispMap,
+DisplacementShape::DisplacementShape(luxrays::ExtTriangleMeshPtr srcMesh, const Texture &dispMap,
 		const Params &params) {
 	SDL_LOG("Displacement shape " << srcMesh->GetName() << " with texture " << dispMap.GetName());
 
@@ -169,11 +169,9 @@ DisplacementShape::DisplacementShape(luxrays::ExtTriangleMesh *srcMesh, const Te
 }
 
 DisplacementShape::~DisplacementShape() {
-	if (!refined)
-		delete mesh;
 }
 
-ExtTriangleMesh *DisplacementShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr DisplacementShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

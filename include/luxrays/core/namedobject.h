@@ -54,6 +54,10 @@ private:
 	std::string name;
 };
 
+using NamedObjectPtr = std::shared_ptr<NamedObject>;
+using NamedObjectConstPtr = std::shared_ptr<const NamedObject>;
+using NamedObjectRef = NamedObject&;
+
 }
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(luxrays::NamedObject)

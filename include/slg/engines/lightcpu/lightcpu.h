@@ -19,6 +19,7 @@
 #ifndef _SLG_LIGHTCPU_H
 #define	_SLG_LIGHTCPU_H
 
+#include "luxrays/utils/thread.h"
 #include "slg/slg.h"
 #include "slg/engines/cpurenderengine.h"
 #include "slg/engines/pathtracer.h"
@@ -43,20 +44,26 @@ public:
 	friend class LightCPURenderEngine;
 
 private:
-	virtual std::jthread *AllocRenderThread() { return new std::jthread(std::bind_front(&LightCPURenderThread::RenderFunc, this)); }
+	virtual JThreadPtr AllocRenderThread() {
+		auto t = std::make_shared<std::jthread>(
+			std::bind_front(&LightCPURenderThread::RenderFunc, this)
+		);
+		luxrays::SetThreadName(t, "LxLightCPU");
+		return t;
+	}
 
 	void RenderFunc(std::stop_token stop_token);
 };
 
 class LightCPURenderEngine : public CPUNoTileRenderEngine {
 public:
-	LightCPURenderEngine(const RenderConfig *cfg);
+	LightCPURenderEngine(RenderConfigConstRef cfg);
 	~LightCPURenderEngine();
 
 	virtual RenderEngineType GetType() const { return GetObjectType(); }
 	virtual std::string GetTag() const { return GetObjectTag(); }
 
-	virtual RenderState *GetRenderState();
+	virtual RenderStatePtr GetRenderState();
 
 	//--------------------------------------------------------------------------
 	// Static methods used by RenderEngineRegistry
@@ -65,7 +72,7 @@ public:
 	static RenderEngineType GetObjectType() { return LIGHTCPU; }
 	static std::string GetObjectTag() { return "LIGHTCPU"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static RenderEngine *FromProperties(const RenderConfig *rcfg);
+	static RenderEngine *FromProperties(RenderConfigConstRef rcfg);
 
 	friend class LightCPURenderThread;
 

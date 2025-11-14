@@ -28,6 +28,7 @@
 #include "luxrays/utils/serializationutils.h"
 
 #include "slg/slg.h"
+#include "slg/usings.h"
 #include "slg/samplers/sobol.h"
 #include "slg/bsdf/bsdf.h"
 #include "slg/scene/scene.h"
@@ -41,6 +42,7 @@ namespace slg {
 namespace ocl {
 #include "slg/engines/caches/photongi/pgic_types.cl"
 }
+
 
 //------------------------------------------------------------------------------
 // Photon Mapping based GI cache
@@ -260,10 +262,10 @@ class EyePathInfo;
 
 class PhotonGICache {
 public:
-	PhotonGICache(const Scene *scn, const PhotonGICacheParams &params);
+	PhotonGICache(SceneConstPtr scn, const PhotonGICacheParams &params);
 	virtual ~PhotonGICache();
 
-	void SetScene(const Scene *scn) { scene = scn; }
+	void SetScene(SceneConstPtr scn) { scene = scn; }
 	PhotonGIDebugType GetDebugType() const { return params.debugType; }
 	
 	bool IsIndirectEnabled() const { return params.indirect.enabled; }
@@ -303,7 +305,7 @@ public:
 
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static const luxrays::Properties &GetDefaultProps();
-	static PhotonGICache *FromProperties(const Scene *scn, const luxrays::Properties &cfg);
+	static PhotonGICache *FromProperties(SceneConstPtr scn, const luxrays::Properties &cfg);
 
 	friend class PGICSceneVisibility;
 	friend class TracePhotonsThread;
@@ -333,7 +335,7 @@ private:
 
 	template<class Archive> void serialize(Archive &ar, const u_int version);
 
-	const Scene *scene;
+	SceneConstPtr scene;
 	PhotonGICacheParams params;
 
 	u_int threadCount;

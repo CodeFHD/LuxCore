@@ -32,7 +32,7 @@ using namespace slg;
 // TilePathCPURenderEngine
 //------------------------------------------------------------------------------
 
-TilePathCPURenderEngine::TilePathCPURenderEngine(const RenderConfig *rcfg) :
+TilePathCPURenderEngine::TilePathCPURenderEngine(RenderConfigConstRef rcfg) :
 		CPUTileRenderEngine(rcfg), photonGICache(nullptr) {
 }
 
@@ -42,16 +42,16 @@ TilePathCPURenderEngine::~TilePathCPURenderEngine() {
 
 void TilePathCPURenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_PIXEL_NORMALIZED);
-	film->SetRadianceGroupCount(renderConfig->scene->lightDefs.GetLightGroupCount());
+	film->SetRadianceGroupCount(renderConfig.scene->lightDefs.GetLightGroupCount());
 	film->Init();
 }
 
-RenderState *TilePathCPURenderEngine::GetRenderState() {
-	return new TilePathCPURenderState(bootStrapSeed, tileRepository, photonGICache);
+RenderStatePtr TilePathCPURenderEngine::GetRenderState() {
+	return std::make_shared<TilePathCPURenderState>(bootStrapSeed, tileRepository, photonGICache);
 }
 
 void TilePathCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
@@ -78,7 +78,7 @@ void TilePathCPURenderEngine::StartLockLess() {
 		// Check if the render state is of the right type
 		startRenderState->CheckEngineTag(GetObjectTag());
 
-		TilePathCPURenderState *rs = (TilePathCPURenderState *)startRenderState;
+		auto rs = static_pointer_cast<TilePathCPURenderState>(startRenderState);
 
 		// Use a new seed to continue the rendering
 		const u_int newSeed = rs->bootStrapSeed + 1;
@@ -93,12 +93,11 @@ void TilePathCPURenderEngine::StartLockLess() {
 		photonGICache = rs->photonGICache;
 		rs->photonGICache = nullptr;
 		
-		delete startRenderState;
-		startRenderState = NULL;
+		startRenderState = nullptr;
 	} else {
 		film->Reset();
 
-		tileRepository = TileRepository::FromProperties(renderConfig->cfg);
+		tileRepository = TileRepository::FromProperties(renderConfig.cfg);
 		tileRepository->varianceClamping = VarianceClamping(pathTracer.sqrtVarianceClampMaxValue);
 		tileRepository->InitTiles(*film);
 	}
@@ -109,7 +108,7 @@ void TilePathCPURenderEngine::StartLockLess() {
 
 	// note: photonGICache could have been restored from the render state
 	if ((GetType() != RTPATHCPU) && !photonGICache) {
-		photonGICache = PhotonGICache::FromProperties(renderConfig->scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
 
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)
@@ -154,7 +153,7 @@ Properties TilePathCPURenderEngine::ToProperties(const Properties &cfg) {
 	return props;
 }
 
-RenderEngine *TilePathCPURenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *TilePathCPURenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new TilePathCPURenderEngine(rcfg);
 }
 

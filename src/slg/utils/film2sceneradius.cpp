@@ -39,7 +39,7 @@ using namespace slg;
 
 namespace slg {
 
-static void GenerateEyeRay(const Camera *camera, Ray &eyeRay,
+static void GenerateEyeRay(CameraConstPtr camera, Ray &eyeRay,
 		PathVolumeInfo &volInfo, Sampler *sampler, SampleResult &sampleResult,
 		float &dpdx, float &dpdy, const float imagePlaneRadius,
 		const float timeStart, const float timeEnd) {
@@ -104,7 +104,7 @@ typedef struct Film2SceneRadiusThreadParams {
 
 	u_int threadIndex;
 	u_int workSize;
-	const Scene *scene;
+	SceneConstPtr scene;
 	float imagePlaneRadius;
 	u_int maxPathDepth;
 	float timeStart, timeEnd;
@@ -126,7 +126,7 @@ static void Film2SceneRadiusThread(Film2SceneRadiusThreadParams &params) {
 	// Initialization
 	//--------------------------------------------------------------------------
 
-	const Camera *camera = params.scene->camera;
+	auto camera = params.scene->camera;
 
 	// Initialize the sampler
 	RandomGenerator rnd(1 + params.threadIndex);
@@ -134,16 +134,16 @@ static void Film2SceneRadiusThread(Film2SceneRadiusThreadParams &params) {
 	SobolSampler sampler(&rnd, NULL, NULL, true, 0.f, 0.f,
 			16, 16, 1, 1,
 			&sobolSharedData);
-	
+
 	// Request the samples
 	const u_int sampleBootSize = 5;
 	const u_int sampleStepSize = 4;
-	const u_int sampleSize = 
+	const u_int sampleSize =
 		sampleBootSize + // To generate eye ray
 		params.maxPathDepth * sampleStepSize; // For each path vertex
 
 	sampler.RequestSamples(PIXEL_NORMALIZED_ONLY, sampleSize);
-		// Initialize SampleResult 
+		// Initialize SampleResult
 	vector<SampleResult> sampleResults(1);
 	SampleResult &sampleResult = sampleResults[0];
 	const Film::FilmChannels sampleResultsChannels({
@@ -264,7 +264,7 @@ static void Film2SceneRadiusThread(Film2SceneRadiusThreadParams &params) {
 	}
 }
 
-float Film2SceneRadius(const Scene *scene, 
+float Film2SceneRadius(SceneConstPtr scene,
 		const float imagePlaneRadius, const float defaultRadius,
 		const u_int maxPathDepth, const float timeStart, const float timeEnd,
 		const Film2SceneRadiusValidator *validator) {
@@ -273,8 +273,8 @@ float Film2SceneRadius(const Scene *scene,
 	// Render 16 passes at 256 * 256 resolution
 	const u_int workSize = 16 * 256 * 256 / renderThreadCount;
 
-	vector<Film2SceneRadiusThreadParams> params(renderThreadCount);
-	vector<std::jthread *> renderThreads(renderThreadCount);
+	std::vector<Film2SceneRadiusThreadParams> params(renderThreadCount);
+	std::vector<JThreadPtr> renderThreads(renderThreadCount);
 
 	for (size_t i = 0; i < renderThreadCount; ++i) {
 		params[i].threadIndex = i;
@@ -286,14 +286,16 @@ float Film2SceneRadius(const Scene *scene,
 		params[i].timeEnd = timeEnd;
 		params[i].validator = validator;
 
-		renderThreads[i] = new std::jthread(&Film2SceneRadiusThread, boost::ref(params[i]));
+		renderThreads[i] = std::make_shared<std::jthread>(
+			&Film2SceneRadiusThread, boost::ref(params[i])
+		);
+		SetThreadName(renderThreads[i], "LxFlm2ScnRadius");
 	}
 
 	float totalAccumulatedRadiusSize = 0.f;
 	u_int totalRadiusSizeCount = 0;
 	for (size_t i = 0; i < renderThreadCount; ++i) {
 		renderThreads[i]->join();
-		delete renderThreads[i];
 
 		totalAccumulatedRadiusSize += params[i].accumulatedRadiusSize;
 		totalRadiusSizeCount += params[i].radiusSizeCount;

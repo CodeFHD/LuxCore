@@ -63,6 +63,22 @@ class RayHit;
  *         | =>       ExtMesh        => |
  */
 
+class ExtMesh;
+using ExtMeshConstPtr = std::shared_ptr<const ExtMesh>;
+using ExtMeshPtr = std::shared_ptr<ExtMesh>;
+
+class ExtTriangleMesh;
+using ExtTriangleMeshConstPtr = std::shared_ptr<const ExtTriangleMesh>;
+using ExtTriangleMeshPtr = std::shared_ptr<ExtTriangleMesh>;
+
+class ExtMotionTriangleMesh;
+using ExtMotionTriangleMeshConstPtr = std::shared_ptr<const ExtMotionTriangleMesh>;
+using ExtMotionTriangleMeshPtr = std::shared_ptr<ExtMotionTriangleMesh>;
+
+class ExtInstanceTriangleMesh;
+using ExtInstanceTriangleMeshConstPtr = std::shared_ptr<const ExtInstanceTriangleMesh>;
+using ExtInstanceTriangleMeshPtr = std::shared_ptr<ExtInstanceTriangleMesh>;
+
 class ExtMesh : virtual public Mesh, public NamedObject {
 public:
 	ExtMesh() : bevelRadius(0.f) { }
@@ -299,16 +315,16 @@ public:
 
 	virtual void Save(const std::string &fileName) const;
 
-	void CopyAOV(ExtTriangleMesh *destMesh) const;
-	ExtTriangleMesh *CopyExt(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
+	void CopyAOV(ExtTriangleMeshPtr destMesh) const;
+	ExtTriangleMeshPtr CopyExt(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
 			std::array<UV *, EXTMESH_MAX_DATA_COUNT> *meshUVs,
 			std::array<Spectrum *, EXTMESH_MAX_DATA_COUNT> *meshCols,
 			std::array<float *, EXTMESH_MAX_DATA_COUNT> *meshAlphas,
 			const float bRadius = 0.f) const;
-	ExtTriangleMesh *Copy(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
+	ExtTriangleMeshPtr Copy(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
 			UV *meshUVs, Spectrum *meshCols, float *meshAlphas,
 			const float bRadius = 0.f) const;
-	ExtTriangleMesh *Copy(const float bRadius = 0.f) const {
+	ExtTriangleMeshPtr Copy(const float bRadius = 0.f) const {
 		return CopyExt(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, bRadius);
 	}
 
@@ -316,8 +332,8 @@ public:
 			bool &continueToTrace, float &rayHitT,
 			luxrays::Point &p, luxrays::Normal &n) const;
 	
-	static ExtTriangleMesh *Load(const std::string &fileName);
-	static ExtTriangleMesh *Merge(const std::vector<const ExtTriangleMesh *> &meshes,
+	static ExtTriangleMeshPtr Load(const std::string &fileName);
+	static ExtTriangleMeshPtr Merge(const std::vector<ExtTriangleMeshConstPtr > &meshes,
 			const std::vector<luxrays::Transform> *trans = nullptr);
 
 	friend class ExtInstanceTriangleMesh;
@@ -360,8 +376,8 @@ public:
 		float radius;
 	};
 
-	static ExtTriangleMesh *LoadPly(const std::string &fileName);
-	static ExtTriangleMesh *LoadSerialized(const std::string &fileName);
+	static ExtTriangleMeshPtr LoadPly(const std::string &fileName);
+	static ExtTriangleMeshPtr LoadSerialized(const std::string &fileName);
 
 	// Used by serialization
 	ExtTriangleMesh() {
@@ -497,47 +513,47 @@ public:
 
 class ExtInstanceTriangleMesh : public InstanceTriangleMesh, public ExtMesh {
 public:
-	ExtInstanceTriangleMesh(ExtTriangleMesh *m, const Transform &t) : 
+	ExtInstanceTriangleMesh(ExtTriangleMeshPtr m, const Transform &t) : 
 		InstanceTriangleMesh(m, t) { }
 	~ExtInstanceTriangleMesh() { };
 	virtual void Delete() {	}
 
 	virtual MeshType GetType() const { return TYPE_EXT_TRIANGLE_INSTANCE; }
 	
-	virtual float GetBevelRadius() const { return static_cast<ExtTriangleMesh *>(mesh)->GetBevelRadius(); }
+	virtual float GetBevelRadius() const { return static_pointer_cast<ExtTriangleMesh>(mesh)->GetBevelRadius(); }
 
-	virtual bool HasNormals() const { return static_cast<ExtTriangleMesh *>(mesh)->HasNormals(); }
-	virtual bool HasUVs(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasUVs(dataIndex); }
-	virtual bool HasColors(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasColors(dataIndex); }
-	virtual bool HasAlphas(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasAlphas(dataIndex); }
+	virtual bool HasNormals() const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasNormals(); }
+	virtual bool HasUVs(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasUVs(dataIndex); }
+	virtual bool HasColors(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasColors(dataIndex); }
+	virtual bool HasAlphas(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasAlphas(dataIndex); }
 	
-	virtual bool HasVertexAOV(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasVertexAOV(dataIndex); }
-	virtual bool HasTriAOV(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasTriAOV(dataIndex); }
+	virtual bool HasVertexAOV(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasVertexAOV(dataIndex); }
+	virtual bool HasTriAOV(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasTriAOV(dataIndex); }
 
 	virtual Normal GetGeometryNormal(const luxrays::Transform &local2World, const u_int triIndex) const {
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->GetGeometryNormal(Transform::TRANS_IDENTITY, triIndex));
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->GetGeometryNormal(Transform::TRANS_IDENTITY, triIndex));
 	}
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int triIndex, const u_int vertIndex) const {
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->GetShadeNormal(Transform::TRANS_IDENTITY, triIndex, vertIndex));
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->GetShadeNormal(Transform::TRANS_IDENTITY, triIndex, vertIndex));
 	}
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int vertIndex) const {
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex));
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex));
 	}
 	virtual UV GetUV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetUV(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetUV(vertIndex, dataIndex);
 	}
 	virtual Spectrum GetColor(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetColor(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetColor(vertIndex, dataIndex);
 	}
 	virtual float GetAlpha(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetAlpha(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetAlpha(vertIndex, dataIndex);
 	}
 
 	virtual float GetVertexAOV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetVertexAOV(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetVertexAOV(vertIndex, dataIndex);
 	}
 	virtual float GetTriAOV(const unsigned triIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetTriAOV(triIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetTriAOV(triIndex, dataIndex);
 	}
 
 	virtual bool GetTriBaryCoords(const luxrays::Transform &local2World, const u_int triIndex,
@@ -553,31 +569,31 @@ public:
 
 	virtual Normal InterpolateTriNormal(const luxrays::Transform &local2World,
 			const u_int triIndex, const float b1, const float b2) const {
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(trans * static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriNormal(
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(trans * static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriNormal(
 				Transform::TRANS_IDENTITY, triIndex, b1, b2));
 	}
 
 	virtual UV InterpolateTriUV(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriUV(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriUV(triIndex,
 				b1, b2, dataIndex);
 	}
 
 	virtual Spectrum InterpolateTriColor(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriColor(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriColor(triIndex,
 				b1, b2, dataIndex);
 	}
 	
 	virtual float InterpolateTriAlpha(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriAlpha(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriAlpha(triIndex,
 				b1, b2, dataIndex);
 	}
 	
 	virtual float InterpolateTriVertexAOV(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriVertexAOV(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriVertexAOV(triIndex,
 				b1, b2, dataIndex);
 	}
 
@@ -585,12 +601,12 @@ public:
 			bool &continueToTrace, float &rayHitT,
 			luxrays::Point &p, luxrays::Normal &n) const;
 
-	virtual void Save(const std::string &fileName) const { static_cast<ExtTriangleMesh *>(mesh)->Save(fileName); }
+	virtual void Save(const std::string &fileName) const { static_pointer_cast<ExtTriangleMesh>(mesh)->Save(fileName); }
 
 	const Transform &GetTransformation() const { return trans; }
-	ExtTriangleMesh *GetExtTriangleMesh() const { return (ExtTriangleMesh *)mesh; };
+	ExtTriangleMeshPtr GetExtTriangleMesh() const { return static_pointer_cast<ExtTriangleMesh>(mesh); };
 	
-	void UpdateMeshReferences(ExtTriangleMesh *oldMesh, ExtTriangleMesh *newMesh);
+	void UpdateMeshReferences(ExtTriangleMeshPtr oldMesh, ExtTriangleMeshPtr newMesh);
 
 	friend class boost::serialization::access;
 
@@ -613,50 +629,50 @@ private:
 
 class ExtMotionTriangleMesh : public MotionTriangleMesh, public ExtMesh {
 public:
-	ExtMotionTriangleMesh(ExtTriangleMesh *m, const MotionSystem &ms) :
+	ExtMotionTriangleMesh(ExtTriangleMeshPtr m, const MotionSystem &ms) :
 		MotionTriangleMesh(m, ms) { }
 	~ExtMotionTriangleMesh() { }
 	virtual void Delete() {	}
 
 	virtual MeshType GetType() const { return TYPE_EXT_TRIANGLE_MOTION; }
 
-	virtual float GetBevelRadius() const { return static_cast<ExtTriangleMesh *>(mesh)->GetBevelRadius(); }
+	virtual float GetBevelRadius() const { return static_pointer_cast<ExtTriangleMesh>(mesh)->GetBevelRadius(); }
 
-	virtual bool HasNormals() const { return static_cast<ExtTriangleMesh *>(mesh)->HasNormals(); }
-	virtual bool HasUVs(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasUVs(dataIndex); }
-	virtual bool HasColors(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasColors(dataIndex); }
-	virtual bool HasAlphas(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasAlphas(dataIndex); }
+	virtual bool HasNormals() const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasNormals(); }
+	virtual bool HasUVs(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasUVs(dataIndex); }
+	virtual bool HasColors(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasColors(dataIndex); }
+	virtual bool HasAlphas(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasAlphas(dataIndex); }
 
-	virtual bool HasVertexAOV(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasVertexAOV(dataIndex); }
-	virtual bool HasTriAOV(const u_int dataIndex) const { return static_cast<ExtTriangleMesh *>(mesh)->HasTriAOV(dataIndex); }
+	virtual bool HasVertexAOV(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasVertexAOV(dataIndex); }
+	virtual bool HasTriAOV(const u_int dataIndex) const { return static_pointer_cast<ExtTriangleMesh>(mesh)->HasTriAOV(dataIndex); }
 
 	virtual Normal GetGeometryNormal(const luxrays::Transform &local2World, const u_int triIndex) const {
 		const bool transSwapsHandedness = local2World.SwapsHandedness();
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->GetGeometryNormal(local2World, triIndex));
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->GetGeometryNormal(local2World, triIndex));
 	}
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int triIndex, const u_int vertIndex) const {
 		const bool transSwapsHandedness = local2World.SwapsHandedness();
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->GetShadeNormal(local2World, triIndex, vertIndex));
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->GetShadeNormal(local2World, triIndex, vertIndex));
 	}
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int vertIndex) const {
 		const bool transSwapsHandedness = local2World.SwapsHandedness();
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->GetShadeNormal(local2World, vertIndex));
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->GetShadeNormal(local2World, vertIndex));
 	}
 	virtual UV GetUV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetUV(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetUV(vertIndex, dataIndex);
 	}
 	virtual Spectrum GetColor(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetColor(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetColor(vertIndex, dataIndex);
 	}
 	virtual float GetAlpha(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetAlpha(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetAlpha(vertIndex, dataIndex);
 	}
 
 	virtual float GetVertexAOV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetVertexAOV(vertIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetVertexAOV(vertIndex, dataIndex);
 	}
 	virtual float GetTriAOV(const unsigned triIndex, const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->GetTriAOV(triIndex, dataIndex);
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->GetTriAOV(triIndex, dataIndex);
 	}
 
 	virtual bool GetTriBaryCoords(const luxrays::Transform &local2World, const u_int triIndex,
@@ -671,40 +687,40 @@ public:
 	virtual Normal InterpolateTriNormal(const luxrays::Transform &local2World,
 			const u_int triIndex, const float b1, const float b2) const {
 		const bool transSwapsHandedness = local2World.SwapsHandedness();
-		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriNormal(
+		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriNormal(
 				local2World, triIndex, b1, b2));
 	}
 
 	virtual UV InterpolateTriUV(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriUV(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriUV(triIndex,
 				b1, b2, dataIndex);
 	}
 	
 	virtual Spectrum InterpolateTriColor(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriColor(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriColor(triIndex,
 				b1, b2, dataIndex);
 	}
 	
 	virtual float InterpolateTriAlpha(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriAlpha(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriAlpha(triIndex,
 				b1, b2, dataIndex);
 	}
 
 	virtual float InterpolateTriVertexAOV(const u_int triIndex, const float b1, const float b2,
 			const u_int dataIndex) const {
-		return static_cast<ExtTriangleMesh *>(mesh)->InterpolateTriVertexAOV(triIndex,
+		return static_pointer_cast<ExtTriangleMesh>(mesh)->InterpolateTriVertexAOV(triIndex,
 				b1, b2, dataIndex);
 	}
 
-	virtual void Save(const std::string &fileName) const { static_cast<ExtTriangleMesh *>(mesh)->Save(fileName); }
+	virtual void Save(const std::string &fileName) const { static_pointer_cast<ExtTriangleMesh>(mesh)->Save(fileName); }
 
 	const MotionSystem &GetMotionSystem() const { return motionSystem; }
-	ExtTriangleMesh *GetExtTriangleMesh() const { return (ExtTriangleMesh *)mesh; };
+	ExtTriangleMeshPtr GetExtTriangleMesh() const { return static_pointer_cast<ExtTriangleMesh>(mesh); };
 
-	void UpdateMeshReferences(ExtTriangleMesh *oldMesh, ExtTriangleMesh *newMesh);
+	void UpdateMeshReferences(ExtTriangleMeshPtr oldMesh, ExtTriangleMeshPtr newMesh);
 
 	friend class boost::serialization::access;
 

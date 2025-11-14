@@ -37,7 +37,7 @@ Properties EpsilonWindow::GetEpsilonProperties(const Properties &cfgProps) const
 }
 
 void EpsilonWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = GetEpsilonProperties(config->ToProperties());
 	} catch(exception &ex) {

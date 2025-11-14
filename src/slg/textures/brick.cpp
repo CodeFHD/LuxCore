@@ -26,8 +26,8 @@ using namespace slg;
 // Brick texture
 //------------------------------------------------------------------------------
 
-BrickTexture::BrickTexture(const TextureMapping3D *mp, const Texture *t1,
-		const Texture *t2, const Texture *t3,
+BrickTexture::BrickTexture(TextureMapping3DConstPtr mp, TextureConstPtr t1,
+		TextureConstPtr t2, TextureConstPtr t3,
 		float brickw, float brickh, float brickd, float mortar,
 		float r, const string &b, const float modulationBias) :
 		mapping(mp), tex1(t1), tex2(t2), tex3(t3),

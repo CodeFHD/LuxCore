@@ -31,7 +31,7 @@ using namespace slg;
 //------------------------------------------------------------------------------
 
 SamplerSharedData *TilePathSamplerSharedData::FromProperties(const Properties &cfg,
-		RandomGenerator *rndGen, Film *film) {
+		RandomGenerator *rndGen, FilmPtr film) {
 	return new TilePathSamplerSharedData();
 }
 
@@ -39,7 +39,7 @@ SamplerSharedData *TilePathSamplerSharedData::FromProperties(const Properties &c
 // TilePath sampler
 //------------------------------------------------------------------------------
 
-TilePathSampler::TilePathSampler(luxrays::RandomGenerator *rnd, Film *flm,
+TilePathSampler::TilePathSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 		const FilmSampleSplatter *flmSplatter) : Sampler(rnd, flm, flmSplatter, true),
 		sobolSequence() {
 	aaSamples = 1;
@@ -105,7 +105,7 @@ void TilePathSampler::NextSample(const vector<SampleResult> &sampleResults) {
 	InitNewSample();
 }
 
-void TilePathSampler::Init(TileWork *tWork, Film *tFilm) {
+void TilePathSampler::Init(TileWork *tWork, FilmPtr tFilm) {
 	tileWork = tWork;
 	tileFilm = tFilm;
 
@@ -126,7 +126,7 @@ Properties TilePathSampler::ToProperties(const Properties &cfg) {
 }
 
 Sampler *TilePathSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	return new TilePathSampler(rndGen, film, flmSplatter);
 }
 

@@ -41,7 +41,7 @@ AcceleratorWindow::AcceleratorWindow(LuxCoreApp *a) : ObjectEditorWindow(a, "Acc
 }
 
 void AcceleratorWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = config->ToProperties().GetAllProperties("accelerator");
 	} catch(exception &ex) {

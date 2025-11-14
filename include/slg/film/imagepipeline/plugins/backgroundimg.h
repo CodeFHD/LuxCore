@@ -38,7 +38,7 @@ namespace slg {
 
 class BackgroundImgPlugin : public ImagePipelinePlugin {
 public:
-	BackgroundImgPlugin(ImageMap *map);
+	BackgroundImgPlugin(ImageMapPtr map);
 	virtual ~BackgroundImgPlugin();
 
 	virtual ImagePipelinePlugin *Copy() const;
@@ -63,8 +63,8 @@ private:
 
 	void UpdateFilmImageMap(const Film &film);
 
-	ImageMap *imgMap;
-	ImageMap *filmImageMap;
+	ImageMapPtr imgMap;
+	ImageMapPtr filmImageMap;
 
 	// Used inside the object destructor to free buffers
 	luxrays::HardwareDevice *hardwareDevice;

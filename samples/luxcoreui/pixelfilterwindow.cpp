@@ -41,7 +41,7 @@ PixelFilterWindow::PixelFilterWindow(LuxCoreApp *a) : ObjectEditorWindow(a, "Pix
 }
 
 void PixelFilterWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = config->ToProperties().GetAllProperties("film.filter");
 	} catch(exception &ex) {

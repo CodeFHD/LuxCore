@@ -50,11 +50,11 @@ MBVHAccel::~MBVHAccel() {
 	}
 }
 
-bool MBVHAccel::MeshPtrCompare(const Mesh *p0, const Mesh *p1) {
+bool MBVHAccel::MeshPtrCompare(MeshConstPtr p0, MeshConstPtr p1) {
 	return p0 < p1;
 }
 
-void MBVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totalVertexCount,
+void MBVHAccel::Init(const deque<MeshConstPtr > &ms, const u_longlong totalVertexCount,
 		const u_longlong totalTriangleCount) {
 	assert (!initialized);
 
@@ -85,7 +85,7 @@ void MBVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totalVertex
 
 	leafsIndex.reserve(nLeafs);
 
-	map<const Mesh *, u_int, bool (*)(const Mesh *, const Mesh *)> uniqueLeafIndexByMesh(MeshPtrCompare);
+	map<MeshConstPtr , u_int, bool (*)(MeshConstPtr , MeshConstPtr )> uniqueLeafIndexByMesh(MeshPtrCompare);
 
 	double lastPrint = WallClockTime();
 	for (u_int i = 0; i < nLeafs; ++i) {
@@ -95,13 +95,13 @@ void MBVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totalVertex
 			lastPrint = now;
 		}
 
-		const Mesh *mesh = meshes[i];
+		MeshConstPtr mesh = meshes[i];
 
 		switch (mesh->GetType()) {
 			case TYPE_TRIANGLE:
 			case TYPE_EXT_TRIANGLE: {
 				BVHAccel *leaf = new BVHAccel(ctx);
-				deque<const Mesh *> mlist(1, mesh);
+				std::deque<MeshConstPtr > mlist(1, mesh);
 				leaf->Init(mlist, mesh->GetTotalVertexCount(), mesh->GetTotalTriangleCount());
 
 				const u_int uniqueLeafIndex = uniqueLeafs.size();
@@ -114,18 +114,18 @@ void MBVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totalVertex
 			}
 			case TYPE_TRIANGLE_INSTANCE:
 			case TYPE_EXT_TRIANGLE_INSTANCE: {
-				const InstanceTriangleMesh *itm = dynamic_cast<const InstanceTriangleMesh *>(mesh);
+				auto itm = dynamic_pointer_cast<const InstanceTriangleMesh>(mesh);
 
 				// Check if a BVH has already been created
-				map<const Mesh *, u_int, bool (*)(const Mesh *, const Mesh *)>::iterator it =
+				map<MeshConstPtr , u_int, bool (*)(MeshConstPtr , MeshConstPtr )>::iterator it =
 						uniqueLeafIndexByMesh.find(itm->GetTriangleMesh());
 
 				if (it == uniqueLeafIndexByMesh.end()) {
-					TriangleMesh *instancedMesh = itm->GetTriangleMesh();
+					auto instancedMesh = itm->GetTriangleMesh();
 
 					// Create a new BVH
 					BVHAccel *leaf = new BVHAccel(ctx);
-					deque<const Mesh *> mlist(1, instancedMesh);
+					std::deque<MeshConstPtr > mlist(1, instancedMesh);
 					leaf->Init(mlist, instancedMesh->GetTotalVertexCount(), instancedMesh->GetTotalTriangleCount());
 
 					const u_int uniqueLeafIndex = uniqueLeafs.size();
@@ -144,18 +144,17 @@ void MBVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totalVertex
 			}
 			case TYPE_TRIANGLE_MOTION:
 			case TYPE_EXT_TRIANGLE_MOTION: {
-				const MotionTriangleMesh *mtm = dynamic_cast<const MotionTriangleMesh *>(mesh);
+				auto mtm = dynamic_pointer_cast<const MotionTriangleMesh>(mesh);
 
 				// Check if a BVH has already been created
-				map<const Mesh *, u_int, bool (*)(const Mesh *, const Mesh *)>::iterator it =
-						uniqueLeafIndexByMesh.find(mtm->GetTriangleMesh());
+				auto it = uniqueLeafIndexByMesh.find(mtm->GetTriangleMesh());
 
 				if (it == uniqueLeafIndexByMesh.end()) {
-					TriangleMesh *motionMesh = mtm->GetTriangleMesh();
+					auto motionMesh = mtm->GetTriangleMesh();
 
 					// Create a new BVH
 					BVHAccel *leaf = new BVHAccel(ctx);
-					deque<const Mesh *> mlist(1, motionMesh);
+					std::deque<MeshConstPtr > mlist(1, motionMesh);
 					leaf->Init(mlist, motionMesh->GetTotalVertexCount(), motionMesh->GetTotalTriangleCount());
 
 					const u_int uniqueLeafIndex = uniqueLeafs.size();
@@ -293,7 +292,7 @@ bool MBVHAccel::Intersect(const Ray *ray, RayHit *rayHit) const {
 			if (insideLeafTree) {
 				// I'm inside a leaf tree, I have to check the triangle
 				const u_int absoluteMeshIndex = node.triangleLeaf.meshIndex + currentMeshOffset;
-				const Mesh *currentMesh = meshes[absoluteMeshIndex];
+				MeshConstPtr currentMesh = meshes[absoluteMeshIndex];
 				// I use currentMesh->GetVertices() in order to have access to not
 				// transformed vertices in the case of instances
 				const Point *vertices = currentMesh->GetVertices();

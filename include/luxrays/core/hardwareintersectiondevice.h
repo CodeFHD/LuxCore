@@ -63,7 +63,7 @@ public:
 	virtual ~HardwareIntersectionKernel() {
 	}
 
-	virtual void Update(const DataSet *newDataSet) = 0;
+	virtual void Update(DataSetConstPtr newDataSet) = 0;
 	virtual void EnqueueTraceRayBuffer(HardwareDeviceBuffer *rayBuff,
 			HardwareDeviceBuffer *rayHitBuff, const unsigned int rayCount) = 0;
 

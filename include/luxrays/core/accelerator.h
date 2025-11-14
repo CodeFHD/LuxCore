@@ -48,7 +48,7 @@ public:
 
 	virtual HardwareIntersectionKernel *NewHardwareIntersectionKernel(HardwareIntersectionDevice &device) const = 0;
 
-	virtual void Init(const std::deque<const Mesh *> &meshes, const u_longlong totalVertexCount, const u_longlong totalTriangleCount) = 0;
+	virtual void Init(const std::deque<MeshConstPtr > &meshes, const u_longlong totalVertexCount, const u_longlong totalTriangleCount) = 0;
 	virtual bool DoesSupportUpdate() const { return false; }
 	virtual void Update() { throw new std::runtime_error("Internal error in Accelerator::Update()"); }
 

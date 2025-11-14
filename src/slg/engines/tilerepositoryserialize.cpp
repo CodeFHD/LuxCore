@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <boost/format.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "slg/engines/tilerepository.h"
 

@@ -27,6 +27,8 @@
 
 namespace slg {
 
+using JThreadPtr = std::shared_ptr<std::jthread>;
+
 //------------------------------------------------------------------------------
 // TracePhotonsThread
 //------------------------------------------------------------------------------
@@ -89,7 +91,7 @@ private:
 	std::atomic<u_int> &globalIndirectSize;
 	std::atomic<u_int> &globalCausticSize;
 
-	std::jthread *renderThread;
+	JThreadPtr renderThread;
 
 	u_int sampleBootSize, sampleStepSize, sampleSize;
 	bool indirectDone, causticDone;

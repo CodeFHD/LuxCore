@@ -39,7 +39,7 @@ public:
 	bool alreadyFound;
 };
 
-EdgeDetectorAOVShape::EdgeDetectorAOVShape(ExtTriangleMesh *srcMesh,
+EdgeDetectorAOVShape::EdgeDetectorAOVShape(ExtTriangleMeshPtr srcMesh,
 		const u_int destAOVIndex0, const u_int destAOVIndex1, const u_int destAOVIndex2) {
 	assert (destAOVIndex0 < EXTMESH_MAX_DATA_COUNT);
 	assert (destAOVIndex1 < EXTMESH_MAX_DATA_COUNT);
@@ -131,11 +131,9 @@ EdgeDetectorAOVShape::EdgeDetectorAOVShape(ExtTriangleMesh *srcMesh,
 }
 
 EdgeDetectorAOVShape::~EdgeDetectorAOVShape() {
-	if (!refined)
-		delete mesh;
 }
 
-ExtTriangleMesh *EdgeDetectorAOVShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr EdgeDetectorAOVShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

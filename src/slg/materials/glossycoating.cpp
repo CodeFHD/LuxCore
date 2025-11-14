@@ -27,16 +27,16 @@ using namespace slg;
 // GlossyCoating material
 //------------------------------------------------------------------------------
 
-GlossyCoatingMaterial::GlossyCoatingMaterial(const Texture *frontTransp, const Texture *backTransp,
-		const Texture *emitted, const Texture *bump,
-		const Material *mB, const Texture *ks, const Texture *u, const Texture *v,
-		const Texture *ka, const Texture *d, const Texture *i, const bool mbounce) :
+GlossyCoatingMaterial::GlossyCoatingMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+		TextureConstPtr emitted, TextureConstPtr bump,
+		MaterialConstPtr mB, TextureConstPtr ks, TextureConstPtr u, TextureConstPtr v,
+		TextureConstPtr ka, TextureConstPtr d, TextureConstPtr i, const bool mbounce) :
 			Material(frontTransp, backTransp, emitted, bump), matBase(mB), Ks(ks), nu(u), nv(v),
 			Ka(ka), depth(d), index(i), multibounce(mbounce) {
 	glossiness = Min(ComputeGlossiness(nu, nv), matBase->GetGlossiness());
 }
 
-const Volume *GlossyCoatingMaterial::GetInteriorVolume(const HitPoint &hitPoint,
+VolumeConstPtr GlossyCoatingMaterial::GetInteriorVolume(const HitPoint &hitPoint,
 		const float passThroughEvent) const {
 	if (interiorVolume)
 		return interiorVolume;
@@ -44,7 +44,7 @@ const Volume *GlossyCoatingMaterial::GetInteriorVolume(const HitPoint &hitPoint,
 		return matBase->GetInteriorVolume(hitPoint, passThroughEvent);
 }
 
-const Volume *GlossyCoatingMaterial::GetExteriorVolume(const HitPoint &hitPoint,
+VolumeConstPtr GlossyCoatingMaterial::GetExteriorVolume(const HitPoint &hitPoint,
 		const float passThroughEvent) const {
 	if (exteriorVolume)
 		return exteriorVolume;
@@ -421,7 +421,7 @@ void GlossyCoatingMaterial::Pdf(const HitPoint &hitPoint,
 	}
 }
 
-void GlossyCoatingMaterial::UpdateMaterialReferences(const Material *oldMat, const Material *newMat) {
+void GlossyCoatingMaterial::UpdateMaterialReferences(MaterialConstPtr oldMat, MaterialConstPtr newMat) {
 	if (matBase == oldMat)
 		matBase = newMat;
 	
@@ -429,32 +429,35 @@ void GlossyCoatingMaterial::UpdateMaterialReferences(const Material *oldMat, con
 	Material::UpdateMaterialReferences(oldMat, newMat);
 }
 
-bool GlossyCoatingMaterial::IsReferencing(const Material *mat) const {
-	if (mat == this)
+bool GlossyCoatingMaterial::IsReferencing(MaterialConstPtr mat) const {
+	if (mat.get() == this)
 		return true;
 
 	return matBase->IsReferencing(mat);
 }
 
-void GlossyCoatingMaterial::AddReferencedMaterials(std::unordered_set<const Material *> &referencedMats) const {
-	Material::AddReferencedMaterials(referencedMats);
+void GlossyCoatingMaterial::AddReferencedMaterials(
+	std::unordered_set<MaterialConstPtr> &referencedMats,
+	MaterialConstPtr self
+) const {
+	Material::AddReferencedMaterials(referencedMats, self);
 
-	matBase->AddReferencedMaterials(referencedMats);
+	matBase->AddReferencedMaterials(referencedMats, matBase);
 }
 
-void GlossyCoatingMaterial::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void GlossyCoatingMaterial::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs) const {
 	Material::AddReferencedTextures(referencedTexs);
 
 	matBase->AddReferencedTextures(referencedTexs);
-	Ks->AddReferencedTextures(referencedTexs);
-	nu->AddReferencedTextures(referencedTexs);
-	nv->AddReferencedTextures(referencedTexs);
-	Ka->AddReferencedTextures(referencedTexs);
-	depth->AddReferencedTextures(referencedTexs);
-	index->AddReferencedTextures(referencedTexs);
+	Ks->AddReferencedTextures(referencedTexs, Ks);
+	nu->AddReferencedTextures(referencedTexs, nu);
+	nv->AddReferencedTextures(referencedTexs, nv);
+	Ka->AddReferencedTextures(referencedTexs, Ka);
+	depth->AddReferencedTextures(referencedTexs, depth);
+	index->AddReferencedTextures(referencedTexs, index);
 }
 
-void GlossyCoatingMaterial::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void GlossyCoatingMaterial::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	if (Ks == oldTex)

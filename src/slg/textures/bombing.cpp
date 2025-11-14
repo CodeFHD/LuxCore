@@ -128,21 +128,21 @@ Spectrum BombingTexture::GetSpectrumValue(const HitPoint &hitPoint) const {
 	return result;
 }
 
-void BombingTexture::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-	Texture::AddReferencedTextures(referencedTexs);
+void BombingTexture::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+	Texture::AddReferencedTextures(referencedTexs, self);
 
-	backgroundTex->AddReferencedTextures(referencedTexs);
-	bulletTex->AddReferencedTextures(referencedTexs);
-	bulletMaskTex->AddReferencedTextures(referencedTexs);
+	backgroundTex->AddReferencedTextures(referencedTexs, backgroundTex);
+	bulletTex->AddReferencedTextures(referencedTexs, bulletTex);
+	bulletMaskTex->AddReferencedTextures(referencedTexs, bulletMaskTex);
 }
 
-void BombingTexture::AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+void BombingTexture::AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 	backgroundTex->AddReferencedImageMaps(referencedImgMaps);
 	bulletTex->AddReferencedImageMaps(referencedImgMaps);
 	bulletMaskTex->AddReferencedImageMaps(referencedImgMaps);
 }
 
-void BombingTexture::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void BombingTexture::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	if (backgroundTex == oldTex)
 		backgroundTex = newTex;
 	if (bulletTex == oldTex)

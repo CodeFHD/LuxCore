@@ -38,7 +38,7 @@ LightStrategyWindow::LightStrategyWindow(LuxCoreApp *a) : ObjectEditorWindow(a, 
 }
 
 void LightStrategyWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = config->ToProperties().GetAllProperties("lightstrategy");
 	} catch(exception &ex) {

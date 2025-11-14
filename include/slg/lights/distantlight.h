@@ -37,15 +37,15 @@ public:
 		float *sin2ThetaMaxData, float *cosThetaMaxData) const;
 
 	virtual LightSourceType GetType() const { return TYPE_DISTANT; }
-	virtual float GetPower(const Scene &scene) const;
+	virtual float GetPower(SceneConstPtr scene) const;
 
-	virtual luxrays::Spectrum Emit(const Scene &scene,
+	virtual luxrays::Spectrum Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		luxrays::Ray &ray, float &emissionPdfW,
 		float *directPdfA = NULL, float *cosThetaAtLight = NULL) const;
 
-    virtual luxrays::Spectrum Illuminate(const Scene &scene, const BSDF &bsdf,
+    virtual luxrays::Spectrum Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         luxrays::Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW = NULL, float *cosThetaAtLight = NULL) const;

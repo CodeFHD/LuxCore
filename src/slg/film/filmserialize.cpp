@@ -20,6 +20,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/serialization/unordered_set.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "slg/film/film.h"
 #include "slg/film/imagepipeline/imagepipeline.h"
@@ -34,19 +35,7 @@ using namespace slg;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::Film)
 
-Film *Film::LoadSerialized(const string &fileName) {
-	SerializationInputFile sif(fileName);
-
-	Film *film;
-	sif.GetArchive() >> film;
-
-	if (!sif.IsGood())
-		throw runtime_error("Error while loading serialized film: " + fileName);
-
-	return film;
-}
-
-void Film::SaveSerialized(const string &fileName, const Film *film) {
+void Film::SaveSerialized(const string &fileName, FilmConstPtr film) {
 	SerializationOutputFile sof(fileName);
 
 	sof.GetArchive() << film;
@@ -56,6 +45,18 @@ void Film::SaveSerialized(const string &fileName, const Film *film) {
 
 	sof.Flush();
 	SLG_LOG("Film saved: " << (sof.GetPosition() / 1024) << " Kbytes");
+}
+
+FilmPtr Film::LoadSerialized(const string &fileName) {
+	SerializationInputFile sif(fileName);
+
+	FilmPtr film;
+	sif.GetArchive() >> film;
+
+	if (!sif.IsGood())
+		throw runtime_error("Error while loading serialized film: " + fileName);
+
+	return film;
 }
 
 template<class Archive> void Film::load(Archive &ar, const u_int version) {

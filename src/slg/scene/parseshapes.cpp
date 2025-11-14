@@ -53,7 +53,7 @@ void Scene::ParseShapes(const Properties &props) {
 		if (shapeName == "")
 			throw runtime_error("Syntax error in shape definition: " + shapeName);
 
-		ExtTriangleMesh *mesh = CreateShape(shapeName, props);
+		auto mesh = CreateShape(shapeName, props);
 		DefineMesh(mesh);
 		++shapeCount;
 
@@ -68,7 +68,7 @@ void Scene::ParseShapes(const Properties &props) {
 	editActions.AddActions(GEOMETRY_EDIT);
 }
 
-ExtTriangleMesh *Scene::CreateInlinedMesh(const string &shapeName, const string &propName, const Properties &props) {
+ExtTriangleMeshPtr Scene::CreateInlinedMesh(const string &shapeName, const string &propName, const Properties &props) {
 	// The mesh definition is in-lined
 	u_int pointsSize;
 	Point *points;
@@ -130,21 +130,21 @@ ExtTriangleMesh *Scene::CreateInlinedMesh(const string &shapeName, const string 
 		}
 	}
 	
-	return new ExtTriangleMesh(pointsSize, trisSize, points, tris, normals, uvs);
+	return std::make_shared<ExtTriangleMesh>(pointsSize, trisSize, points, tris, normals, uvs);
 }
 
-ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &props) {
+ExtTriangleMeshPtr Scene::CreateShape(const string &shapeName, const Properties &props) {
 	const string propName = "scene.shapes." + shapeName;
 
 	// Get the shape type
 	const string shapeType = props.Get(Property(propName + ".type")("mesh")).Get<string>();
 
 	// Define the shape
-	Shape *shape;
+	ShapePtr shape;
 	if (shapeType == "mesh") {
 		const string meshFileName = SLG_FileNameResolver.ResolveFile(props.Get(Property(propName + ".ply")("")).Get<string>());
 
-		MeshShape *meshShape = new MeshShape(meshFileName);
+		auto meshShape = std::make_shared<MeshShape>(meshFileName);
 
 		if (props.IsDefined(propName + ".transformation")) {
 			// Apply the transformation
@@ -159,7 +159,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 
 		shape = meshShape;
 	} else if (shapeType == "inlinedmesh") {
-		MeshShape *meshShape = new MeshShape(CreateInlinedMesh(shapeName, propName, props));
+		auto meshShape = std::make_shared<MeshShape>(CreateInlinedMesh(shapeName, propName, props));
 		
 		if (props.IsDefined(propName + ".transformation")) {
 			// Apply the transformation
@@ -182,7 +182,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		if ((aovIndex != NULL_INDEX) && (aovIndex >= EXTMESH_MAX_DATA_COUNT))
 			throw runtime_error("Pointiness aov index must be less than: " + ToString(EXTMESH_MAX_DATA_COUNT));
 		
-		shape = new PointinessShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName), aovIndex);
+		shape = std::make_shared<PointinessShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)), aovIndex);
 	} else if (shapeType == "strands") {
 		const string fileName = SLG_FileNameResolver.ResolveFile(props.Get(Property(propName + ".file")("strands.hair")).Get<string>());
 
@@ -228,7 +228,8 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		if (strandsCount <= 0)
 			throw runtime_error("Unable to read strands file: " + fileName);
 
-		shape = new StrendsShape(this,
+		shape = std::make_shared<StrendsShape>(
+				*this,
 				&strandsFile, tessellationType,
 				adaptiveMaxDepth, adaptiveError,
 				solidSideCount, solidCapBottom, solidCapTop,
@@ -236,7 +237,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 	} else if (shapeType == "group") {
 		vector<string> shapeNamesKeys = props.GetAllUniqueSubNames(propName, true);
 		if (shapeNamesKeys.size() > 0) {
-			vector<const ExtTriangleMesh *> meshes;
+			vector<ExtTriangleMeshConstPtr> meshes;
 			vector<Transform> trans;
 			for (auto const &shapeNamesKey : shapeNamesKeys) {
 				// Extract the index
@@ -250,7 +251,9 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 				if (!extMeshCache.IsExtMeshDefined(name))
 					throw runtime_error("Unknown shape name in a group shape " + shapeName + ": " + name);
 
-				meshes.push_back((const ExtTriangleMesh *)extMeshCache.GetExtMesh(name));
+				meshes.push_back(
+					static_pointer_cast<const ExtTriangleMesh>(extMeshCache.GetExtMesh(name))
+				);
 
 				if (props.IsDefined(prefix + ".transformation")) {
 					const Matrix4x4 mat = props.Get(Property(prefix +
@@ -260,7 +263,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 					trans.push_back(Transform(Matrix4x4::MAT_IDENTITY));
 			}
 
-			shape = new GroupShape(meshes, trans);
+			shape = std::make_shared<GroupShape>(meshes, trans);
 		} else
 			throw runtime_error("A shape group can not be empty: " + shapeName);
 	} else if (shapeType == "subdiv") {
@@ -272,9 +275,9 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		const float maxEdgeScreenSize = Max(props.Get(Property(propName + ".maxedgescreensize")(0.0)).Get<double>(), 0.0);
 		const bool subdivEnhanced = props.Get(Property(propName + ".enhanced")(false)).Get<bool>();
 
-		shape = new SubdivShape(
+		shape = std::make_shared<SubdivShape>(
 			camera,
-			(ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
+			static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)),
 			maxLevel,
 			maxEdgeScreenSize,
 			subdivEnhanced
@@ -284,7 +287,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
 			throw runtime_error("Unknown shape name in a displacement shape: " + shapeName);
 		
-		const Texture *tex = GetTexture(props.Get(Property(propName + ".map")(0.f)));
+		auto tex = GetTexture(props.Get(Property(propName + ".map")(0.f)));
 		
 		DisplacementShape::Params params;
 
@@ -314,14 +317,14 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		params.uvIndex = Clamp(props.Get(Property(propName + ".uvindex")(0)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 		params.normalSmooth = props.Get(Property(propName + ".normalsmooth")(true)).Get<bool>();
 
-		shape = new DisplacementShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
+		shape = std::make_shared<DisplacementShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)),
 				*tex, params);
 	} else if (shapeType == "harlequin") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
 			throw runtime_error("Unknown shape name in a harlequin shape: " + shapeName);
 		
-		shape = new HarlequinShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName));
+		shape = std::make_shared<HarlequinShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)));
 	} else if (shapeType == "simplify") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
@@ -331,7 +334,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		const float edgeScreenSize = Clamp(props.Get(Property(propName + ".edgescreensize")(0.0)).Get<double>(), 0.0, 1.0);
 		const bool preserveBorder = props.Get(Property(propName + ".preserveborder")(false)).Get<bool>();
 		
-		shape = new SimplifyShape(camera, (ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
+		shape = std::make_shared<SimplifyShape>(camera, static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)),
 				target, edgeScreenSize, preserveBorder);
 	} else if (shapeType == "islandaov") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
@@ -340,7 +343,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 
 		const u_int dataIndex = Clamp(props.Get(Property(propName + ".dataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 		
-		shape = new IslandAOVShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName), dataIndex);
+		shape = std::make_shared<IslandAOVShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)), dataIndex);
 	} else if (shapeType == "randomtriangleaov") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
@@ -349,7 +352,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		const u_int srcDataIndex = Clamp(props.Get(Property(propName + ".srcdataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 		const u_int dstDataIndex = Clamp(props.Get(Property(propName + ".dstdataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		shape = new RandomTriangleAOVShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
+		shape = std::make_shared<RandomTriangleAOVShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)),
 				srcDataIndex, dstDataIndex);
 	} else if (shapeType == "edgedetectoraov") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
@@ -368,7 +371,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 		if (aovIndex2 >= EXTMESH_MAX_DATA_COUNT)
 			throw runtime_error("Edgedetectoraov aov index 2 must be less than: " + ToString(EXTMESH_MAX_DATA_COUNT));
 
-		shape = new EdgeDetectorAOVShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
+		shape = std::make_shared<EdgeDetectorAOVShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)),
 				aovIndex0, aovIndex1, aovIndex2);
 	} else if (shapeType == "bevel") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
@@ -377,7 +380,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 
 		const float geometryBevel = props.Get(Property(propName + ".bevel.radius")(0.f)).Get<double>();
 
-		shape = new BevelShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName), geometryBevel);
+		shape = std::make_shared<BevelShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)), geometryBevel);
 	} else if (shapeType == "cameraprojuv") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
@@ -385,7 +388,7 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 
 		const u_int uvIndex = Clamp(props.Get(Property(propName + ".uvindex")(0)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		shape = new CameraProjUVShape((ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName), uvIndex);
+		shape = std::make_shared<CameraProjUVShape>(static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)), uvIndex);
 	} else if (shapeType == "mergeondistance") {
 		const string sourceMeshName = props.Get(Property(propName + ".source")("")).Get<string>();
 		if (!extMeshCache.IsExtMeshDefined(sourceMeshName))
@@ -400,16 +403,15 @@ ExtTriangleMesh *Scene::CreateShape(const string &shapeName, const Properties &p
 			std::numeric_limits<u_int>::max()
 		);
 
-		shape = new MergeOnDistanceShape(
-			(ExtTriangleMesh *)extMeshCache.GetExtMesh(sourceMeshName),
+		shape = std::make_shared<MergeOnDistanceShape>(
+			static_pointer_cast<ExtTriangleMesh>(extMeshCache.GetExtMesh(sourceMeshName)),
 			tolerance
 		);
 	} else
 
 		throw runtime_error("Unknown shape type: " + shapeType);
 
-	ExtTriangleMesh *mesh = shape->Refine(this);
-	delete shape;
+	auto mesh = shape->Refine(*this);
 	mesh->SetName(shapeName);
 
 	return mesh;

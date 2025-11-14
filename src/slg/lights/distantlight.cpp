@@ -77,13 +77,13 @@ void DistantLight::GetPreprocessedData(float *absoluteLightDirData, float *xData
 		*cosThetaMaxData = cosThetaMax;
 }
 
-float DistantLight::GetPower(const Scene &scene) const {
+float DistantLight::GetPower(SceneConstPtr scene) const {
 	const float envRadius = GetEnvRadius(scene);
 
 	return temperatureScale.Y() * gain.Y() * color.Y() * M_PI * envRadius * envRadius;
 }
 
-Spectrum DistantLight::Emit(const Scene &scene,
+Spectrum DistantLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -94,7 +94,7 @@ Spectrum DistantLight::Emit(const Scene &scene,
 	if (cosThetaAtLight)
 		*cosThetaAtLight = Dot(rayDir, absoluteLightDir);
 
-	const Point worldCenter = scene.dataSet->GetBSphere().center;
+	const Point worldCenter = scene->dataSet->GetBSphere().center;
 	const float envRadius = GetEnvRadius(scene);
 
 	float d1, d2;
@@ -111,13 +111,13 @@ Spectrum DistantLight::Emit(const Scene &scene,
 	return temperatureScale * gain * color;
 }
 
-Spectrum DistantLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum DistantLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
 	const Vector shadowRayDir = -UniformSampleCone(u0, u1, cosThetaMax, x, y, absoluteLightDir);
 
-	const Point worldCenter = scene.dataSet->GetBSphere().center;
+	const Point worldCenter = scene->dataSet->GetBSphere().center;
 	const float envRadius = GetEnvRadius(scene);
 
 	const Point shadowRayOrig = bsdf.GetRayOrigin(shadowRayDir);

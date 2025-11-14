@@ -28,24 +28,23 @@ using namespace slg;
 // LightStrategyPower
 //------------------------------------------------------------------------------
 
-void LightStrategyPower::Preprocess(const Scene *scn, const LightStrategyTask taskType,
+void LightStrategyPower::Preprocess(SceneConstPtr scene, const LightStrategyTask taskType,
 			const bool useRTMode) {
-	DistributionLightStrategy::Preprocess(scn, taskType);
+	DistributionLightStrategy::Preprocess(scene, taskType);
 
 	const u_int lightCount = scene->lightDefs.GetSize();
 	if (lightCount == 0)
 		return;
 
-	const float envRadius = InfiniteLightSource::GetEnvRadius(*scene);
+	const float envRadius = InfiniteLightSource::GetEnvRadius(scene);
 	const float invEnvRadius2 = 1.f / (envRadius * envRadius);
 
 	vector<float> lightPower;
 	lightPower.reserve(lightCount);
 
-	const vector<LightSource *> &lights = scene->lightDefs.GetLightSources();
 	for (u_int i = 0; i < lightCount; ++i) {
-		const LightSource *l = lights[i];
-		float power = l->GetPower(*scene) * l->GetImportance();
+		auto l = scene->lightDefs.GetLightSource(i);
+		float power = l->GetPower(scene) * l->GetImportance();
 		// In order to avoid over-sampling of distant lights
 		if (l->IsInfinite())
 			power *= invEnvRadius2;
@@ -86,8 +85,8 @@ Properties LightStrategyPower::ToProperties(const Properties &cfg) {
 			cfg.Get(GetDefaultProps().Get("lightstrategy.type"));
 }
 
-LightStrategy *LightStrategyPower::FromProperties(const Properties &cfg) {
-	return new LightStrategyPower();
+LightStrategyPtr LightStrategyPower::FromProperties(const Properties &cfg) {
+	return std::make_shared<LightStrategyPower>();
 }
 
 const Properties &LightStrategyPower::GetDefaultProps() {

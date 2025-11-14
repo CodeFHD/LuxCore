@@ -72,7 +72,7 @@ void CompiledScene::AddToImageMapMem(slg::ocl::ImageMap &im, void *data, const s
 	im.pixelsIndex = start;
 }
 
-u_int CompiledScene::CompileImageMap(const ImageMap *im) {
+u_int CompiledScene::CompileImageMap(ImageMapConstPtr im) {
 	const u_int imgMapIndex = imageMapDescs.size();
 
 	imageMapDescs.resize(imageMapDescs.size() + 1);
@@ -145,7 +145,7 @@ void CompiledScene::CompileImageMaps() {
 
 	const double tStart = WallClockTime();
 
-	vector<const ImageMap *> ims;
+	vector<ImageMapConstPtr > ims;
 	scene->imgMapCache.GetImageMaps(ims);
 	
 	for (u_int i = 0; i < ims.size(); ++i)

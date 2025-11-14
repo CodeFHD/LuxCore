@@ -43,17 +43,17 @@ public:
 		u_int x, y;
 	};
 
-	RTPathCPUSamplerSharedData(Film *flm);
+	RTPathCPUSamplerSharedData(FilmPtr flm);
 	virtual ~RTPathCPUSamplerSharedData() { }
 
 	virtual void Reset();
 
-	void Reset(Film *flm);
+	void Reset(FilmPtr flm);
 
 	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, Film *film);
+			luxrays::RandomGenerator *rndGen, FilmPtr film);
 
-	Film *engineFilm;
+	FilmPtr engineFilm;
 	std::atomic<u_int> step;
 	u_int filmSubRegion[4], filmSubRegionWidth, filmSubRegionHeight;
 	std::vector<PixelCoord> pixelRenderSequence;
@@ -67,7 +67,7 @@ class RTPathCPURenderEngine;
 
 class RTPathCPUSampler : public Sampler {
 public:
-	RTPathCPUSampler(luxrays::RandomGenerator *rnd, Film *flm,
+	RTPathCPUSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 			const FilmSampleSplatter *flmSplatter,
 			RTPathCPUSamplerSharedData *samplerSharedData);
 	virtual ~RTPathCPUSampler();
@@ -79,7 +79,7 @@ public:
 	virtual void NextSample(const std::vector<SampleResult> &sampleResults);
 
 	void SetRenderEngine(RTPathCPURenderEngine *engine);
-	void Reset(Film *flm);
+	void Reset(FilmPtr flm);
 
 	//--------------------------------------------------------------------------
 	// Static methods used by SamplerRegistry
@@ -89,7 +89,7 @@ public:
 	static std::string GetObjectTag() { return "RTPATHCPUSAMPLER"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 

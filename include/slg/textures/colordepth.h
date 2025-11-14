@@ -30,7 +30,7 @@ namespace slg {
 
 class ColorDepthTexture : public Texture {
 public:
-	ColorDepthTexture(const float depth, const Texture *t) :
+	ColorDepthTexture(const float depth, TextureConstPtr t) :
 		d(-luxrays::Max(1e-3f, depth)), kt(t) { }
 	virtual ~ColorDepthTexture() { }
 
@@ -40,28 +40,28 @@ public:
 	virtual float Y() const;
 	virtual float Filter() const;
 	
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		kt->AddReferencedTextures(referencedTexs);
+		kt->AddReferencedTextures(referencedTexs, kt);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		kt->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (kt == oldTex)
 			kt = newTex;
 	}
 
 	float GetD() const { return d; }
-	const Texture *GetKt() const { return kt; }
+	TextureConstPtr GetKt() const { return kt; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
 	float d;
-	const Texture *kt;
+	TextureConstPtr kt;
 };
 
 }

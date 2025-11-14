@@ -25,22 +25,22 @@ namespace slg {
 class MergeOnDistanceShape : public Shape {
 public:
 	MergeOnDistanceShape(
-		luxrays::ExtTriangleMesh *srcMesh,
+		luxrays::ExtTriangleMeshPtr srcMesh,
 		u_int tolerance
 	);
 
 	virtual ~MergeOnDistanceShape();
 	virtual ShapeType GetType() const { return MERGEONDISTANCE; }
 
-	static luxrays::ExtTriangleMesh * ApplyMergeOnDistance(
-		luxrays::ExtTriangleMesh *srcMesh,
+	static luxrays::ExtTriangleMeshPtr ApplyMergeOnDistance(
+		luxrays::ExtTriangleMeshPtr srcMesh,
 		u_int tolerance
 	);
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const slg::Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(slg::SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }

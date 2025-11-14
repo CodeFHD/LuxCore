@@ -51,11 +51,11 @@ void MapSphereLight::GetPreprocessedData(float *localPosData, float *absolutePos
 		*funcData = func;
 }
 
-float MapSphereLight::GetPower(const Scene &scene) const {
+float MapSphereLight::GetPower(SceneConstPtr scene) const {
 	return imageMap->GetSpectrumMeanY() * SphereLight::GetPower(scene);
 }
 
-Spectrum MapSphereLight::Emit(const Scene &scene,
+Spectrum MapSphereLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -73,7 +73,7 @@ Spectrum MapSphereLight::Emit(const Scene &scene,
 			func->Average();
 }
 
-Spectrum MapSphereLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum MapSphereLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {

@@ -38,7 +38,7 @@ namespace slg {
 
 class RandomSamplerSharedData : public SamplerSharedData {
 public:
-	RandomSamplerSharedData(Film *engineFilm);
+	RandomSamplerSharedData(FilmPtr engineFilm);
 	virtual ~RandomSamplerSharedData() { }
 
 	virtual void Reset();
@@ -46,9 +46,9 @@ public:
 	void GetNewBucket(const u_int bucketCount, u_int *newBucketIndex);
 	
 	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, Film *film);
+			luxrays::RandomGenerator *rndGen, FilmPtr film);
 
-	Film *engineFilm;
+	FilmPtr engineFilm;
 
 private:
 	u_int bucketIndex;
@@ -60,7 +60,7 @@ private:
 
 class RandomSampler : public Sampler {
 public:
-	RandomSampler(luxrays::RandomGenerator *rnd, Film *flm,
+	RandomSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 			const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 			const float adaptiveStrength, const float adaptiveUserImpWeight,
 			const u_int bucketSize, const u_int tileSize, const u_int superSampling,
@@ -84,7 +84,7 @@ public:
 	static std::string GetObjectTag() { return "RANDOM"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 

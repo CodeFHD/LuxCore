@@ -29,7 +29,7 @@ namespace slg {
 
 class SplitFloat3Texture : public Texture {
 public:
-	SplitFloat3Texture(const Texture *t, const u_int ch) : tex(t), channel(ch) { }
+	SplitFloat3Texture(TextureConstPtr t, const u_int ch) : tex(t), channel(ch) { }
 	virtual ~SplitFloat3Texture() { }
 
 	virtual TextureType GetType() const { return SPLIT_FLOAT3; }
@@ -40,27 +40,27 @@ public:
 	virtual float Y() const { return 1.f; }
 	virtual float Filter() const { return 1.f; }
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		tex->AddReferencedTextures(referencedTexs);
+		tex->AddReferencedTextures(referencedTexs, tex);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		tex->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (tex == oldTex)
 			tex = newTex;
 	}
 
-	const Texture *GetTexture() const { return tex; }
+	TextureConstPtr GetTexture() const { return tex; }
 	u_int GetChannel() const { return channel; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const Texture *tex;
+	TextureConstPtr tex;
 	u_int channel;
 };
 

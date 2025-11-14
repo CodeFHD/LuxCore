@@ -29,7 +29,7 @@ using namespace slg;
 // Lamp spectrum texture
 //------------------------------------------------------------------------------
 
-Texture *slg::AllocLampSpectrumTex(const Properties &props, const string &propName) {
+TexturePtr slg::AllocLampSpectrumTex(const Properties &props, const string &propName) {
 	const string name = props.Get(Property(propName + ".name")("Incandescent2")).Get<string>();
 	const int wlCount = 250;
 
@@ -61,7 +61,7 @@ Texture *slg::AllocLampSpectrumTex(const Properties &props, const string &propNa
 		//wl = lampspectrum_Candle_WL;
 		//data = lampspectrum_Candle_AP;
 		// Override with blackbody for incandescent sources due to poor calibration
-		return new BlackBodyTexture(1020.f);
+		return std::make_shared<BlackBodyTexture>(1020.f);
 	} else if (name == "CarbonArc") {
 		wl = lampspectrum_CarbonArc_WL;
 		data = lampspectrum_CarbonArc_AP;
@@ -156,7 +156,7 @@ Texture *slg::AllocLampSpectrumTex(const Properties &props, const string &propNa
 		//wl = lampspectrum_Incandescent1_WL;
 		//data = lampspectrum_Incandescent1_AP;
 		// Override with blackbody for incandescent sources due to poor calibration
-		return new BlackBodyTexture(2750.f);
+		return std::make_shared<BlackBodyTexture>(2750.f);
 	} else if (name == "LCDS") {
 		wl = lampspectrum_LCDS_WL;
 		data = lampspectrum_LCDS_AP;
@@ -244,9 +244,9 @@ Texture *slg::AllocLampSpectrumTex(const Properties &props, const string &propNa
 		//wl = lampspectrum_Incandescent2_WL;
 		//data = lampspectrum_Incandescent2_AP;
 		// Override with blackbody for incandescent sources due to poor calibration
-		return new BlackBodyTexture(2900.f);
+		return std::make_shared<BlackBodyTexture>(2900.f);
 	}
 
-	return new IrregularDataTexture(wlCount, wl, data, .1f, true);
+	return std::make_shared<IrregularDataTexture>(wlCount, wl, data, .1f, true);
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

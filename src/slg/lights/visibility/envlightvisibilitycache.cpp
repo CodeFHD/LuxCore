@@ -104,8 +104,8 @@ void ELVCOctree::GetNearestEntryImpl(const IndexOctreeNode *node, const BBox &no
 // Env. light visibility cache builder
 //------------------------------------------------------------------------------
 
-EnvLightVisibilityCache::EnvLightVisibilityCache(const Scene *scn, const EnvLightSource *envl,
-		ImageMap *li, const ELVCParams &p) :
+EnvLightVisibilityCache::EnvLightVisibilityCache(SceneConstPtr scn, const EnvLightSource *envl,
+		ImageMapPtr li, const ELVCParams &p) :
 		scene(scn), envLight(envl), luminanceMapImage(li), params(p),
 		cacheEntriesBVH(nullptr) {
 	assert (luminanceMapImage);
@@ -114,7 +114,7 @@ EnvLightVisibilityCache::EnvLightVisibilityCache(const Scene *scn, const EnvLigh
 	mapHeight = luminanceMapImage->GetHeight();
 }
 
-EnvLightVisibilityCache::EnvLightVisibilityCache(const Scene *scn, const EnvLightSource *envl,
+EnvLightVisibilityCache::EnvLightVisibilityCache(SceneConstPtr scn, const EnvLightSource *envl,
 		const u_int width, const u_int height, const ELVCParams &p) :
 		scene(scn), envLight(envl), luminanceMapImage(nullptr), params(p),
 		cacheEntriesBVH(nullptr), mapWidth(width), mapHeight(height) {
@@ -283,7 +283,7 @@ void EnvLightVisibilityCache::TraceVisibilityParticles() {
 // Build cache entries
 //------------------------------------------------------------------------------
 
-void EnvLightVisibilityCache::BuildCacheEntry(const u_int entryIndex, const ImageMap *luminanceMapImageScaled) {
+void EnvLightVisibilityCache::BuildCacheEntry(const u_int entryIndex, ImageMapConstPtr luminanceMapImageScaled) {
 	//const double t1 = WallClockTime();
 
 	const ELVCVisibilityParticle &visibilityParticle = visibilityParticles[entryIndex];
@@ -297,7 +297,7 @@ void EnvLightVisibilityCache::BuildCacheEntry(const u_int entryIndex, const Imag
 	cacheEntry.visibilityMap = nullptr;
 
 	// Allocate the map storage
-	unique_ptr<ImageMap> visibilityMapImage(ImageMap::AllocImageMap(1,
+	ImageMapPtr visibilityMapImage(ImageMap::AllocImageMap(1,
 			tilesXCount, tilesYCount, ImageMapConfig()));
 	float *visibilityMap = (float *)visibilityMapImage->GetStorage()->GetPixelsData();
 	fill(visibilityMap, visibilityMap + tilesXCount * tilesYCount, 0.f);
@@ -513,11 +513,13 @@ void EnvLightVisibilityCache::BuildCacheEntries() {
 	SLG_LOG("EnvLightVisibilityCache building cache entries: " << visibilityParticles.size());
 
 	// Scale the luminance image map to the requested size
-	unique_ptr<ImageMap> luminanceMapImageScaled(nullptr);
+	ImageMapPtr luminanceMapImageScaled(nullptr);
 	if (luminanceMapImage) {
 		// Scale the image
-		luminanceMapImageScaled.reset(ImageMap::Resample(luminanceMapImage, 1,
-				tilesXCount, tilesYCount));
+		//luminanceMapImageScaled.reset(ImageMap::Resample(luminanceMapImage, 1,
+				//tilesXCount, tilesYCount));
+		luminanceMapImageScaled = ImageMap::Resample(luminanceMapImage, 1,
+				tilesXCount, tilesYCount);
 		luminanceMapImageScaled->Preprocess();
 	}
 
@@ -551,7 +553,7 @@ void EnvLightVisibilityCache::BuildCacheEntries() {
 			}
 		}
 
-		BuildCacheEntry(i, luminanceMapImageScaled.get());
+		BuildCacheEntry(i, luminanceMapImageScaled);
 
 		++counter;
 	}

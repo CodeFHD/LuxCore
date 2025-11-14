@@ -59,7 +59,7 @@ void PathCPURenderThread::RenderFunc(std::stop_token stop_token) {
 	Sampler *eyeSampler = nullptr;
 	Sampler *lightSampler = nullptr;
 
-	eyeSampler = engine->renderConfig->AllocSampler(rndGen, engine->film,
+	eyeSampler = engine->renderConfig.AllocSampler(rndGen, engine->film,
 			nullptr, engine->samplerSharedData, Properties());
 	eyeSampler->SetThreadIndex(threadIndex);
 	eyeSampler->RequestSamples(PIXEL_NORMALIZED_ONLY, pathTracer.eyeSampleSize);
@@ -86,7 +86,7 @@ void PathCPURenderThread::RenderFunc(std::stop_token stop_token) {
 	// Setup PathTracer thread state
 	PathTracerThreadState pathTracerThreadState(device,
 			eyeSampler, lightSampler,
-			engine->renderConfig->scene, engine->film,
+			engine->renderConfig.scene, engine->film,
 			&varianceClamping);
 
 	//--------------------------------------------------------------------------

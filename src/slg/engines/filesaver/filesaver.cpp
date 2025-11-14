@@ -43,7 +43,7 @@ using namespace nlohmann;
 // Scene FileSaver render engine
 //------------------------------------------------------------------------------
 
-FileSaverRenderEngine::FileSaverRenderEngine(const RenderConfig *rcfg) :
+FileSaverRenderEngine::FileSaverRenderEngine(RenderConfigConstRef rcfg) :
 		RenderEngine(rcfg) {
 }
 
@@ -52,7 +52,7 @@ void FileSaverRenderEngine::InitFilm() {
 }
 
 void FileSaverRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Rendering parameters
@@ -81,7 +81,7 @@ void FileSaverRenderEngine::SaveScene() {
 
 static string Base64Encode(const char *data, const size_t size) {
 	stringstream ss;
-	
+
 	typedef boost::archive::iterators::base64_from_binary<
 			boost::archive::iterators::transform_width<const char *, 6, 8>
 	> base64_t;
@@ -94,8 +94,10 @@ static string Base64Encode(const char *data, const size_t size) {
 	return ss.str() + "===";
 }
 
-void FileSaverRenderEngine::ExportSceneGLTF(const RenderConfig *renderConfig,
-		const string &fileName) {
+void FileSaverRenderEngine::ExportSceneGLTF(
+	RenderConfigConstRef renderConfig,
+	const string &fileName
+) {
 	SLG_LOG("[FileSaverRenderEngine] Export glTF scene file: " << fileName);
 	
 	const path fileNamePath(fileName);
@@ -154,7 +156,7 @@ void FileSaverRenderEngine::ExportSceneGLTF(const RenderConfig *renderConfig,
 		{ "wrapT", 0x812F } // GL_CLAMP_TO_EDGE
 	}));
 
-	const u_int sceneObjectsCount =  renderConfig->scene->objDefs.GetSize();
+	const u_int sceneObjectsCount =  renderConfig.scene->objDefs.GetSize();
 	double lastPrint = WallClockTime();
 	for (u_int i = 0; i < sceneObjectsCount; ++i) {
 		if (WallClockTime() - lastPrint > 2.0) {
@@ -162,13 +164,13 @@ void FileSaverRenderEngine::ExportSceneGLTF(const RenderConfig *renderConfig,
 			lastPrint = WallClockTime();
 		}
 
-		const SceneObject *scnObj = renderConfig->scene->objDefs.GetSceneObject(i);
-		const ExtMesh *mesh = scnObj->GetExtMesh();
+		auto scnObj = renderConfig.scene->objDefs.GetSceneObject(i);
+		auto mesh = scnObj->GetExtMesh();
 		// TODO: other mesh types
 		if (mesh->GetType() != TYPE_EXT_TRIANGLE)
 			continue;
 
-		const ExtTriangleMesh *triMesh = (const ExtTriangleMesh *)mesh;
+		auto triMesh = static_pointer_cast<const ExtTriangleMesh>(mesh);
 
 		//----------------------------------------------------------------------
 		// Add vertices buffer
@@ -323,7 +325,7 @@ void FileSaverRenderEngine::ExportSceneGLTF(const RenderConfig *renderConfig,
 		if (scnObj->HasBakeMap(COMBINED) && triMesh->HasUVs(scnObj->GetBakeMapUVIndex())) {
 			// Write the image to file
 
-			const ImageMap *imgMap = scnObj->GetBakeMap();
+			auto imgMap = scnObj->GetBakeMap();
 			const string imgMapFileName = (dirPath / imgMap->GetName()).generic_string() + ".png";
 			SDL_LOG("  Saving image map: " << imgMapFileName << " (channels: " << imgMap->GetChannelCount() << ")");
 			imgMap->WriteImage(imgMapFileName);
@@ -414,7 +416,7 @@ void FileSaverRenderEngine::ExportSceneGLTF(const RenderConfig *renderConfig,
 	gltfFile.close();
 }
 
-void FileSaverRenderEngine::ExportScene(const RenderConfig *renderConfig,
+void FileSaverRenderEngine::ExportScene(RenderConfigConstRef renderConfig,
 		const string &directoryName, const string &renderEngineType) {
 	SLG_LOG("[FileSaverRenderEngine] Export directory: " << directoryName);
 
@@ -433,7 +435,7 @@ void FileSaverRenderEngine::ExportScene(const RenderConfig *renderConfig,
 		const std::string cfgFileName = (dirPath / "render.cfg").generic_string();
 		SLG_LOG("[FileSaverRenderEngine] Config file name: " << cfgFileName);
 
-		Properties cfg = renderConfig->cfg;
+		Properties cfg = renderConfig.cfg;
 
 		// Overwrite the scene file name
 		cfg.Set(Property("scene.file")("scene.scn"));
@@ -452,7 +454,7 @@ void FileSaverRenderEngine::ExportScene(const RenderConfig *renderConfig,
 	{
 		SLG_LOG("[FileSaverRenderEngine] Scene file name: " << sceneFileName);
 
-		Properties props = renderConfig->scene->ToProperties(false);
+		Properties props = renderConfig.scene->ToProperties(false);
 
 		// Write the scene file
 		props.Save(sceneFileName);
@@ -464,12 +466,12 @@ void FileSaverRenderEngine::ExportScene(const RenderConfig *renderConfig,
 	{
 		// Write the image map information
 		SDL_LOG("Saving image maps information:");
-		vector<const ImageMap *> ims;
-		renderConfig->scene->imgMapCache.GetImageMaps(ims);
+		vector<ImageMapConstPtr > ims;
+		renderConfig.scene->imgMapCache.GetImageMaps(ims);
 		for (u_int i = 0; i < ims.size(); ++i) {
 			// Avoid to save ImageMapTexture::randomImageMap
-			if (ims[i] != ImageMapTexture::randomImageMap.get()) {
-				const string fileName = (dirPath / renderConfig->scene->imgMapCache.GetSequenceFileName(ims[i])).generic_string();
+			if (ims[i] != ImageMapTexture::randomImageMap) {
+				const string fileName = (dirPath / renderConfig.scene->imgMapCache.GetSequenceFileName(ims[i])).generic_string();
 				SDL_LOG("  " + fileName);
 				ims[i]->WriteImage(fileName);
 			}
@@ -477,7 +479,7 @@ void FileSaverRenderEngine::ExportScene(const RenderConfig *renderConfig,
 
 		// Write the mesh information
 		SDL_LOG("Saving meshes information:");
-		const u_int meshCount =  renderConfig->scene->extMeshCache.GetSize();
+		const u_int meshCount =  renderConfig.scene->extMeshCache.GetSize();
 		double lastPrint = WallClockTime();
 		for (u_int i = 0; i < meshCount; ++i) {
 			if (WallClockTime() - lastPrint > 2.0) {
@@ -485,13 +487,13 @@ void FileSaverRenderEngine::ExportScene(const RenderConfig *renderConfig,
 				lastPrint = WallClockTime();
 			}
 
-			const ExtMesh *mesh = renderConfig->scene->extMeshCache.GetExtMesh(i);
+			auto mesh = renderConfig.scene->extMeshCache.GetExtMesh(i);
 			// The only meshes I need to save are the real one. The others (instances, etc.)
 			// will reference only true one.
 			if (mesh->GetType() != TYPE_EXT_TRIANGLE)
 				continue;
 
-			const string fileName = (dirPath / renderConfig->scene->extMeshCache.GetSequenceFileName(mesh)).generic_string();
+			const string fileName = (dirPath / renderConfig.scene->extMeshCache.GetSequenceFileName(mesh)).generic_string();
 
 			//SDL_LOG("  " + fileName);
 			mesh->Save(fileName);
@@ -511,7 +513,7 @@ Properties FileSaverRenderEngine::ToProperties(const Properties &cfg) {
 			cfg.Get(GetDefaultProps().Get("filesaver.renderengine.type"));
 }
 
-RenderEngine *FileSaverRenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *FileSaverRenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new FileSaverRenderEngine(rcfg);
 }
 

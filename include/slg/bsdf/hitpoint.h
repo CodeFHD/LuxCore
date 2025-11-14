@@ -26,6 +26,7 @@
 #include "luxrays/core/geometry/transform.h"
 #include "luxrays/core/geometry/frame.h"
 #include "luxrays/core/exttrianglemesh.h"
+#include "slg/usings.h"
 
 namespace slg {
 
@@ -60,7 +61,7 @@ typedef struct HitPoint_t {
 	luxrays::Normal dndu, dndv;
 
 	// Mesh information
-	const luxrays::ExtMesh *mesh;
+	luxrays::ExtMeshConstPtr mesh;
 	u_int triangleIndex;
 	float triangleBariCoord1, triangleBariCoord2;
 	
@@ -69,7 +70,7 @@ typedef struct HitPoint_t {
 	luxrays::Transform localToWorld;
 	// Interior and exterior volume (this includes volume priority system
 	// computation and scene default world volume)
-	const Volume *interiorVolume, *exteriorVolume;
+	std::shared_ptr<const Volume> interiorVolume, exteriorVolume;
 	u_int objectID;
 	bool fromLight, intoObject;
 	// If I got here going trough a shadow transparency. It can be used to disable MIS.
@@ -82,7 +83,7 @@ typedef struct HitPoint_t {
 	//
 	// Note: this is also _not_ initializing volume related information.
 	void Init(const bool fixedFromLight, const bool throughShadowTransparency,
-		const Scene &scene, const u_int meshIndex, const u_int triangleIndex,
+		SceneConstPtr scene, const u_int meshIndex, const u_int triangleIndex,
 		const luxrays::Point &p, const luxrays::Vector &d,
 		const float b1, const float b2,
 		const float passThroughEvent);
@@ -109,7 +110,7 @@ typedef struct HitPoint_t {
 			return mesh->InterpolateTriColor(triangleIndex, triangleBariCoord1, triangleBariCoord2, dataIndex);
 		else
 			return luxrays::Spectrum(1.f);
-	}	
+	}
 
 	const float GetAlpha(const u_int dataIndex) const {
 		if (mesh)

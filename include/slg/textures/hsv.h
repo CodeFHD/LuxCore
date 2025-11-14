@@ -29,8 +29,8 @@ namespace slg {
 
 class HsvTexture : public Texture {
 public:
-	HsvTexture(const Texture *t, const Texture *h, 
-			const Texture *s, const Texture *v) : tex(t), hue(h), sat(s), val(v) { }
+	HsvTexture(TextureConstPtr t, TextureConstPtr h, 
+			TextureConstPtr s, TextureConstPtr v) : tex(t), hue(h), sat(s), val(v) { }
 	virtual ~HsvTexture() { }
 
 	virtual TextureType GetType() const { return HSV_TEX; }
@@ -39,22 +39,22 @@ public:
 	virtual float Y() const;
 	virtual float Filter() const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		tex->AddReferencedTextures(referencedTexs);
-		hue->AddReferencedTextures(referencedTexs);
-		sat->AddReferencedTextures(referencedTexs);
-		val->AddReferencedTextures(referencedTexs);
+		tex->AddReferencedTextures(referencedTexs, tex);
+		hue->AddReferencedTextures(referencedTexs, hue);
+		sat->AddReferencedTextures(referencedTexs, sat);
+		val->AddReferencedTextures(referencedTexs, val);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		tex->AddReferencedImageMaps(referencedImgMaps);
 		hue->AddReferencedImageMaps(referencedImgMaps);
 		sat->AddReferencedImageMaps(referencedImgMaps);
 		val->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (tex == oldTex)
 			tex = newTex;
 		if (hue == oldTex)
@@ -65,10 +65,10 @@ public:
 			val = newTex;
 	}
 
-	const Texture *GetTexture() const { return tex; }
-	const Texture *GetHue() const { return hue; }
-	const Texture *GetSaturation() const { return sat; }
-	const Texture *GetValue() const { return val; }
+	TextureConstPtr GetTexture() const { return tex; }
+	TextureConstPtr GetHue() const { return hue; }
+	TextureConstPtr GetSaturation() const { return sat; }
+	TextureConstPtr GetValue() const { return val; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
@@ -79,10 +79,10 @@ private:
 			const float &hueHitpoint, const float &satHitpoint,
 			const float &valHitpoint) const;
 
-	const Texture *tex;
-	const Texture *hue;
-	const Texture *sat;
-	const Texture *val;
+	TextureConstPtr tex;
+	TextureConstPtr hue;
+	TextureConstPtr sat;
+	TextureConstPtr val;
 };
 
 }

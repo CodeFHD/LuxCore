@@ -29,23 +29,21 @@ using namespace slg;
 // SceneObjectDefinitions
 //------------------------------------------------------------------------------
 
-void SceneObjectDefinitions::DefineSceneObject(SceneObject *newObj) {
+void SceneObjectDefinitions::DefineSceneObject(SceneObjectPtr newObj) {
 
 	if (newObj->GetExtMesh() != NULL)
 		meshToSceneObjects.insert(make_pair(newObj->GetExtMesh()->GetName() , newObj->GetName()));
 
-	const SceneObject* oldObj = static_cast<const SceneObject*>(objs.DefineObj(newObj));
+	auto oldObj = static_pointer_cast<const SceneObject>(objs.DefineObj(newObj));
 
-	// Delete the old object definition
-	delete oldObj;
 }
 
 void SceneObjectDefinitions::DefineIntersectableLights(LightSourceDefinitions &lightDefs,
-		const Material *mat) const {
+		MaterialConstPtr mat) const {
 	const u_int size = objs.GetSize();
 
 	for (u_int i = 0; i < size; ++i) {
-		const SceneObject *so = static_cast<const SceneObject *>(objs.GetObj(i));
+		auto so = static_pointer_cast<const SceneObject>(objs.GetObj(i));
 
 		if (so->GetMaterial() == mat)
 			DefineIntersectableLights(lightDefs, so);
@@ -53,14 +51,14 @@ void SceneObjectDefinitions::DefineIntersectableLights(LightSourceDefinitions &l
 }
 
 void SceneObjectDefinitions::DefineIntersectableLights(LightSourceDefinitions &lightDefs,
-		const SceneObject *obj) const {
-	const ExtMesh *mesh = obj->GetExtMesh();
+		SceneObjectConstPtr obj) const {
+	auto mesh = obj->GetExtMesh();
 
 	// Add all new triangle lights
 
 	const string prefix = Scene::EncodeTriangleLightNamePrefix(obj->GetName());
 	for (u_int i = 0; i < mesh->GetTotalTriangleCount(); ++i) {
-		TriangleLight *tl = new TriangleLight();
+		auto tl = std::make_shared<TriangleLight>();
 
 		// I use here boost::lexical_cast instead of ToString() because it is a
 		// lot faster and there can not be locale related problems with integers
@@ -79,37 +77,40 @@ void SceneObjectDefinitions::DefineIntersectableLights(LightSourceDefinitions &l
 	}
 }
 
-void SceneObjectDefinitions::UpdateMaterialReferences(const Material *oldMat, const Material *newMat) {
+void SceneObjectDefinitions::UpdateMaterialReferences(MaterialConstPtr oldMat, MaterialPtr newMat) {
 	// Replace old material direct references with new ones
 	for (auto o : objs.GetObjs())
-		static_cast<SceneObject *>(o)->UpdateMaterialReferences(oldMat, newMat);
+		static_pointer_cast<SceneObject>(o)->UpdateMaterialReferences(oldMat, newMat);
 }
 
-void SceneObjectDefinitions::UpdateMeshReferences(const ExtMesh* oldMesh, ExtMesh* newMesh,
-	std::unordered_set<SceneObject*>& modifiedObjsList) {
+void SceneObjectDefinitions::UpdateMeshReferences(
+	ExtMeshConstPtr oldMesh,
+	ExtMeshPtr newMesh,
+	std::unordered_set<SceneObjectConstPtr>& modifiedObjsList
+) {
 
 	auto p = meshToSceneObjects.equal_range(oldMesh->GetName());
 	auto it = p.first;
-	
+
 	while(it != p.second)
 	{
 		bool updated = false;
 		std::string soName = it->second;
 		if (objs.IsObjDefined(soName))
 		{
-			SceneObject* so = static_cast<SceneObject*>(objs.GetObj(soName));
+			auto so = static_pointer_cast<SceneObject>(objs.GetObj(soName));
 			if (so->UpdateMeshReference(oldMesh, newMesh))
 			{
 				updated = true;
 				modifiedObjsList.insert(so);
 				meshToSceneObjects.erase(it++);
-				
+
 				// change index
 				meshToSceneObjects.insert(make_pair(newMesh->GetName(), so->GetName()));
 			}
 		}
 		if(!updated) ++it;
-	}		
+	}
 }
 
 

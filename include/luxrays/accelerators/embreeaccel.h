@@ -43,7 +43,7 @@ public:
 		return nullptr;
 	}
 
-	virtual void Init(const std::deque<const Mesh *> &meshes,
+	virtual void Init(const std::deque<MeshConstPtr > &meshes,
 		const u_longlong totalVertexCount,
 		const u_longlong totalTriangleCount);
 
@@ -53,10 +53,10 @@ public:
 	virtual bool Intersect(const Ray *ray, RayHit *hit) const;
 
 private:
-	static bool MeshPtrCompare(const Mesh *p0, const Mesh *p1);
+	static bool MeshPtrCompare(MeshConstPtr p0, MeshConstPtr p1);
 	
-	void ExportTriangleMesh(const RTCScene embreeScene, const Mesh *mesh) const;
-	void ExportMotionTriangleMesh(const RTCScene embreeScene, const MotionTriangleMesh *mtm) const;
+	void ExportTriangleMesh(const RTCScene embreeScene, MeshConstPtr mesh) const;
+	void ExportMotionTriangleMesh(const RTCScene embreeScene, MotionTriangleMeshConstPtr mtm) const;
 
 	// Used for Embree initialization
 	static std::mutex initMutex;
@@ -67,9 +67,9 @@ private:
 
 	RTCDevice embreeDevice;
 	RTCScene embreeScene;
-	std::map<const Mesh *, RTCScene, bool (*)(const Mesh *, const Mesh *)> uniqueRTCSceneByMesh;
-	std::map<const Mesh *, RTCGeometry, bool (*)(const Mesh *, const Mesh *)> uniqueGeomByMesh;
-	std::map<const Mesh *, Matrix4x4, bool (*)(const Mesh *, const Mesh *)> uniqueInstMatrixByMesh;
+	std::map<MeshConstPtr , RTCScene, bool (*)(MeshConstPtr , MeshConstPtr )> uniqueRTCSceneByMesh;
+	std::map<MeshConstPtr , RTCGeometry, bool (*)(MeshConstPtr , MeshConstPtr )> uniqueGeomByMesh;
+	std::map<MeshConstPtr , Matrix4x4, bool (*)(MeshConstPtr , MeshConstPtr )> uniqueInstMatrixByMesh;
 	// Used to normalize between 0.f and 1.f
 	float minTime, maxTime, timeScale;
 };

@@ -201,10 +201,10 @@ class ELVCSceneVisibility;
 
 class EnvLightVisibilityCache {
 public:
-	EnvLightVisibilityCache(const Scene *scene, const EnvLightSource *envLight,
-			ImageMap *luminanceMapImage,
+	EnvLightVisibilityCache(SceneConstPtr scene, const EnvLightSource *envLight,
+			ImageMapPtr luminanceMapImage,
 			const ELVCParams &params);
-	EnvLightVisibilityCache(const Scene *scene, const EnvLightSource *envLight,
+	EnvLightVisibilityCache(SceneConstPtr scene, const EnvLightSource *envLight,
 			const u_int mapWidth, const u_int mapHeight, const ELVCParams &params);
 	virtual ~EnvLightVisibilityCache();
 
@@ -236,7 +236,7 @@ private:
 
 	float EvaluateBestRadius();
 	void TraceVisibilityParticles();
-	void BuildCacheEntry(const u_int entryIndex, const ImageMap *luminanceMapImageScaled);
+	void BuildCacheEntry(const u_int entryIndex, ImageMapConstPtr luminanceMapImageScaled);
 	void BuildCacheEntries();
 	void BuildTileDistributions();
 
@@ -245,9 +245,9 @@ private:
 	void LoadPersistentCache(const std::string &fileName);
 	void SavePersistentCache(const std::string &fileName);
 
-	const Scene *scene;
+	SceneConstPtr scene;
 	const EnvLightSource *envLight;
-	const ImageMap *luminanceMapImage;
+	ImageMapConstPtr luminanceMapImage;
 
 	ELVCParams params;
 

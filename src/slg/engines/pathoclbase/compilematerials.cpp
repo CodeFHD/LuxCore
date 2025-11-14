@@ -579,7 +579,7 @@ void CompiledScene::CompileMaterials() {
 	mats.resize(materialsCount);
 
 	for (u_int i = 0; i < materialsCount; ++i) {
-		const Material *m = scene->matDefs.GetMaterial(i);
+		auto m = scene->matDefs.GetMaterial(i);
 		slg::ocl::Material *mat = &mats[i];
 		//SLG_LOG(" Type: " << m->GetType());
 
@@ -588,13 +588,13 @@ void CompiledScene::CompileMaterials() {
         mat->bumpSampleDistance = m->GetBumpSampleDistance();
 
 		// Material transparency
-		const Texture *frontTranspTex = m->GetFrontTransparencyTexture();
+		auto frontTranspTex = m->GetFrontTransparencyTexture();
 		if (frontTranspTex) {
 			mat->frontTranspTexIndex = scene->texDefs.GetTextureIndex(frontTranspTex);
 		} else
 			mat->frontTranspTexIndex = NULL_INDEX;
 
-		const Texture *backTranspTex = m->GetBackTransparencyTexture();
+		auto backTranspTex = m->GetBackTransparencyTexture();
 		if (backTranspTex) {
 			mat->backTranspTexIndex = scene->texDefs.GetTextureIndex(backTranspTex);
 		} else
@@ -603,7 +603,7 @@ void CompiledScene::CompileMaterials() {
 		ASSIGN_SPECTRUM(mat->passThroughShadowTransparency, m->GetPassThroughShadowTransparency());
 
 		// Material emission
-		const Texture *emitTex = m->GetEmitTexture();
+		TextureConstPtr emitTex = m->GetEmitTexture();
 		if (emitTex)
 			mat->emitTexIndex = scene->texDefs.GetTextureIndex(emitTex);
 		else
@@ -613,7 +613,7 @@ void CompiledScene::CompileMaterials() {
 		mat->usePrimitiveArea = m->IsUsingPrimitiveArea();
 
 		// Material bump mapping
-		const Texture *bumpTex = m->GetBumpTexture();
+		TextureConstPtr bumpTex = m->GetBumpTexture();
 		if (bumpTex)
 			mat->bumpTexIndex = scene->texDefs.GetTextureIndex(bumpTex);
 		else
@@ -625,9 +625,9 @@ void CompiledScene::CompileMaterials() {
 				(m->IsVisibleIndirectSpecular() ? SPECULAR : NONE);
 
 		// Material volumes
-		const Material *interiorVol = m->GetInteriorVolume();
+		MaterialConstPtr interiorVol = m->GetInteriorVolume();
 		mat->interiorVolumeIndex = interiorVol ? scene->matDefs.GetMaterialIndex(interiorVol) : NULL_INDEX;
-		const Material *exteriorVol = m->GetExteriorVolume();
+		MaterialConstPtr exteriorVol = m->GetExteriorVolume();
 		mat->exteriorVolumeIndex = exteriorVol ? scene->matDefs.GetMaterialIndex(exteriorVol) : NULL_INDEX;
 		mat->glossiness = m->GetGlossiness();
 		mat->avgPassThroughTransparency = m->GetAvgPassThroughTransparency();
@@ -643,14 +643,14 @@ void CompiledScene::CompileMaterials() {
 		// Material specific parameters
 		switch (m->GetType()) {
 			case MATTE: {
-				const MatteMaterial *mm = static_cast<const MatteMaterial *>(m);
+				auto mm = dynamic_pointer_cast<const MatteMaterial>(m);
 
 				mat->type = slg::ocl::MATTE;
 				mat->matte.kdTexIndex = scene->texDefs.GetTextureIndex(mm->GetKd());
 				break;
 			}
 			case ROUGHMATTE: {
-				const RoughMatteMaterial *mm = static_cast<const RoughMatteMaterial *>(m);
+				auto mm = dynamic_pointer_cast<const RoughMatteMaterial>(m);
 
 				mat->type = slg::ocl::ROUGHMATTE;
 				mat->roughmatte.kdTexIndex = scene->texDefs.GetTextureIndex(mm->GetKd());
@@ -658,14 +658,14 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case MIRROR: {
-				const MirrorMaterial *mm = static_cast<const MirrorMaterial *>(m);
+				auto mm = dynamic_pointer_cast<const MirrorMaterial>(m);
 
 				mat->type = slg::ocl::MIRROR;
 				mat->mirror.krTexIndex = scene->texDefs.GetTextureIndex(mm->GetKr());
 				break;
 			}
 			case GLASS: {
-				const GlassMaterial *gm = static_cast<const GlassMaterial *>(m);
+				auto gm = dynamic_pointer_cast<const GlassMaterial>(m);
 
 				mat->type = slg::ocl::GLASS;
 				mat->glass.krTexIndex = scene->texDefs.GetTextureIndex(gm->GetKr());
@@ -693,7 +693,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case ARCHGLASS: {
-				const ArchGlassMaterial *am = static_cast<const ArchGlassMaterial *>(m);
+				auto am = dynamic_pointer_cast<const ArchGlassMaterial>(m);
 
 				mat->type = slg::ocl::ARCHGLASS;
 				mat->archglass.krTexIndex = scene->texDefs.GetTextureIndex(am->GetKr());
@@ -717,7 +717,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case MIX: {
-				const MixMaterial *mm = static_cast<const MixMaterial *>(m);
+				auto mm = dynamic_pointer_cast<const MixMaterial>(m);
 
 				mat->type = slg::ocl::MIX;
 				mat->mix.matAIndex = scene->matDefs.GetMaterialIndex(mm->GetMaterialA());
@@ -730,7 +730,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case MATTETRANSLUCENT: {
-				const MatteTranslucentMaterial *mt = static_cast<const MatteTranslucentMaterial *>(m);
+				auto mt = dynamic_pointer_cast<const MatteTranslucentMaterial>(m);
 
 				mat->type = slg::ocl::MATTETRANSLUCENT;
 				mat->matteTranslucent.krTexIndex = scene->texDefs.GetTextureIndex(mt->GetKr());
@@ -738,7 +738,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case ROUGHMATTETRANSLUCENT: {
-				const RoughMatteTranslucentMaterial *rmt = static_cast<const RoughMatteTranslucentMaterial *>(m);
+				auto rmt = dynamic_pointer_cast<const RoughMatteTranslucentMaterial>(m);
 
 				mat->type = slg::ocl::ROUGHMATTETRANSLUCENT;
 				mat->roughmatteTranslucent.krTexIndex = scene->texDefs.GetTextureIndex(rmt->GetKr());
@@ -747,29 +747,29 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case GLOSSY2: {
-				const Glossy2Material *g2m = static_cast<const Glossy2Material *>(m);
+				auto g2m = dynamic_pointer_cast<const Glossy2Material>(m);
 
 				mat->type = slg::ocl::GLOSSY2;
 				mat->glossy2.kdTexIndex = scene->texDefs.GetTextureIndex(g2m->GetKd());
 				mat->glossy2.ksTexIndex = scene->texDefs.GetTextureIndex(g2m->GetKs());
 
-				const Texture *nuTex = g2m->GetNu();
-				const Texture *nvTex = g2m->GetNv();
+				auto nuTex = g2m->GetNu();
+				auto nvTex = g2m->GetNv();
 				mat->glossy2.nuTexIndex = scene->texDefs.GetTextureIndex(nuTex);
 				mat->glossy2.nvTexIndex = scene->texDefs.GetTextureIndex(nvTex);
 
-				const Texture *depthTex = g2m->GetDepth();
+				auto depthTex = g2m->GetDepth();
 				mat->glossy2.kaTexIndex = scene->texDefs.GetTextureIndex(g2m->GetKa());
 				mat->glossy2.depthTexIndex = scene->texDefs.GetTextureIndex(depthTex);
 
-				const Texture *indexTex = g2m->GetIndex();
+				auto indexTex = g2m->GetIndex();
 				mat->glossy2.indexTexIndex = scene->texDefs.GetTextureIndex(indexTex);
 				mat->glossy2.multibounce = g2m->IsMultibounce () ? 1 : 0;
 				mat->glossy2.doublesided = g2m->IsDoubleSided () ? 1 : 0;
 				break;
 			}
 			case METAL2: {
-				const Metal2Material *m2m = static_cast<const Metal2Material *>(m);
+				auto m2m = dynamic_pointer_cast<const Metal2Material>(m);
 
 				mat->type = slg::ocl::METAL2;
 				if (m2m->GetFresnel())
@@ -785,14 +785,14 @@ void CompiledScene::CompileMaterials() {
 				else
 					mat->metal2.kTexIndex = NULL_INDEX;
 
-				const Texture *nuTex = m2m->GetNu();
-				const Texture *nvTex = m2m->GetNv();
+				auto nuTex = m2m->GetNu();
+				auto nvTex = m2m->GetNv();
 				mat->metal2.nuTexIndex = scene->texDefs.GetTextureIndex(nuTex);
 				mat->metal2.nvTexIndex = scene->texDefs.GetTextureIndex(nvTex);
 				break;
 			}
 			case ROUGHGLASS: {
-				const RoughGlassMaterial *rgm = static_cast<const RoughGlassMaterial *>(m);
+				auto rgm = dynamic_pointer_cast<const RoughGlassMaterial>(m);
 
 				mat->type = slg::ocl::ROUGHGLASS;
 				mat->roughglass.krTexIndex = scene->texDefs.GetTextureIndex(rgm->GetKr());
@@ -806,8 +806,8 @@ void CompiledScene::CompileMaterials() {
 				else
 					mat->roughglass.interiorIorTexIndex = NULL_INDEX;
 
-				const Texture *nuTex = rgm->GetNu();
-				const Texture *nvTex = rgm->GetNv();
+				auto nuTex = rgm->GetNu();
+				auto nvTex = rgm->GetNv();
 				mat->roughglass.nuTexIndex = scene->texDefs.GetTextureIndex(nuTex);
 				mat->roughglass.nvTexIndex = scene->texDefs.GetTextureIndex(nvTex);
 				
@@ -822,7 +822,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case VELVET: {
-				const VelvetMaterial *vm = static_cast<const VelvetMaterial *>(m);
+				auto vm = dynamic_pointer_cast<const VelvetMaterial>(m);
 
 				mat->type = slg::ocl::VELVET;
 				mat->velvet.kdTexIndex = scene->texDefs.GetTextureIndex(vm->GetKd());
@@ -833,7 +833,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case CLOTH: {
-				const ClothMaterial *cm = static_cast<const ClothMaterial *>(m);
+				auto cm = dynamic_pointer_cast<const ClothMaterial>(m);
 
 				mat->type = slg::ocl::CLOTH;
 				mat->cloth.Preset = cm->GetPreset();
@@ -847,7 +847,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case CARPAINT: {
-				const CarPaintMaterial *cm = static_cast<const CarPaintMaterial *>(m);
+				auto cm = dynamic_pointer_cast<const CarPaintMaterial>(m);
 				mat->type = slg::ocl::CARPAINT;
 				mat->carpaint.KdTexIndex = scene->texDefs.GetTextureIndex(cm->Kd);
 				mat->carpaint.Ks1TexIndex = scene->texDefs.GetTextureIndex(cm->Ks1);
@@ -864,7 +864,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case GLOSSYTRANSLUCENT: {
-				const GlossyTranslucentMaterial *gtm = static_cast<const GlossyTranslucentMaterial *>(m);
+				auto gtm = dynamic_pointer_cast<const GlossyTranslucentMaterial>(m);
 
 				mat->type = slg::ocl::GLOSSYTRANSLUCENT;
 				mat->glossytranslucent.kdTexIndex = scene->texDefs.GetTextureIndex(gtm->GetKd());
@@ -872,22 +872,22 @@ void CompiledScene::CompileMaterials() {
 				mat->glossytranslucent.ksTexIndex = scene->texDefs.GetTextureIndex(gtm->GetKs());
 				mat->glossytranslucent.ksbfTexIndex = scene->texDefs.GetTextureIndex(gtm->GetKs_bf());
 
-				const Texture *nuTex = gtm->GetNu();
-				const Texture *nvTex = gtm->GetNv();
+				auto nuTex = gtm->GetNu();
+				auto nvTex = gtm->GetNv();
 				mat->glossytranslucent.nuTexIndex = scene->texDefs.GetTextureIndex(nuTex);
 				mat->glossytranslucent.nvTexIndex = scene->texDefs.GetTextureIndex(nvTex);
-				const Texture *nubfTex = gtm->GetNu_bf();
-				const Texture *nvbfTex = gtm->GetNv_bf();
+				auto nubfTex = gtm->GetNu_bf();
+				auto nvbfTex = gtm->GetNv_bf();
 				mat->glossytranslucent.nubfTexIndex = scene->texDefs.GetTextureIndex(nubfTex);
 				mat->glossytranslucent.nvbfTexIndex = scene->texDefs.GetTextureIndex(nvbfTex);
 
-				const Texture *depthTex = gtm->GetDepth();
+				auto depthTex = gtm->GetDepth();
 				mat->glossytranslucent.kaTexIndex = scene->texDefs.GetTextureIndex(gtm->GetKa());
 				mat->glossytranslucent.depthTexIndex = scene->texDefs.GetTextureIndex(depthTex);
 				mat->glossytranslucent.kabfTexIndex = scene->texDefs.GetTextureIndex(gtm->GetKa_bf());
 				mat->glossytranslucent.depthbfTexIndex = scene->texDefs.GetTextureIndex(depthTex);
 
-				const Texture *indexTex = gtm->GetIndex();
+				auto indexTex = gtm->GetIndex();
 				mat->glossytranslucent.indexTexIndex = scene->texDefs.GetTextureIndex(indexTex);
 				mat->glossytranslucent.indexbfTexIndex = scene->texDefs.GetTextureIndex(indexTex);
 
@@ -896,28 +896,28 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case GLOSSYCOATING: {
-				const GlossyCoatingMaterial *gcm = static_cast<const GlossyCoatingMaterial *>(m);
+				auto gcm = dynamic_pointer_cast<const GlossyCoatingMaterial>(m);
 
 				mat->type = slg::ocl::GLOSSYCOATING;
 				mat->glossycoating.matBaseIndex = scene->matDefs.GetMaterialIndex(gcm->GetMaterialBase());
 				mat->glossycoating.ksTexIndex = scene->texDefs.GetTextureIndex(gcm->GetKs());
 
-				const Texture *nuTex = gcm->GetNu();
-				const Texture *nvTex = gcm->GetNv();
+				auto nuTex = gcm->GetNu();
+				auto nvTex = gcm->GetNv();
 				mat->glossycoating.nuTexIndex = scene->texDefs.GetTextureIndex(nuTex);
 				mat->glossycoating.nvTexIndex = scene->texDefs.GetTextureIndex(nvTex);
 
-				const Texture *depthTex = gcm->GetDepth();
+				auto depthTex = gcm->GetDepth();
 				mat->glossycoating.kaTexIndex = scene->texDefs.GetTextureIndex(gcm->GetKa());
 				mat->glossycoating.depthTexIndex = scene->texDefs.GetTextureIndex(depthTex);
 
-				const Texture *indexTex = gcm->GetIndex();
+				auto indexTex = gcm->GetIndex();
 				mat->glossycoating.indexTexIndex = scene->texDefs.GetTextureIndex(indexTex);
 				mat->glossycoating.multibounce = gcm->IsMultibounce() ? 1 : 0;
 				break;
 			}
 			case DISNEY: {
-				const DisneyMaterial *dm = static_cast<const DisneyMaterial *>(m);
+				auto dm = dynamic_pointer_cast<const DisneyMaterial>(m);
 
 				mat->type = slg::ocl::DISNEY;
 				mat->disney.baseColorTexIndex = scene->texDefs.GetTextureIndex(dm->GetBaseColor());
@@ -946,7 +946,7 @@ void CompiledScene::CompileMaterials() {
 				break;
 			}
 			case TWOSIDED: {
-				const TwoSidedMaterial *tsm = static_cast<const TwoSidedMaterial *>(m);
+				auto tsm = dynamic_pointer_cast<const TwoSidedMaterial>(m);
 
 				mat->type = slg::ocl::TWOSIDED;
 				mat->twosided.frontMatIndex = scene->matDefs.GetMaterialIndex(tsm->GetFrontMaterial());
@@ -959,7 +959,7 @@ void CompiledScene::CompileMaterials() {
 			case CLEAR_VOL:
 			case HOMOGENEOUS_VOL:
 			case HETEROGENEOUS_VOL: {
-				const Volume *v = static_cast<const Volume *>(m);
+				auto v = dynamic_pointer_cast<const Volume>(m);
 				mat->volume.iorTexIndex = v->GetIORTexture() ?
 					scene->texDefs.GetTextureIndex(v->GetIORTexture()) :
 					NULL_INDEX;
@@ -971,13 +971,13 @@ void CompiledScene::CompileMaterials() {
 
 				switch (m->GetType()) {
 					case CLEAR_VOL: {
-						const ClearVolume *cv = static_cast<const ClearVolume *>(m);
+						auto cv = dynamic_pointer_cast<const ClearVolume>(m);
 						mat->type = slg::ocl::CLEAR_VOL;
 						mat->volume.clear.sigmaATexIndex = scene->texDefs.GetTextureIndex(cv->GetSigmaA());
 						break;
 					}
 					case HOMOGENEOUS_VOL: {
-						const HomogeneousVolume *hv = static_cast<const HomogeneousVolume *>(m);
+						auto hv = dynamic_pointer_cast<const HomogeneousVolume>(m);
 						mat->type = slg::ocl::HOMOGENEOUS_VOL;
 						mat->volume.homogenous.sigmaATexIndex = scene->texDefs.GetTextureIndex(hv->GetSigmaA());
 						mat->volume.homogenous.sigmaSTexIndex = scene->texDefs.GetTextureIndex(hv->GetSigmaS());
@@ -986,7 +986,7 @@ void CompiledScene::CompileMaterials() {
 						break;
 					}
 					case HETEROGENEOUS_VOL: {
-						const HeterogeneousVolume *hv = static_cast<const HeterogeneousVolume *>(m);
+						auto hv = dynamic_pointer_cast<const HeterogeneousVolume>(m);
 						mat->type = slg::ocl::HETEROGENEOUS_VOL;
 						mat->volume.heterogenous.sigmaATexIndex = scene->texDefs.GetTextureIndex(hv->GetSigmaA());
 						mat->volume.heterogenous.sigmaSTexIndex = scene->texDefs.GetTextureIndex(hv->GetSigmaS());

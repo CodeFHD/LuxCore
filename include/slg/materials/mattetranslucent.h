@@ -29,9 +29,9 @@ namespace slg {
 
 class MatteTranslucentMaterial : public Material {
 public:
-	MatteTranslucentMaterial(const Texture *frontTransp, const Texture *backTransp,
-			const Texture *emitted, const Texture *bump,
-			const Texture *refl, const Texture *trans);
+	MatteTranslucentMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+			TextureConstPtr emitted, TextureConstPtr bump,
+			TextureConstPtr refl, TextureConstPtr trans);
 
 	virtual MaterialType GetType() const { return MATTETRANSLUCENT; }
 	virtual BSDFEvent GetEventTypes() const { return DIFFUSE | REFLECT | TRANSMIT; };
@@ -49,17 +49,17 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	const Texture *GetKr() const { return Kr; }
-	const Texture *GetKt() const { return Kt; }
+	TextureConstPtr GetKr() const { return Kr; }
+	TextureConstPtr GetKt() const { return Kt; }
 
 private:
-	const Texture *Kr;
-	const Texture *Kt;
+	TextureConstPtr Kr;
+	TextureConstPtr Kt;
 };
 
 }

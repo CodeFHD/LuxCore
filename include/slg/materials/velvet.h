@@ -29,10 +29,10 @@ namespace slg {
 
 class VelvetMaterial : public Material {
 public:
-	VelvetMaterial(const Texture *frontTransp, const Texture *backTransp,
-			const Texture *emitted, const Texture *bump,
-			const Texture *kd, const Texture *p1, const Texture *p2, const Texture *p3,
-			const Texture *thickness);
+	VelvetMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+			TextureConstPtr emitted, TextureConstPtr bump,
+			TextureConstPtr kd, TextureConstPtr p1, TextureConstPtr p2, TextureConstPtr p3,
+			TextureConstPtr thickness);
 
 	virtual MaterialType GetType() const { return VELVET; }
 	virtual BSDFEvent GetEventTypes() const { return DIFFUSE | REFLECT; };
@@ -50,23 +50,23 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	const Texture *GetKd() const { return Kd; }
-	const Texture *GetP1() const { return P1; }
-	const Texture *GetP2() const { return P2; }
-	const Texture *GetP3() const { return P3; }
-	const Texture *GetThickness() const { return Thickness; }
+	TextureConstPtr GetKd() const { return Kd; }
+	TextureConstPtr GetP1() const { return P1; }
+	TextureConstPtr GetP2() const { return P2; }
+	TextureConstPtr GetP3() const { return P3; }
+	TextureConstPtr GetThickness() const { return Thickness; }
 
 private:
-	const Texture *Kd;
-	const Texture *P1;
-	const Texture *P2;
-	const Texture *P3;
-	const Texture *Thickness;
+	TextureConstPtr Kd;
+	TextureConstPtr P1;
+	TextureConstPtr P2;
+	TextureConstPtr P3;
+	TextureConstPtr Thickness;
 };
 
 }

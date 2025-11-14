@@ -100,14 +100,20 @@ public:
 	friend class BiDirVMCPURenderEngine;
 
 private:
-	virtual std::jthread *AllocRenderThread() { return new std::jthread(std::bind_front(&BiDirVMCPURenderThread::RenderFuncVM, this)); }
+	virtual JThreadPtr AllocRenderThread() {
+		auto t = std::make_shared<std::jthread>(
+			std::bind_front(&BiDirVMCPURenderThread::RenderFuncVM, this)
+		);
+		luxrays::SetThreadName(t, "LxBiDirVMCPU");
+		return t;
+	}
 
 	void RenderFuncVM(std::stop_token stop_token);
 };
 
 class BiDirVMCPURenderEngine : public BiDirCPURenderEngine {
 public:
-	BiDirVMCPURenderEngine(const RenderConfig *cfg);
+	BiDirVMCPURenderEngine(RenderConfigConstRef cfg);
 
 	virtual RenderEngineType GetType() const { return GetObjectType(); }
 	virtual std::string GetTag() const { return GetObjectTag(); }
@@ -119,7 +125,7 @@ public:
 	static RenderEngineType GetObjectType() { return BIDIRVMCPU; }
 	static std::string GetObjectTag() { return "BIDIRVMCPU"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static RenderEngine *FromProperties(const RenderConfig *rcfg);
+	static RenderEngine *FromProperties(RenderConfigConstRef rcfg);
 
 	friend class BiDirVMCPURenderThread;
 

@@ -33,13 +33,13 @@ using namespace slg;
 // DensityGrid texture
 //------------------------------------------------------------------------------
 
-DensityGridTexture::DensityGridTexture(const TextureMapping3D *mp,
+DensityGridTexture::DensityGridTexture(TextureMapping3DConstPtr mp,
 		const u_int nx, const u_int ny, const u_int nz,
-        const ImageMap *map) : mapping(mp),
+        ImageMapConstPtr map) : mapping(mp),
 		nx(nx), ny(ny), nz(nz), imageMap(map) {
 }
 
-ImageMap *DensityGridTexture::ParseData(const luxrays::Property &dataProp,
+ImageMapPtr DensityGridTexture::ParseData(const luxrays::Property &dataProp,
 		const bool isRGB,
 		const u_int nx, const u_int ny, const u_int nz,
 		const ImageMapStorage::StorageType storageType,
@@ -51,7 +51,7 @@ ImageMap *DensityGridTexture::ParseData(const luxrays::Property &dataProp,
 	// implemented by the code accessing the data.
 
 	const u_int channelCount = isRGB ? 3 : 1;
-	unique_ptr<ImageMap> imgMap(ImageMap::AllocImageMap(channelCount, nx, ny * nz,
+	ImageMapPtr imgMap(ImageMap::AllocImageMap(channelCount, nx, ny * nz,
 			ImageMapConfig(1.f,
 				(storageType == ImageMapStorage::AUTO) ? ImageMapStorage::HALF : storageType,
 				wrapMode,
@@ -76,10 +76,10 @@ ImageMap *DensityGridTexture::ParseData(const luxrays::Property &dataProp,
 					imgStorage->SetFloat((z * ny + y) * nx + x, dataProp.Get<double>(i));
 	}
 
-	return imgMap.release();
+	return imgMap;
 }
 
-ImageMap *DensityGridTexture::ParseOpenVDB(const string &fileName, const string &gridName,
+ImageMapPtr DensityGridTexture::ParseOpenVDB(const string &fileName, const string &gridName,
 		const u_int nx, const u_int ny, const u_int nz,
 		const ImageMapStorage::StorageType storageType,
 		const ImageMapStorage::WrapType wrapMode) {
@@ -127,7 +127,7 @@ ImageMap *DensityGridTexture::ParseOpenVDB(const string &fileName, const string 
 	// sample the image. The image data are accessed directly and the wrapping is
 	// implemented by the code accessing the data.
 
-	unique_ptr<ImageMap> imgMap(ImageMap::AllocImageMap(channelsCount, nx, ny * nz,
+	ImageMapPtr imgMap(ImageMap::AllocImageMap(channelsCount, nx, ny * nz,
 			ImageMapConfig(1.f,
 				storageType,
 				wrapMode,
@@ -188,7 +188,7 @@ ImageMap *DensityGridTexture::ParseOpenVDB(const string &fileName, const string 
 
 	file.close();
 
-	return imgMap.release();
+	return imgMap;
 }
 
 Spectrum DensityGridTexture::D(int x, int y, int z) const {

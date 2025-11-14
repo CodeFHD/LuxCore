@@ -44,6 +44,18 @@ typedef enum {
 	TYPE_EXT_TRIANGLE, TYPE_EXT_TRIANGLE_INSTANCE, TYPE_EXT_TRIANGLE_MOTION
 } MeshType;
 
+class Mesh;
+using MeshConstPtr = std::shared_ptr<const Mesh>;
+using MeshPtr = std::shared_ptr<Mesh>;
+
+class TriangleMesh;
+using TriangleMeshConstPtr = std::shared_ptr<const TriangleMesh>;
+using TriangleMeshPtr = std::shared_ptr<TriangleMesh>;
+
+class MotionTriangleMesh;
+using MotionTriangleMeshConstPtr = std::shared_ptr<const MotionTriangleMesh>;
+using MotionTriangleMeshPtr = std::shared_ptr<MotionTriangleMesh>;
+
 
 class Mesh {
 public:
@@ -136,7 +148,7 @@ public:
 		return new Triangle[meshTriCount];
 	}
 
-	static TriangleMesh *Merge(
+	static TriangleMeshPtr Merge(
 		const std::deque<const Mesh *> &meshes,
 		TriangleMeshID **preprocessedMeshIDs = NULL,
 		TriangleID **preprocessedMeshTriangleIDs = NULL);
@@ -202,7 +214,7 @@ private:
 
 class InstanceTriangleMesh : virtual public Mesh {
 public:
-	InstanceTriangleMesh(TriangleMesh *m, const Transform &t);
+	InstanceTriangleMesh(TriangleMeshPtr m, const Transform &t);
 	virtual ~InstanceTriangleMesh() { }
 
 	virtual MeshType GetType() const { return TYPE_TRIANGLE_INSTANCE; }
@@ -267,7 +279,7 @@ public:
 		cachedArea = -1.f;
 	}
 
-	TriangleMesh *GetTriangleMesh() const { return mesh; };
+	TriangleMeshPtr GetTriangleMesh() const { return mesh; };
 	
 	friend class boost::serialization::access;
 
@@ -278,7 +290,7 @@ protected:
 
 	Transform trans;
 	bool transSwapsHandedness;
-	TriangleMesh *mesh;
+	TriangleMeshPtr mesh;
 
 	mutable float cachedArea;
 	mutable BBox cachedBBox;
@@ -306,7 +318,7 @@ private:
 
 class MotionTriangleMesh : virtual public Mesh {
 public:
-	MotionTriangleMesh(TriangleMesh *m, const MotionSystem &ms);
+	MotionTriangleMesh(TriangleMeshPtr m, const MotionSystem &ms);
 	virtual ~MotionTriangleMesh() { }
 
 	virtual MeshType GetType() const { return TYPE_TRIANGLE_MOTION; }
@@ -355,7 +367,7 @@ public:
 
 	virtual void ApplyTransform(const Transform &t);
 
-	TriangleMesh *GetTriangleMesh() const { return mesh; };
+	TriangleMeshPtr GetTriangleMesh() const { return mesh; };
 	const MotionSystem &GetMotionSystem() const { return motionSystem; }
 
 	friend class boost::serialization::access;
@@ -366,7 +378,7 @@ protected:
 	}
 
 	MotionSystem motionSystem;
-	TriangleMesh *mesh;
+	TriangleMeshPtr mesh;
 
 	mutable float cachedArea;
 	mutable BBox cachedBBox;

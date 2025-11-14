@@ -37,9 +37,9 @@ Properties LightSource::ToProperties(const ImageMapCache &imgMapCache, const boo
 	return props;
 }
 
-void LightSource::UpdateVolumeReferences(const Volume *oldVol, const Volume *newVol) {
+void LightSource::UpdateVolumeReferences(VolumeConstPtr oldVol, VolumeConstPtr newVol) {
 	if (volume == oldVol)
-		volume = (const Volume *)newVol;
+		volume = newVol;
 }
 
 string LightSource::LightSourceType2String(const LightSourceType type) {
@@ -73,7 +73,7 @@ void NotIntersectableLightSource::Preprocess() {
 }
 
 Properties NotIntersectableLightSource::ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const {
-	const string prefix = "scene.lights." + GetName();
+	const string prefix = "scene->lights." + GetName();
 
 	return LightSource::ToProperties(imgMapCache, useRealFileName) <<
 			Property(prefix + ".gain")(gain) <<
@@ -87,8 +87,8 @@ Properties NotIntersectableLightSource::ToProperties(const ImageMapCache &imgMap
 // InfiniteLightSource
 //------------------------------------------------------------------------------
 
-float InfiniteLightSource::GetEnvRadius(const Scene &scene) {
-	return LIGHT_WORLD_RADIUS_SCALE * scene.sceneBSphere.rad;
+float InfiniteLightSource::GetEnvRadius(SceneConstPtr scene) {
+	return LIGHT_WORLD_RADIUS_SCALE * scene->sceneBSphere.rad;
 }
 
 Properties InfiniteLightSource::ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const {

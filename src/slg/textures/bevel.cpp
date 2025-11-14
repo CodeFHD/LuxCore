@@ -28,14 +28,14 @@ using namespace slg;
 // Bevel texture
 //------------------------------------------------------------------------------
 
-BevelTexture::BevelTexture(const Texture *t, const float r) : tex(t), radius(r) {
+BevelTexture::BevelTexture(TextureConstPtr t, const float r) : tex(t), radius(r) {
 }
 
 BevelTexture::~BevelTexture() {
 }
 
 Normal BevelTexture::Bump(const HitPoint &hitPoint, const float sampleDistance) const {
-	const ExtMesh *mesh = hitPoint.mesh;
+	auto mesh = hitPoint.mesh;
 	if (!mesh)
 		return hitPoint.shadeN;
 

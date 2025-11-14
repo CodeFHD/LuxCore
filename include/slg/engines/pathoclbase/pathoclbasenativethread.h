@@ -26,6 +26,8 @@
 
 namespace slg {
 
+using JThreadPtr = std::shared_ptr<std::jthread>;
+
 class PathOCLBaseRenderEngine;
 
 //------------------------------------------------------------------------------
@@ -61,7 +63,7 @@ protected:
 	PathOCLBaseRenderEngine *renderEngine;
 	luxrays::NativeIntersectionDevice *intersectionDevice;
 
-	std::jthread *renderThread;
+	JThreadPtr renderThread;
 
 	bool started, editMode, threadDone;
 };

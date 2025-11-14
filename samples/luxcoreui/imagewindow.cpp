@@ -256,8 +256,8 @@ void ImageWindow::Draw() {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.f);
 		ImGui::BeginChild("Image", ImVec2(0.f, 0.f), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-		const unsigned int filmWidth = app->session->GetFilm().GetWidth();
-		const unsigned int filmHeight = app->session->GetFilm().GetHeight();
+		const unsigned int filmWidth = app->session->GetFilm()->GetWidth();
+		const unsigned int filmHeight = app->session->GetFilm()->GetHeight();
 		ImGui::Image((ImTextureID) (intptr_t) channelTexID,
 				ImVec2(.01f * imgScale * filmWidth, .01f * imgScale * filmHeight),
 				ImVec2(0.f, 1.f), ImVec2(1.f, 0.f));

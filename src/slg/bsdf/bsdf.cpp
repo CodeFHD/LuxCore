@@ -26,13 +26,13 @@ using namespace std;
 
 // Used when hitting a surface
 void BSDF::Init(const bool fixedFromLight, const bool throughShadowTransparency,
-		const Scene &scene, const Ray &ray, const RayHit &rayHit,
+		SceneConstPtr scene, const Ray &ray, const RayHit &rayHit,
 		const float passThroughEvent, const PathVolumeInfo *volInfo) {
 	// Get the scene object
-	sceneObject = scene.objDefs.GetSceneObject(rayHit.meshIndex);
+	sceneObject = scene->objDefs.GetSceneObject(rayHit.meshIndex);
 
 	// Get the mesh
-	const ExtMesh *mesh = sceneObject->GetExtMesh();
+	auto mesh = sceneObject->GetExtMesh();
 	mesh->GetLocal2World(ray.time, hitPoint.localToWorld);
 
 	hitPoint.Init(fixedFromLight, throughShadowTransparency,
@@ -40,7 +40,7 @@ void BSDF::Init(const bool fixedFromLight, const bool throughShadowTransparency,
 			ray(rayHit.t), -ray.d,
 			rayHit.b1, rayHit.b2,
 			passThroughEvent);
-	
+
 	// Get the material
 	material = sceneObject->GetMaterial();
 
@@ -48,11 +48,11 @@ void BSDF::Init(const bool fixedFromLight, const bool throughShadowTransparency,
 	volInfo->SetHitPointVolumes(hitPoint,
 			material->GetInteriorVolume(hitPoint, hitPoint.passThroughEvent),
 			material->GetExteriorVolume(hitPoint, hitPoint.passThroughEvent),
-			scene.defaultWorldVolume);
+			scene->defaultWorldVolume);
 
 	// Check if it is a light source
 	if (material->IsLightSource())
-		triangleLightSource = scene.lightDefs.GetLightSourceByMeshAndTriIndex(rayHit.meshIndex, rayHit.triangleIndex);
+		triangleLightSource = scene->lightDefs.GetLightSourceByMeshAndTriIndex(rayHit.meshIndex, rayHit.triangleIndex);
 	else
 		triangleLightSource = NULL;
 
@@ -64,17 +64,17 @@ void BSDF::Init(const bool fixedFromLight, const bool throughShadowTransparency,
 }
 
 // Used when have a point of a surface
-void BSDF::Init(const Scene &scene,
+void BSDF::Init(SceneConstPtr scene,
 		const u_int meshIndex, const u_int triangleIndex,
 		const Point &surfacePoint,
 		const float surfacePointBary1, const float surfacePointBary2, 
 		const float time,
 		const float passThroughEvent, const PathVolumeInfo *volInfo) {
 	// Get the scene object
-	sceneObject = scene.objDefs.GetSceneObject(meshIndex);
+	sceneObject = scene->objDefs.GetSceneObject(meshIndex);
 
 	// Get the mesh
-	const ExtMesh *mesh = sceneObject->GetExtMesh();
+	auto mesh = sceneObject->GetExtMesh();
 	mesh->GetLocal2World(time, hitPoint.localToWorld);
 
 	const Vector fixedDir = Vector(mesh->GetGeometryNormal(hitPoint.localToWorld, triangleIndex));
@@ -90,11 +90,11 @@ void BSDF::Init(const Scene &scene,
 	volInfo->SetHitPointVolumes(hitPoint,
 			material->GetInteriorVolume(hitPoint, hitPoint.passThroughEvent),
 			material->GetExteriorVolume(hitPoint, hitPoint.passThroughEvent),
-			scene.defaultWorldVolume);
+			scene->defaultWorldVolume);
 
 	// Check if it is a light source
 	if (material->IsLightSource())
-		triangleLightSource = scene.lightDefs.GetLightSourceByMeshAndTriIndex(meshIndex, triangleIndex);
+		triangleLightSource = scene->lightDefs.GetLightSourceByMeshAndTriIndex(meshIndex, triangleIndex);
 	else
 		triangleLightSource = NULL;
 
@@ -107,8 +107,8 @@ void BSDF::Init(const Scene &scene,
 
 // Used when hitting a volume scatter point
 void BSDF::Init(const bool fixedFromLight, const bool throughShadowTransparency,
-		const Scene &scene, const luxrays::Ray &ray,
-		const Volume &volume, const float t, const float passThroughEvent) {
+		SceneConstPtr scene, const luxrays::Ray &ray,
+		VolumeConstPtr volume, const float t, const float passThroughEvent) {
 	hitPoint.fromLight = fixedFromLight;
 	hitPoint.throughShadowTransparency = throughShadowTransparency;
 	hitPoint.passThroughEvent = passThroughEvent;
@@ -117,15 +117,15 @@ void BSDF::Init(const bool fixedFromLight, const bool throughShadowTransparency,
 	hitPoint.fixedDir = -ray.d;
 
 	sceneObject = NULL;
-	material = &volume;
+	material = volume;
 
 	hitPoint.geometryN = Normal(-ray.d);
 	hitPoint.interpolatedN = hitPoint.geometryN;
 	hitPoint.shadeN = hitPoint.geometryN;
 
 	hitPoint.intoObject = true;
-	hitPoint.interiorVolume = &volume;
-	hitPoint.exteriorVolume = &volume;
+	hitPoint.interiorVolume = volume;
+	hitPoint.exteriorVolume = volume;
 
 	triangleLightSource = NULL;
 

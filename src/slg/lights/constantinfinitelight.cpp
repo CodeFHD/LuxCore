@@ -40,14 +40,14 @@ void ConstantInfiniteLight::GetPreprocessedData(const EnvLightVisibilityCache **
 		*elvc = visibilityMapCache;
 }
 
-float ConstantInfiniteLight::GetPower(const Scene &scene) const {
+float ConstantInfiniteLight::GetPower(SceneConstPtr scene) const {
 	const float envRadius = GetEnvRadius(scene);
 
 	return temperatureScale.Y() * gain.Y() * (4.f * M_PI * M_PI * envRadius * envRadius) *
 		color.Y();
 }
 
-Spectrum ConstantInfiniteLight::GetRadiance(const Scene &scene,
+Spectrum ConstantInfiniteLight::GetRadiance(SceneConstPtr scene,
 		const BSDF *bsdf, const Vector &dir, float *directPdfA, float *emissionPdfW) const {
 	const float envRadius = GetEnvRadius(scene);
 
@@ -79,12 +79,12 @@ Spectrum ConstantInfiniteLight::GetRadiance(const Scene &scene,
 	return temperatureScale * gain * color;
 }
 
-Spectrum ConstantInfiniteLight::Emit(const Scene &scene,
+Spectrum ConstantInfiniteLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
 		float *directPdfA, float *cosThetaAtLight) const {
-	const Point worldCenter = scene.dataSet->GetBSphere().center;
+	const Point worldCenter = scene->dataSet->GetBSphere().center;
 	const float envRadius = GetEnvRadius(scene);
 
 	// Compute InfiniteLight ray weight
@@ -108,7 +108,7 @@ Spectrum ConstantInfiniteLight::Emit(const Scene &scene,
 	return GetRadiance(scene, nullptr, ray.d);
 }
 
-Spectrum ConstantInfiniteLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum ConstantInfiniteLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
@@ -141,7 +141,7 @@ Spectrum ConstantInfiniteLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 			*emissionPdfW = UniformSpherePdf() / (M_PI * envRadius * envRadius);
 	}
 
-	const Point worldCenter = scene.dataSet->GetBSphere().center;
+	const Point worldCenter = scene->dataSet->GetBSphere().center;
 
 	const Point shadowRayOrig = bsdf.GetRayOrigin(shadowRayDir);
 	const Vector toCenter(worldCenter - shadowRayOrig);
@@ -172,7 +172,7 @@ UV ConstantInfiniteLight::GetEnvUV(const luxrays::Vector &dir) const {
 	return uv;
 }
 
-void ConstantInfiniteLight::UpdateVisibilityMap(const Scene *scene, const bool useRTMode) {
+void ConstantInfiniteLight::UpdateVisibilityMap(SceneConstPtr scene, const bool useRTMode) {
 	delete visibilityMapCache;
 	visibilityMapCache = nullptr;
 	

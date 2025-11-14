@@ -54,7 +54,7 @@ public:
 	virtual void Reset() = 0;
 
 	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, Film *film);
+			luxrays::RandomGenerator *rndGen, FilmPtr film);
 };
 
 //------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ typedef enum {
 
 class Sampler : public luxrays::NamedObject {
 public:
-	Sampler(luxrays::RandomGenerator *rnd, Film *flm,
+	Sampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 			const FilmSampleSplatter *flmSplatter,
 			const bool imgSamplesEnable) : NamedObject("sampler"), 
 			threadIndex(0), rndGen(rnd), film(flm), filmSplatter(flmSplatter),
@@ -102,7 +102,7 @@ public:
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	// Allocate a Object based on the cfg definition
 	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
@@ -128,7 +128,7 @@ protected:
 
 	u_int threadIndex;
 	luxrays::RandomGenerator *rndGen;
-	Film *film;
+	FilmPtr film;
 	const FilmSampleSplatter *filmSplatter;
 	
 	SampleType sampleType;

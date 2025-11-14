@@ -31,7 +31,7 @@ using namespace slg;
 // ImageMapResizeMipMapMemPolicy::ApplyResizePolicy()
 //------------------------------------------------------------------------------
 
-ImageMap *ImageMapResizeMipMapMemPolicy::ApplyResizePolicy(const std::string &fileName,
+ImageMapPtr ImageMapResizeMipMapMemPolicy::ApplyResizePolicy(const std::string &fileName,
 		const ImageMapConfig &imgCfg, bool &toApply) const {
 	const string srcFileName = SLG_FileNameResolver.ResolveFile(fileName);
 	
@@ -63,7 +63,7 @@ ImageMap *ImageMapResizeMipMapMemPolicy::ApplyResizePolicy(const std::string &fi
 		SDL_LOG("Probe ImageMap: " << dstFileName << " [from " << width << "x" << height <<
 				" to " << newWidth << "x" << newHeight <<"]");
 
-		ImageMap *im = new ImageMap(dstFileName, imgCfg, newWidth, newHeight);
+		ImageMapPtr im = std::make_shared<ImageMap>(dstFileName, imgCfg, newWidth, newHeight);
 		// Set the ImageMap with  the original name
 		im->SetName(fileName);
 
@@ -73,7 +73,7 @@ ImageMap *ImageMapResizeMipMapMemPolicy::ApplyResizePolicy(const std::string &fi
 
 		return im;
 	} else {
-		ImageMap *im = new ImageMap(fileName, imgCfg);
+		ImageMapPtr im = std::make_shared<ImageMap>(fileName, imgCfg);
 
 		toApply = false;
 
@@ -85,7 +85,7 @@ ImageMap *ImageMapResizeMipMapMemPolicy::ApplyResizePolicy(const std::string &fi
 // ImageMapResizeMinMemPolicy::Preprocess()
 //------------------------------------------------------------------------------
 
-void ImageMapResizeMipMapMemPolicy::Preprocess(ImageMapCache &imc, const Scene *scene,
+void ImageMapResizeMipMapMemPolicy::Preprocess(ImageMapCache &imc, SceneConstPtr scene,
 		const bool useRTMode) const {
 	if (useRTMode)
 		return;

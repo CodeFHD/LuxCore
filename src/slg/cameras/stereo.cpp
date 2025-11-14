@@ -31,11 +31,6 @@ StereoCamera::StereoCamera(const StereoCameraType sType,
 	horizStereoLensDistance = .2779f;
 }
 
-StereoCamera::~StereoCamera() {
-	delete leftEye;
-	delete rightEye;
-}
-
 const Transform &StereoCamera::GetRasterToCamera(const u_int index) const {
 	if (index == 0)
 		return leftEye->GetRasterToCamera();
@@ -83,8 +78,7 @@ void StereoCamera::Update(const u_int width, const u_int height,
 	switch(stereoType) {
 		case STEREO_PERSPECTIVE: {
 			// Create left eye camera
-			delete leftEye;
-			PerspectiveCamera *left = new PerspectiveCamera(orig - .5f * horizStereoEyesDistance * x, target, up);
+			auto left = std::make_shared<PerspectiveCamera>(orig - .5f * horizStereoEyesDistance * x, target, up);
 			left->clipHither = clipHither;
 			left->clipYon = clipYon;
 			left->shutterOpen = shutterOpen;
@@ -108,8 +102,7 @@ void StereoCamera::Update(const u_int width, const u_int height,
 			leftEye = left;
 
 			// Create right eye camera
-			delete rightEye;
-			PerspectiveCamera *right = new PerspectiveCamera(orig + .5f * horizStereoEyesDistance * x, target, up);
+			auto right = std::make_shared<PerspectiveCamera>(orig + .5f * horizStereoEyesDistance * x, target, up);
 
 			right->clipHither = clipHither;
 			right->clipYon = clipYon;
@@ -136,8 +129,7 @@ void StereoCamera::Update(const u_int width, const u_int height,
 		}
 		case STEREO_ENVIRONMENT_180: {
 			// Create left eye camera
-			delete leftEye;
-			EnvironmentCamera *left = new EnvironmentCamera(orig - .5f * horizStereoEyesDistance * x, target, up);
+			auto left = std::make_shared<EnvironmentCamera>(orig - .5f * horizStereoEyesDistance * x, target, up);
 			left->screenOffsetX = -horizStereoLensDistance * .5f;
 			left->degrees = 180.f;
 
@@ -145,8 +137,7 @@ void StereoCamera::Update(const u_int width, const u_int height,
 			leftEye = left;
 
 			// Create right eye camera
-			delete rightEye;
-			EnvironmentCamera *right = new EnvironmentCamera(orig + .5f * horizStereoEyesDistance * x, target, up);
+			auto right = std::make_shared<EnvironmentCamera>(orig + .5f * horizStereoEyesDistance * x, target, up);
 			right->screenOffsetX = horizStereoLensDistance * .5f;
 			right->degrees = 180.f;
 
@@ -156,8 +147,7 @@ void StereoCamera::Update(const u_int width, const u_int height,
 		}
 		case STEREO_ENVIRONMENT_360: {
 			// Create left eye camera
-			delete leftEye;
-			EnvironmentCamera *left = new EnvironmentCamera(orig - .5f * horizStereoEyesDistance * x, target, up);
+			auto left = std::make_shared<EnvironmentCamera>(orig - .5f * horizStereoEyesDistance * x, target, up);
 			left->screenOffsetX = -horizStereoLensDistance * .5f;
 			left->degrees = 360.f;
 
@@ -165,8 +155,7 @@ void StereoCamera::Update(const u_int width, const u_int height,
 			leftEye = left;
 
 			// Create right eye camera
-			delete rightEye;
-			EnvironmentCamera *right = new EnvironmentCamera(orig + .5f * horizStereoEyesDistance * x, target, up);
+			auto right = std::make_shared<EnvironmentCamera>(orig + .5f * horizStereoEyesDistance * x, target, up);
 			right->screenOffsetX = horizStereoLensDistance * .5f;
 			right->degrees = 360.f;
 

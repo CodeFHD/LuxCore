@@ -27,15 +27,15 @@ namespace slg {
 
 class HarlequinShape : public Shape {
 public:
-	HarlequinShape(luxrays::ExtTriangleMesh *srcMesh);
+	HarlequinShape(luxrays::ExtTriangleMeshPtr srcMesh);
 	virtual ~HarlequinShape();
 
 	virtual ShapeType GetType() const { return HARLEQUIN; }
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }

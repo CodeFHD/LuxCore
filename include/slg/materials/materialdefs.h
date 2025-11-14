@@ -39,18 +39,18 @@ public:
 	bool IsMaterialDefined(const std::string &name) const {
 		return mats.IsObjDefined(name);
 	}
-	void DefineMaterial(Material *m);
+	void DefineMaterial(MaterialPtr m);
 
-	const Material *GetMaterial(const std::string &name) const {
-		return static_cast<const Material *>(mats.GetObj(name));
+	MaterialConstPtr GetMaterial(const std::string &name) const {
+		return dynamic_pointer_cast<const Material>(mats.GetObj(name));
 	}
-	const Material *GetMaterial(const u_int index) const {
-		return static_cast<const Material *>(mats.GetObj(index));
+	MaterialConstPtr GetMaterial(const u_int index) const {
+		return dynamic_pointer_cast<const Material>(mats.GetObj(index));
 	}
 	u_int GetMaterialIndex(const std::string &name) const {
 		return mats.GetIndex(name);
 	}
-	u_int GetMaterialIndex(const Material *m) const {
+	u_int GetMaterialIndex(MaterialConstPtr m) const {
 		return mats.GetIndex(m);
 	}
 
@@ -66,12 +66,12 @@ public:
 		mats.DeleteObj(name);
 	}
 
-	void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
-  
+	void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
+ 
 	void GetMaterialSortedNames(std::vector<std::string> &names) const;
 
 private:
-	void GetMaterialSortedNamesImpl(const Material *m, std::vector<std::string> &names,
+	void GetMaterialSortedNamesImpl(MaterialConstPtr m, std::vector<std::string> &names,
 			std::unordered_set<std::string> &doneNames) const;
 
 	luxrays::NamedObjectVector mats;

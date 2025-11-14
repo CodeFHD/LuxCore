@@ -125,13 +125,13 @@ void ProjectionLight::GetPreprocessedData(float *emittedFactorData, float *absol
 		*lightProjectionData = &lightProjection;
 }
 
-float ProjectionLight::GetPower(const Scene &scene) const {
+float ProjectionLight::GetPower(SceneConstPtr scene) const {
 	return emittedFactor.Y() *
 			(imageMap ? imageMap->GetSpectrumMeanY() : 1.f) *
 			2.f * M_PI * (1.f - cosTotalWidth);
 }
 
-Spectrum ProjectionLight::Emit(const Scene &scene,
+Spectrum ProjectionLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -158,7 +158,7 @@ Spectrum ProjectionLight::Emit(const Scene &scene,
 	return c;
 }
 
-Spectrum ProjectionLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum ProjectionLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
@@ -198,7 +198,7 @@ Spectrum ProjectionLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 	return c;
 }
 
-bool ProjectionLight::IsAlwaysInShadow(const Scene &scene,
+bool ProjectionLight::IsAlwaysInShadow(SceneConstPtr scene,
 			const luxrays::Point &p, const luxrays::Normal &n) const {
 	const Vector toLight(absolutePos - p);
 	const float distance = toLight.Length();

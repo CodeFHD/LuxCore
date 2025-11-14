@@ -31,7 +31,7 @@ class LightStrategyUniform : public DistributionLightStrategy {
 public:
 	LightStrategyUniform() : DistributionLightStrategy(TYPE_UNIFORM) { }
 
-	virtual void Preprocess(const Scene *scene, const LightStrategyTask taskType,
+	virtual void Preprocess(SceneConstPtr scene, const LightStrategyTask taskType,
 			const bool useRTMode);
 
 	virtual LightStrategyType GetType() const { return GetObjectType(); }
@@ -44,7 +44,8 @@ public:
 	static LightStrategyType GetObjectType() { return TYPE_UNIFORM; }
 	static std::string GetObjectTag() { return "UNIFORM"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static LightStrategy *FromProperties(const luxrays::Properties &cfg);
+	//static LightStrategy *FromProperties(const luxrays::Properties &cfg);
+	static LightStrategyPtr FromProperties(const luxrays::Properties &cfg);
 
 protected:
 	static const luxrays::Properties &GetDefaultProps();

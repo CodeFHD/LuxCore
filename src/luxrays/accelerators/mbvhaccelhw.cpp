@@ -85,7 +85,7 @@ public:
 				const u_int tmpLeftVertCount = pageVertCount - tmpVertIndex;
 
 				// Check if there is enough space in the temporary buffer for all vertices
-				const Mesh *currentMesh = mbvh.uniqueLeafs[currentLeafIndex]->meshes[currentMeshIndex];
+				auto currentMesh = mbvh.uniqueLeafs[currentLeafIndex]->meshes[currentMeshIndex];
 				const u_int toCopy = currentMesh->GetTotalVertexCount() - currentMeshVertIndex;
 				if (tmpLeftVertCount >= toCopy) {
 					// There is enough space for all mesh vertices
@@ -281,7 +281,7 @@ public:
 	}
 
 	void UpdateBVHNodes();
-	virtual void Update(const DataSet *newDataSet);
+	virtual void Update(DataSetConstPtr newDataSet) override;
 	virtual void EnqueueTraceRayBuffer(HardwareDeviceBuffer *rayBuff,
 			HardwareDeviceBuffer *rayHitBuff, const unsigned int rayCount);
 
@@ -437,7 +437,7 @@ void MBVHKernel::UpdateBVHNodes() {
 	}
 }
 
-void MBVHKernel::Update(const DataSet *newDataSet) {
+void MBVHKernel::Update(DataSetConstPtr newDataSet) {
 	if (!mbvh.nRootNodes)
 		return;
 

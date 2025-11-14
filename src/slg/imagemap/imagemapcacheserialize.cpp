@@ -16,6 +16,8 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
+#include <boost/serialization/shared_ptr.hpp>
+
 #include "slg/imagemap/imagemapcache.h"
 #include "slg/core/sdl.h"
 
@@ -59,7 +61,7 @@ template<class Archive> void ImageMapCache::save(Archive &ar, const u_int versio
 		ar & rpta;
 
 		// Save the ImageMap
-		ImageMap *im = maps[i];
+		ImageMapPtr im = maps[i];
 		ar & im;
 	}
 
@@ -84,7 +86,7 @@ template<class Archive> void ImageMapCache::load(Archive &ar, const u_int versio
 		resizePolicyToApply[i] = rpta;
 
 		// Load the ImageMap
-		ImageMap *im;
+		ImageMapPtr im;
 		ar & im;
 		maps[i] = im;
 

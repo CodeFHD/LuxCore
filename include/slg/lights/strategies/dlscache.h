@@ -40,20 +40,22 @@ public:
 	LightStrategyDLSCache(const DLSCParams &params);
 	virtual ~LightStrategyDLSCache();
 
-	virtual void Preprocess(const Scene *scene, const LightStrategyTask taskType,
+	virtual void Preprocess(SceneConstPtr scene, const LightStrategyTask taskType,
 			const bool useRTMode);
 	
 	// Used for direct light sampling
-	virtual LightSource *SampleLights(const float u,
+	virtual LightSourcePtr SampleLights(
+			SceneConstPtr scene,
+			const float u,
 			const luxrays::Point &p, const luxrays::Normal &n,
 			const bool isVolume,
 			float *pdf) const;
-	virtual float SampleLightPdf(const LightSource *light,
+	virtual float SampleLightPdf(LightSourceConstPtr light,
 			const luxrays::Point &p, const luxrays::Normal &n,
 			const bool isVolume) const;
 
 	// Used for light emission
-	virtual LightSource *SampleLights(const float u, float *pdf) const;
+	virtual LightSourcePtr SampleLights(SceneConstPtr scene, const float u, float *pdf) const;
 
 	virtual LightStrategyType GetType() const { return GetObjectType(); }
 	virtual std::string GetTag() const { return GetObjectTag(); }
@@ -74,7 +76,7 @@ public:
 	static LightStrategyType GetObjectType() { return TYPE_DLS_CACHE; }
 	static std::string GetObjectTag() { return "DLS_CACHE"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static LightStrategy *FromProperties(const luxrays::Properties &cfg);
+	static LightStrategyPtr FromProperties(const luxrays::Properties &cfg);
 
 protected:
 	static const luxrays::Properties &GetDefaultProps();
@@ -82,7 +84,7 @@ protected:
 	LightStrategyTask taskType;
 	LightStrategyLogPower distributionStrategy;
 	DirectLightSamplingCache DLSCache;
-	
+
 	bool useRTMode;
 };
 

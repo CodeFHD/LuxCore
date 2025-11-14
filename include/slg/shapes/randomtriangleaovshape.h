@@ -27,16 +27,16 @@ namespace slg {
 
 class RandomTriangleAOVShape : public Shape {
 public:
-	RandomTriangleAOVShape(luxrays::ExtTriangleMesh *srcMesh,
+	RandomTriangleAOVShape(luxrays::ExtTriangleMeshPtr srcMesh,
 			const u_int srcDataIndex, const u_int dstDataIndex);
 	virtual ~RandomTriangleAOVShape();
 
 	virtual ShapeType GetType() const { return RANDOMTRIANGLEAOV; }
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }

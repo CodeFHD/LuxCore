@@ -29,15 +29,14 @@ namespace slg {
 
 class BombingTexture : public Texture {
 public:
-	BombingTexture(const TextureMapping2D *mp, const Texture *backgroundTx,
-			const Texture *bulletTx, const Texture *bulletMaskTx,
+	BombingTexture(TextureMapping2DConstPtr mp, TextureConstPtr backgroundTx,
+			TextureConstPtr bulletTx, TextureConstPtr bulletMaskTx,
 			const float randomScaleFctr, const bool useRandomRot,
 			const u_int multiBulletCnt) :
 			mapping(mp), backgroundTex(backgroundTx), bulletTex(bulletTx),
 			bulletMaskTex(bulletMaskTx),
 			randomScaleFactor(randomScaleFctr), useRandomRotation(useRandomRot),
 			multiBulletCount(multiBulletCnt) { }
-	virtual ~BombingTexture() { delete mapping; }
 
 	virtual TextureType GetType() const { return BOMBING_TEX; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -45,14 +44,14 @@ public:
 	virtual float Y() const;
 	virtual float Filter() const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs, TextureConstPtr self) const;
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
-	const TextureMapping2D *GetTextureMapping() const { return mapping; }
-	const Texture *GetBackgroundTex() const { return backgroundTex; }
-	const Texture *GetBulletTex() const { return bulletTex; }
-	const Texture *GetBulletMaskTex() const { return bulletMaskTex; }
+	TextureMapping2DConstPtr GetTextureMapping() const { return mapping; }
+	TextureConstPtr GetBackgroundTex() const { return backgroundTex; }
+	TextureConstPtr GetBulletTex() const { return bulletTex; }
+	TextureConstPtr GetBulletMaskTex() const { return bulletMaskTex; }
 	
 	const float GetRandomScaleFactor() const { return randomScaleFactor; }
 	const bool GetUseRandomRotation() const { return useRandomRotation; }
@@ -62,10 +61,10 @@ public:
 
 private:
 
-	const TextureMapping2D *mapping;
-	const Texture *backgroundTex;
-	const Texture *bulletTex;
-	const Texture *bulletMaskTex;
+	TextureMapping2DConstPtr mapping;
+	TextureConstPtr backgroundTex;
+	TextureConstPtr bulletTex;
+	TextureConstPtr bulletMaskTex;
 
 	const float randomScaleFactor;
 	const bool useRandomRotation;

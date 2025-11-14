@@ -30,16 +30,16 @@ namespace slg {
 
 class GroupShape : public Shape {
 public:
-	GroupShape(const std::vector<const luxrays::ExtTriangleMesh *> &meshes,
+	GroupShape(const std::vector<luxrays::ExtTriangleMeshConstPtr > &meshes,
 			const std::vector<luxrays::Transform> &trans);
 	virtual ~GroupShape();
 
 	virtual ShapeType GetType() const { return GROUP; }
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	const std::vector<const luxrays::ExtTriangleMesh *> meshes;
+	const std::vector<luxrays::ExtTriangleMeshConstPtr > meshes;
 	const std::vector<luxrays::Transform> trans;
 };
 

@@ -29,9 +29,9 @@ namespace slg {
 
 class WrinkledTexture : public Texture {
 public:
-	WrinkledTexture(const TextureMapping3D *mp, const int octs, const float omg) :
+	WrinkledTexture(TextureMapping3DConstPtr mp, const int octs, const float omg) :
 		mapping(mp), octaves(octs), omega(omg) { }
-	virtual ~WrinkledTexture() { delete mapping; }
+	virtual ~WrinkledTexture() {  }
 
 	virtual TextureType GetType() const { return WRINKLED; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -39,14 +39,14 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	int GetOctaves() const { return octaves; }
 	float GetOmega() const { return omega; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	const int octaves;
 	const float omega;
 };

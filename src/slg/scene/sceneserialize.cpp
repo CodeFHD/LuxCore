@@ -19,6 +19,7 @@
 #include <memory>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "luxrays/utils/serializationutils.h"
 #include "slg/scene/scene.h"
@@ -33,10 +34,10 @@ using namespace slg;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::Scene)
 
-Scene *Scene::LoadSerialized(const std::string &fileName) {
+ScenePtr Scene::LoadSerialized(const std::string &fileName) {
 	SerializationInputFile sif(fileName);
 
-	Scene *scene;
+	ScenePtr scene;
 	sif.GetArchive() >> scene;
 
 	if (!sif.IsGood())
@@ -45,7 +46,7 @@ Scene *Scene::LoadSerialized(const std::string &fileName) {
 	return scene;
 }
 
-void Scene::SaveSerialized(const std::string &fileName, const Scene *scene) {
+void Scene::SaveSerialized(const std::string &fileName, SceneConstPtr scene) {
 	SerializationOutputFile sof(fileName);
 
 	sof.GetArchive() << scene;

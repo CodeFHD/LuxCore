@@ -43,16 +43,16 @@ public:
 		bool normalSmooth;
 	} Params;
 
-	DisplacementShape(luxrays::ExtTriangleMesh *srcMesh, const Texture &dispMap,
+	DisplacementShape(luxrays::ExtTriangleMeshPtr srcMesh, const Texture &dispMap,
 			const Params &params);
 	virtual ~DisplacementShape();
 
 	virtual ShapeType GetType() const { return DISPLACEMENT; }
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }

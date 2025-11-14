@@ -23,6 +23,7 @@
 
 #include "luxrays/utils/properties.h"
 #include "slg/lights/light.h"
+#include "slg/lights/trianglelight.h"
 #include "slg/lights/strategies/lightstrategy.h"
 
 namespace slg {
@@ -41,47 +42,48 @@ public:
 
 	void SetLightStrategy(const luxrays::Properties &props);
 
-	void UpdateVisibilityMaps(const Scene *scene, const bool useRTMode);
+	void UpdateVisibilityMaps(SceneConstPtr scene, const bool useRTMode);
 
-	void DefineLightSource(LightSource *l);
+	void DefineLightSource(LightSourcePtr l);
 	bool IsLightSourceDefined(const std::string &name) const;
 
-	const LightSource *GetLightSource(const std::string &name) const;
-	LightSource *GetLightSource(const std::string &name);
+	LightSourceConstPtr GetLightSource(const std::string &name) const;
+	LightSourcePtr GetLightSource(const std::string &name);
 
 	u_int GetSize() const { return static_cast<u_int>(lightsByName.size()); }
 	std::vector<std::string> GetLightSourceNames() const;
 
 	void DeleteLightSource(const std::string &name);
 	void DeleteLightSourceStartWith(const std::string &namePrefix);
-	void DeleteLightSourceByMaterial(const Material *mat);
-	
-	void UpdateVolumeReferences(const Volume *oldVol, const Volume *newVol);
+	void DeleteLightSourceByMaterial(MaterialConstPtr mat);
+
+	void UpdateVolumeReferences(VolumeConstPtr oldVol, VolumeConstPtr newVol);
 
 	//--------------------------------------------------------------------------
 	// Following methods require Preprocess()
 	//--------------------------------------------------------------------------
 
-	const TriangleLight *GetLightSourceByMeshAndTriIndex(const u_int meshIndex, const u_int triIndex) const;
- 
+	TriangleLightConstPtr GetLightSourceByMeshAndTriIndex(const u_int meshIndex, const u_int triIndex) const;
+
 	u_int GetLightGroupCount() const { return lightGroupCount; }
 	const u_int GetLightTypeCount(const LightSourceType type) const { return lightTypeCount[type]; }
 	const std::vector<u_int> &GetLightTypeCounts() const { return lightTypeCount; }
 
-	const std::vector<LightSource *> &GetLightSources() const {
-		return lights;
+	LightSourcePtr GetLightSource(size_t n) const {
+		//return lights[n];
+		return lights.at(n);
 	}
-	const std::vector<EnvLightSource *> &GetEnvLightSources() const {
+	const std::vector<EnvLightSourcePtr> &GetEnvLightSources() const {
 		return envLightSources;
 	}
-	const std::vector<TriangleLight *> &GetIntersectableLightSources() const {
+	const std::vector<TriangleLightPtr> &GetIntersectableLightSources() const {
 		return intersectableLightSources;
 	}
 	const std::vector<u_int> &GetLightIndexOffsetByMeshIndex() const { return lightIndexOffsetByMeshIndex; }
 	const std::vector<u_int> &GetLightIndexByTriIndex() const { return lightIndexByTriIndex; }
-	const LightStrategy *GetEmitLightStrategy() const { return emitLightStrategy; }
-	const LightStrategy *GetIlluminateLightStrategy() const { return illuminateLightStrategy; }
-	const LightStrategy *GetInfiniteLightStrategy() const { return infiniteLightStrategy; }
+	LightStrategyConstPtr GetEmitLightStrategy() const { return emitLightStrategy; }
+	LightStrategyConstPtr GetIlluminateLightStrategy() const { return illuminateLightStrategy; }
+	LightStrategyConstPtr GetInfiniteLightStrategy() const { return infiniteLightStrategy; }
 
 	friend class Scene;
 
@@ -89,9 +91,9 @@ private:
 	// Update lightGroupCount, envLightSources, intersectableLightSources,
 	// lightIndexOffsetByMeshIndex, lightStrategyType, etc.
 	// This is called by Scene::Preprocess()
-	void Preprocess(const Scene *scene, const bool useRTMode);
+	void Preprocess(SceneConstPtr scene, const bool useRTMode);
 
-	robin_hood::unordered_flat_map<std::string, LightSource *> lightsByName;
+	robin_hood::unordered_flat_map<std::string, LightSourcePtr> lightsByName;
 
 	//--------------------------------------------------------------------------
 	// Following fields are updated with Preprocess() method
@@ -101,19 +103,19 @@ private:
 
 	std::vector<u_int> lightTypeCount;
 
-	std::vector<LightSource *> lights;
+	std::vector<LightSourcePtr> lights;
 	// Only intersectable light sources
-	std::vector<TriangleLight *> intersectableLightSources;
+	std::vector<TriangleLightPtr> intersectableLightSources;
 	// Only env. light sources (i.e. sky, sun and infinite light, etc.)
-	std::vector<EnvLightSource *> envLightSources;
+	std::vector<EnvLightSourcePtr> envLightSources;
 
 	// 2 tables to go from mesh index and triangle index to light index
 	std::vector<u_int> lightIndexOffsetByMeshIndex;
 	std::vector<u_int> lightIndexByTriIndex;
 
-	LightStrategy *emitLightStrategy;
-	LightStrategy *illuminateLightStrategy;
-	LightStrategy *infiniteLightStrategy;
+	LightStrategyPtr emitLightStrategy;
+	LightStrategyPtr illuminateLightStrategy;
+	LightStrategyPtr infiniteLightStrategy;
 };
 
 }

@@ -30,7 +30,7 @@ using namespace slg;
 // RTPathOCLRenderEngine
 //------------------------------------------------------------------------------
 
-RTPathOCLRenderEngine::RTPathOCLRenderEngine(const RenderConfig *rcfg) :
+RTPathOCLRenderEngine::RTPathOCLRenderEngine(RenderConfigConstRef rcfg) :
 		TilePathOCLRenderEngine(rcfg, false) {
 	if (nativeRenderThreadCount > 0)
 		throw runtime_error("opencl.native.threads.count must be 0 for RTPATHOCL");
@@ -69,7 +69,7 @@ void RTPathOCLRenderEngine::StartLockLess() {
 	// Disable denoiser statistics collection
 	film->GetDenoiser().SetEnabled(false);
 
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	previewResolutionReduction = RoundUpPow2(Min(Max(1, cfg.Get(GetDefaultProps().Get("rtpath.resolutionreduction.preview")).Get<int>()), 64));
 	previewResolutionReductionStep = Min(Max(1, cfg.Get(GetDefaultProps().Get("rtpath.resolutionreduction.preview.step")).Get<int>()), 64);
@@ -86,8 +86,8 @@ void RTPathOCLRenderEngine::StartLockLess() {
 
 	updateActions.Reset();
 	useFastCameraEditPath = false;
-	cameraIsUsingCustomBokeh = (renderConfig->scene->camera->GetType() == Camera::PERSPECTIVE) &&
-			(dynamic_cast<PerspectiveCamera *>(renderConfig->scene->camera))->bokehDistributionImageMap;
+	cameraIsUsingCustomBokeh = (renderConfig.scene->camera->GetType() == Camera::PERSPECTIVE) &&
+			(dynamic_pointer_cast<PerspectiveCamera>(renderConfig.scene->camera))->bokehDistributionImageMap;
 
 	// To synchronize the start of all threads
 	syncType = SYNCTYPE_NONE;
@@ -113,9 +113,9 @@ void RTPathOCLRenderEngine::StopLockLess() {
 void RTPathOCLRenderEngine::EndSceneEdit(const EditActionList &editActions) {
 	// Check if I can use the fast camera edit path
 	if (editActions.HasOnly(CAMERA_EDIT) &&
-			(renderConfig->scene->camera->GetType() == Camera::PERSPECTIVE) &&
+			(renderConfig.scene->camera->GetType() == Camera::PERSPECTIVE) &&
 			// Camera is not using custom bokeh
-			!(dynamic_cast<PerspectiveCamera *>(renderConfig->scene->camera))->bokehDistributionImageMap &&
+			!(dynamic_pointer_cast<PerspectiveCamera>(renderConfig.scene->camera))->bokehDistributionImageMap &&
 			// Camera was not using custom bokeh
 			!cameraIsUsingCustomBokeh) {
 		TilePathOCLRenderEngine::EndSceneEdit(editActions);
@@ -124,10 +124,10 @@ void RTPathOCLRenderEngine::EndSceneEdit(const EditActionList &editActions) {
 		syncType = SYNCTYPE_ENDSCENEEDIT;
 		updateActions.AddActions(editActions.GetActions());
 		syncBarrier->arrive_and_wait();
-		
+
 		TilePathOCLRenderEngine::EndSceneEdit(editActions);
-		cameraIsUsingCustomBokeh = (renderConfig->scene->camera->GetType() == Camera::PERSPECTIVE) &&
-				(dynamic_cast<PerspectiveCamera *>(renderConfig->scene->camera))->bokehDistributionImageMap;
+		cameraIsUsingCustomBokeh = (renderConfig.scene->camera->GetType() == Camera::PERSPECTIVE) &&
+				(dynamic_pointer_cast<PerspectiveCamera>(renderConfig.scene->camera))->bokehDistributionImageMap;
 		syncBarrier->arrive_and_wait();
 		
 		// Here, rendering thread 0 will update all OpenCL buffers here
@@ -155,7 +155,7 @@ void RTPathOCLRenderEngine::BeginFilmEdit() {
 }
 
 // A fast path for film resize
-void RTPathOCLRenderEngine::EndFilmEdit(Film *flm, std::mutex *flmMutex) {
+void RTPathOCLRenderEngine::EndFilmEdit(FilmPtr flm, std::mutex *flmMutex) {
 	// Update the film pointer
 	film = flm;
 	filmMutex = flmMutex;
@@ -217,7 +217,7 @@ Properties RTPathOCLRenderEngine::ToProperties(const Properties &cfg) {
 			cfg.Get(GetDefaultProps().Get("rtpath.resolutionreduction"));
 }
 
-RenderEngine *RTPathOCLRenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *RTPathOCLRenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new RTPathOCLRenderEngine(rcfg);
 }
 

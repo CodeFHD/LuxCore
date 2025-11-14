@@ -18,6 +18,8 @@
 
 #include <limits>
 
+#include <boost/serialization/shared_ptr.hpp>
+
 #include "slg/film/film.h"
 #include "slg/film/convtest/filmconvtest.h"
 #include "slg/film/imagepipeline/plugins/gaussianblur3x3.h"
@@ -32,10 +34,22 @@ using namespace slg;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::FilmConvTest)
 
-FilmConvTest::FilmConvTest(const Film *flm, const float thresholdVal,
-		const u_int warmupVal, const u_int testStepVal, const bool useFilt, const u_int idx) :
-		threshold(thresholdVal), warmup(warmupVal),	testStep(testStepVal),
-		useFilter(useFilt), imagePipelineIndex(idx), film(flm), referenceImage(NULL) {
+FilmConvTest::FilmConvTest(
+	FilmConstPtr flm,
+	const float thresholdVal,
+	const u_int warmupVal,
+	const u_int testStepVal,
+	const bool useFilt,
+	const u_int idx
+) :
+	film(flm),
+	threshold(thresholdVal),
+	warmup(warmupVal),
+	testStep(testStepVal),
+	useFilter(useFilt),
+	imagePipelineIndex(idx),
+	referenceImage(nullptr)
+{
 	Reset();
 }
 

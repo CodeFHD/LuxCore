@@ -28,7 +28,7 @@ using namespace slg;
 // RTPathCPU specific sampler shared data
 //------------------------------------------------------------------------------
 
-RTPathCPUSamplerSharedData::RTPathCPUSamplerSharedData(Film *film) :
+RTPathCPUSamplerSharedData::RTPathCPUSamplerSharedData(FilmPtr film) :
 		SamplerSharedData() {
 	filmSubRegion[0] = 0;
 	filmSubRegion[1] = 0;
@@ -40,7 +40,7 @@ RTPathCPUSamplerSharedData::RTPathCPUSamplerSharedData(Film *film) :
 	Reset(film);
 }
 
-void RTPathCPUSamplerSharedData::Reset(Film *film) {
+void RTPathCPUSamplerSharedData::Reset(FilmPtr film) {
 	engineFilm = film;
 	Reset();	
 }
@@ -83,7 +83,7 @@ void RTPathCPUSamplerSharedData::Reset() {
 }
 
 SamplerSharedData *RTPathCPUSamplerSharedData::FromProperties(const Properties &cfg,
-		RandomGenerator *rndGen, Film *film) {
+		RandomGenerator *rndGen, FilmPtr film) {
 	return new RTPathCPUSamplerSharedData(film);
 }
 
@@ -91,7 +91,7 @@ SamplerSharedData *RTPathCPUSamplerSharedData::FromProperties(const Properties &
 // RTPathCPU specific sampler
 //------------------------------------------------------------------------------
 
-RTPathCPUSampler::RTPathCPUSampler(luxrays::RandomGenerator *rnd, Film *flm,
+RTPathCPUSampler::RTPathCPUSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 			const FilmSampleSplatter *flmSplatter,
 			RTPathCPUSamplerSharedData *samplerSharedData) :
 			Sampler(rnd, flm, flmSplatter, true), sharedData(samplerSharedData) {
@@ -111,7 +111,7 @@ void RTPathCPUSampler::SetRenderEngine(RTPathCPURenderEngine *re) {
 	Reset(film);
 }
 
-void RTPathCPUSampler::Reset(Film *flm) {
+void RTPathCPUSampler::Reset(FilmPtr flm) {
 	film = flm;
 	// Disable denoiser statistics collection
 	film->GetDenoiser().SetEnabled(false);
@@ -239,7 +239,7 @@ Properties RTPathCPUSampler::ToProperties(const Properties &cfg) {
 }
 
 Sampler *RTPathCPUSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	return new RTPathCPUSampler(rndGen, film, flmSplatter, (RTPathCPUSamplerSharedData *)sharedData);
 }
 

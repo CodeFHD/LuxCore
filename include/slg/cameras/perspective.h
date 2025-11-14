@@ -69,7 +69,7 @@ public:
 
 	u_int bokehBlades, bokehPower;
 	BokehDistributionType bokehDistribution;
-	const ImageMap *bokehDistributionImageMap;
+	ImageMapConstPtr bokehDistributionImageMap;
 	luxrays::Distribution2D *bokehDistributionMap;
 	float bokehScaleX, bokehScaleY;
 

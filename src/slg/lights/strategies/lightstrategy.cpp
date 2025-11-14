@@ -48,7 +48,7 @@ Properties LightStrategy::ToProperties(const Properties &cfg) {
 		throw runtime_error("Unknown light strategy type in LightStrategy::ToProperties(): " + type);
 }
 
-LightStrategy *LightStrategy::FromProperties(const Properties &cfg) {
+LightStrategyPtr LightStrategy::FromProperties(const Properties &cfg) {
 	const string type = cfg.Get(Property("lightstrategy.type")(LightStrategyLogPower::GetObjectTag())).Get<string>();
 
 	LightStrategyRegistry::FromProperties func;

@@ -40,18 +40,18 @@ public:
 		return texs.IsObjDefined(name);
 	}
 
-	void DefineTexture(Texture *t);
+	void DefineTexture(TexturePtr t);
 
-	const Texture *GetTexture(const std::string &name) const {
-		return static_cast<const Texture *>(texs.GetObj(name));
+	TextureConstPtr GetTexture(const std::string &name) const {
+		return dynamic_pointer_cast<const Texture>(texs.GetObj(name));
 	}
-	const Texture *GetTexture(const u_int index) const {
-		return static_cast<const Texture *>(texs.GetObj(index));
+	TextureConstPtr GetTexture(const u_int index) const {
+		return dynamic_pointer_cast<const Texture>(texs.GetObj(index));
 	}
 	u_int GetTextureIndex(const std::string &name) const {
 		return texs.GetIndex(name);
 	}
-	u_int GetTextureIndex(const Texture *t) const {
+	u_int GetTextureIndex(TextureConstPtr t) const {
 		return texs.GetIndex(t);
 	}
 
@@ -69,7 +69,7 @@ public:
 	void GetTextureSortedNames(std::vector<std::string> &names) const;
 
 private:
-	void GetTextureSortedNamesImpl(const Texture *tex, std::vector<std::string> &names,
+	void GetTextureSortedNamesImpl(TextureConstPtr tex, std::vector<std::string> &names,
 			std::unordered_set<std::string> &doneNames) const;
 
 	luxrays::NamedObjectVector texs;

@@ -42,23 +42,23 @@ public:
 		const luxrays::Distribution2D **skyDistributionData,
 		const EnvLightVisibilityCache **visibilityMapCache) const;
 
-	virtual void UpdateVisibilityMap(const Scene *scene, const bool useRTMode);
+	virtual void UpdateVisibilityMap(SceneConstPtr scene, const bool useRTMode);
 
 	virtual LightSourceType GetType() const { return TYPE_IL_SKY2; }
-	virtual float GetPower(const Scene &scene) const;
+	virtual float GetPower(SceneConstPtr scene) const;
 
-	virtual luxrays::Spectrum Emit(const Scene &scene,
+	virtual luxrays::Spectrum Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		luxrays::Ray &ray, float &emissionPdfW,
 		float *directPdfA = NULL, float *cosThetaAtLight = NULL) const;
 
-    virtual luxrays::Spectrum Illuminate(const Scene &scene, const BSDF &bsdf,
+    virtual luxrays::Spectrum Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         luxrays::Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW = NULL, float *cosThetaAtLight = NULL) const;
 
-	virtual luxrays::Spectrum GetRadiance(const Scene &scene, const BSDF *bsdf,
+	virtual luxrays::Spectrum GetRadiance(SceneConstPtr scene, const BSDF *bsdf,
 			const luxrays::Vector &dir,
 			float *directPdfA = NULL, float *emissionPdfW = NULL) const;
 	virtual luxrays::UV GetEnvUV(const luxrays::Vector &dir) const;
@@ -79,7 +79,7 @@ public:
 
 private:
 	luxrays::Vector SampleSkyDome(const float u0, const float u1) const;
-	void SampleSkyDomePdf(const Scene &scene, float *directPdf, float *emissionPdf) const;
+	void SampleSkyDomePdf(SceneConstPtr scene, float *directPdf, float *emissionPdf) const;
 	luxrays::Spectrum ComputeSkyRadiance(const luxrays::Vector &w) const;
 	luxrays::Spectrum ComputeRadiance(const luxrays::Vector &w) const;
 

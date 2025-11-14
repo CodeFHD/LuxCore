@@ -16,6 +16,8 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
+#include <boost/serialization/shared_ptr.hpp>
+
 #include "luxrays/luxrays.h"
 #include "luxrays/utils/serializationutils.h"
 #include "slg/renderstate.h"
@@ -41,10 +43,10 @@ void RenderState::CheckEngineTag(const std::string &tag) {
 		throw runtime_error("Wrong engine type in a render state: " + engineTag + " instead of " + tag);
 }
 
-RenderState *RenderState::LoadSerialized(const std::string &fileName) {
+RenderStatePtr RenderState::LoadSerialized(const std::string &fileName) {
 	SerializationInputFile sif(fileName);
 
-	RenderState *renderState;
+	RenderStatePtr renderState;
 	sif.GetArchive() >> renderState;
 
 	if (!sif.IsGood())

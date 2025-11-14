@@ -29,9 +29,17 @@
 namespace slg {
 
 class RenderConfig {
+
+	struct Private{ explicit Private() = default; };
+
 public:
-	RenderConfig(const luxrays::Properties &props, Scene *scene = NULL);
-	~RenderConfig();
+
+	static RenderConfigUPtr Create(
+		const luxrays::Properties &props,
+		ScenePtr scene = nullptr
+	);
+
+	RenderConfig(Private, const luxrays::Properties &props, ScenePtr scene = nullptr);
 
 	bool HasCachedKernels();
 
@@ -43,28 +51,39 @@ public:
 	void Delete(const std::string &prefix);
 
 	Filter *AllocPixelFilter() const;
-	Film *AllocFilm() const;
+	FilmPtr AllocFilm() const;
 
-	SamplerSharedData *AllocSamplerSharedData(luxrays::RandomGenerator *rndGen, Film *film) const;
-	Sampler *AllocSampler(luxrays::RandomGenerator *rndGen, Film *film,
+	SamplerSharedData *AllocSamplerSharedData(luxrays::RandomGenerator *rndGen, FilmPtr film) const;
+	Sampler *AllocSampler(luxrays::RandomGenerator *rndGen, FilmPtr film,
 		const FilmSampleSplatter *flmSplatter,
 		SamplerSharedData *sharedData,
 		const luxrays::Properties &additionalProps) const;
 
-	RenderEngine *AllocRenderEngine() const;
+	RenderEngineUPtr AllocRenderEngine() const;
 
 	const luxrays::Properties &ToProperties() const;
 
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static const luxrays::Properties &GetDefaultProperties();
 
-	static RenderConfig *LoadSerialized(const std::string &fileName);
-	static void SaveSerialized(const std::string &fileName, const RenderConfig *renderConfig);
-	static void SaveSerialized(const std::string &fileName, const RenderConfig *renderConfig,
-		const luxrays::Properties &additionalCfg);
+	static RenderConfigUPtr LoadSerialized(const std::string &fileName);
+	static void SaveSerialized(
+		const std::string &fileName,
+		const RenderConfigUPtr& renderConfig
+	);
+	static void SaveSerialized(
+		const std::string &fileName,
+		const RenderConfigUPtr& renderConfig,
+		const luxrays::Properties &additionalCfg
+	);
+	static void SaveSerialized(
+		const std::string &fileName,
+		RenderConfigConstRef renderConfig,
+		const luxrays::Properties &additionalCfg
+	);
 
 	luxrays::Properties cfg;
-	Scene *scene;
+	ScenePtr scene;
 
 	friend class boost::serialization::access;
 

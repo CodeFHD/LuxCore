@@ -29,16 +29,16 @@ using namespace slg;
 // Volume
 //------------------------------------------------------------------------------
 
-void Volume::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void Volume::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
 	Material::AddReferencedTextures(referencedTexs);
 
 	if (iorTex)
-		iorTex->AddReferencedTextures(referencedTexs);
+		iorTex->AddReferencedTextures(referencedTexs, iorTex);
 	if (volumeEmissionTex)
-		volumeEmissionTex->AddReferencedTextures(referencedTexs);
+		volumeEmissionTex->AddReferencedTextures(referencedTexs, volumeEmissionTex);
 }
 
-void Volume::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void Volume::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	if (iorTex == oldTex)
@@ -68,13 +68,13 @@ Properties Volume::ToProperties() const {
 // SchlickScatter
 //------------------------------------------------------------------------------
 
-SchlickScatter::SchlickScatter(const Volume *vol, const Texture *gTex) :
+SchlickScatter::SchlickScatter(VolumeConstRef vol, TextureConstPtr gTex) :
 	volume(vol), g(gTex) {
 }
 
 Spectrum SchlickScatter::GetColor(const HitPoint &hitPoint) const {
-	Spectrum r = volume->SigmaS(hitPoint);
-	const Spectrum sigmaA = volume->SigmaA(hitPoint);
+	Spectrum r = volume.SigmaS(hitPoint);
+	const Spectrum sigmaA = volume.SigmaA(hitPoint);
 	for (u_int i = 0; i < COLOR_SAMPLES; ++i) {
 		if (r.c[i] > 0.f)
 			r.c[i] /= r.c[i] + sigmaA.c[i];

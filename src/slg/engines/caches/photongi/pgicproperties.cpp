@@ -95,7 +95,7 @@ const Properties &PhotonGICache::GetDefaultProps() {
 	return props;
 }
 
-PhotonGICache *PhotonGICache::FromProperties(const Scene *scn, const Properties &cfg) {
+PhotonGICache *PhotonGICache::FromProperties(SceneConstPtr scn, const Properties &cfg) {
 	PhotonGICacheParams params;
 
 	params.indirect.enabled = cfg.Get(GetDefaultProps().Get("path.photongi.indirect.enabled")).Get<bool>();

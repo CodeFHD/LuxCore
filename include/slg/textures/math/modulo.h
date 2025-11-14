@@ -29,7 +29,7 @@ namespace slg {
 
 class ModuloTexture : public Texture {
 public:
-    ModuloTexture(const Texture *t, const Texture *m) : texture(t), modulo(m) {}
+    ModuloTexture(TextureConstPtr t, TextureConstPtr m) : texture(t), modulo(m) {}
     virtual ~ModuloTexture() {}
 
     virtual TextureType GetType() const {return MODULO_TEX;}
@@ -38,19 +38,19 @@ public:
     virtual float Y() const {return 1.f;}
     virtual float Filter() const {return 1.f;}
 
-    virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-        Texture::AddReferencedTextures(referencedTexs);
+    virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+        Texture::AddReferencedTextures(referencedTexs, self);
 
-        texture->AddReferencedTextures(referencedTexs);
-        modulo->AddReferencedTextures(referencedTexs);
+        texture->AddReferencedTextures(referencedTexs, texture);
+        modulo->AddReferencedTextures(referencedTexs, modulo);
     }
 
-    virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+    virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
         texture->AddReferencedImageMaps(referencedImgMaps);
         modulo->AddReferencedImageMaps(referencedImgMaps);
     }
 
-    virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+    virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
         if(texture == oldTex) {
             texture = newTex;
         }
@@ -59,14 +59,14 @@ public:
         }
     }
 
-    const Texture *GetTexture() const {return texture;}
-    const Texture *GetModulo() const {return modulo;}
+    TextureConstPtr GetTexture() const {return texture;}
+    TextureConstPtr GetModulo() const {return modulo;}
 
     virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-    const Texture *texture;
-    const Texture *modulo;
+    TextureConstPtr texture;
+    TextureConstPtr modulo;
 };
 }
 #endif  /* _SLG_MODULOTEX_H */

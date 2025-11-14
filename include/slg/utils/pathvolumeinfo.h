@@ -44,16 +44,16 @@ class PathVolumeInfo {
 public:
 	PathVolumeInfo();
 
-	const Volume *GetCurrentVolume() const { return currentVolume; }
-	const Volume *GetVolume(const u_int i) const { return volumeList[i]; }
+	VolumeConstPtr GetCurrentVolume() const { return currentVolume; }
+	VolumeConstPtr GetVolume(const u_int i) const { return volumeList[i]; }
 	const u_int GetListSize() const { return volumeListSize; }
 
-	void AddVolume(const Volume *vol);
-	void RemoveVolume(const Volume *vol);
-	void SetCurrentVolume(const Volume *vol) { currentVolume = vol; }
+	void AddVolume(VolumeConstPtr vol);
+	void RemoveVolume(VolumeConstPtr vol);
+	void SetCurrentVolume(VolumeConstPtr vol) { currentVolume = vol; }
 
-	const Volume *SimulateRemoveVolume(const Volume *vol) const;
-	const Volume *SimulateAddVolume(const Volume *vol) const;
+	VolumeConstPtr SimulateRemoveVolume(VolumeConstPtr vol) const;
+	VolumeConstPtr SimulateAddVolume(VolumeConstPtr vol) const;
 
 	void SetScatteredStart(const bool v) { scatteredStart = v; }
 	bool IsScatteredStart() const { return scatteredStart; }
@@ -62,16 +62,16 @@ public:
 	bool ContinueToTrace(const BSDF &bsdf) const;
 
 	void SetHitPointVolumes(HitPoint &hitPoint,
-		const Volume *matInteriorVolume,
-		const Volume *matExteriorVolume,
-		const Volume *defaultWorldVolume) const;
+		VolumeConstPtr matInteriorVolume,
+		VolumeConstPtr matExteriorVolume,
+		VolumeConstPtr defaultWorldVolume) const;
 
 private:
-	static bool CompareVolumePriorities(const Volume *vol1, const Volume *vol2);
+	static bool CompareVolumePriorities(VolumeConstPtr vol1, VolumeConstPtr vol2);
 
-	const Volume *currentVolume;
+	VolumeConstPtr currentVolume;
 	// Using a fixed array here mostly to have the same code as the OpenCL implementation
-	const Volume *volumeList[PATHVOLUMEINFO_SIZE];
+	VolumeConstPtr volumeList[PATHVOLUMEINFO_SIZE];
 	u_int volumeListSize;
 	
 	bool scatteredStart;

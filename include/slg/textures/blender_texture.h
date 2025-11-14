@@ -30,8 +30,8 @@ namespace slg {
 
 class BlenderBlendTexture : public Texture {
 public:
-	BlenderBlendTexture(const TextureMapping3D *mp, const std::string ptype, const bool direction, float bright, float contrast);
-	virtual ~BlenderBlendTexture() { delete mapping; }
+	BlenderBlendTexture(TextureMapping3DConstPtr mp, const std::string ptype, const bool direction, float bright, float contrast);
+	virtual ~BlenderBlendTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_BLEND; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -41,7 +41,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::ProgressionType GetProgressionType() const { return type; }
 	bool GetDirection() const { return direction; }
 	float GetBright() const { return bright; }
@@ -50,7 +50,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::ProgressionType type;
 	bool direction;
 	float bright, contrast;
@@ -62,8 +62,8 @@ private:
 
 class BlenderCloudsTexture : public Texture {
 public:
-	BlenderCloudsTexture(const TextureMapping3D *mp, const std::string &pnoisebasis, const float noisesize, const int noisedepth, bool hard, float bright, float contrast);
-	virtual ~BlenderCloudsTexture() { delete mapping; }
+	BlenderCloudsTexture(TextureMapping3DConstPtr mp, const std::string &pnoisebasis, const float noisesize, const int noisedepth, bool hard, float bright, float contrast);
+	virtual ~BlenderCloudsTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_CLOUDS; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -73,7 +73,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::BlenderNoiseBasis GetNoiseBasis() const { return noisebasis; }
 	int GetNoiseDepth() const { return noisedepth; }
 	float GetNoiseSize() const { return noisesize; }
@@ -84,7 +84,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::BlenderNoiseBasis noisebasis;
 	int noisedepth;
 	float noisesize;
@@ -98,9 +98,9 @@ private:
 
 class BlenderDistortedNoiseTexture : public Texture {
 public:
-	BlenderDistortedNoiseTexture(const TextureMapping3D *mp, const std::string &pnoisedistortion,const std::string &pnoisebasis,
+	BlenderDistortedNoiseTexture(TextureMapping3DConstPtr mp, const std::string &pnoisedistortion,const std::string &pnoisebasis,
 		float distortion, float noisesize, float bright, float contrast);
-	virtual ~BlenderDistortedNoiseTexture() { delete mapping; }
+	virtual ~BlenderDistortedNoiseTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_DISTORTED_NOISE; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -110,7 +110,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::BlenderNoiseBasis GetNoiseDistortion() const { return noisedistortion; }
 	blender::BlenderNoiseBasis GetNoiseBasis() const { return noisebasis; }
 	float GetDistortion() const { return distortion; }
@@ -121,7 +121,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::BlenderNoiseBasis noisedistortion;
 	blender::BlenderNoiseBasis noisebasis;
 	float distortion;
@@ -134,8 +134,8 @@ private:
 //------------------------------------------------------------------------------
 class BlenderMagicTexture : public Texture {
 public:
-	BlenderMagicTexture(const TextureMapping3D *mp, const int noisedepth, const float turbulence, float bright, float contrast);
-	virtual ~BlenderMagicTexture() { delete mapping; }
+	BlenderMagicTexture(TextureMapping3DConstPtr mp, const int noisedepth, const float turbulence, float bright, float contrast);
+	virtual ~BlenderMagicTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_MAGIC; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -143,7 +143,7 @@ public:
 	virtual float Y() const;
 	virtual float Filter() const;
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	int GetNoiseDepth() const { return noisedepth; }
 	float GetTurbulence() const { return turbulence; }
 	float GetBright() const { return bright; }
@@ -152,7 +152,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	int noisedepth;
 	float turbulence;
 	float bright, contrast;
@@ -164,10 +164,10 @@ private:
 
 class BlenderMarbleTexture : public Texture {
 public:
-	BlenderMarbleTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoisebasis,
+	BlenderMarbleTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoisebasis,
 		const std::string &pnoise, float noisesize, float turb, int noisedepth, bool hard,
 		float bright, float contrast);
-	virtual ~BlenderMarbleTexture() { delete mapping; }
+	virtual ~BlenderMarbleTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_MARBLE; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -177,7 +177,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::BlenderMarbleType GetMarbleType() const { return type; }
 	blender::BlenderNoiseBasis GetNoiseBasis() const { return noisebasis; }
 	blender::BlenderNoiseBase GetNoiseBasis2() const { return noisebasis2; }
@@ -191,7 +191,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::BlenderMarbleType type;
 	blender::BlenderNoiseBasis noisebasis;
 	blender::BlenderNoiseBase noisebasis2;
@@ -207,10 +207,10 @@ private:
 
 class BlenderMusgraveTexture : public Texture {
 public:
-	BlenderMusgraveTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoisebasis,
+	BlenderMusgraveTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoisebasis,
 		const float dimension, const float intensity, const float lacunarity, const float offset, const float gain,
 		const float octaves, const float noisesize, float bright, float contrast);
-	virtual ~BlenderMusgraveTexture() { delete mapping; }
+	virtual ~BlenderMusgraveTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_MUSGRAVE; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -220,7 +220,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::BlenderMusgraveType GetMusgraveType() const { return type; }
 	blender::BlenderNoiseBasis GetNoiseBasis() const { return noisebasis; }
 	float GetDimension() const { return dimension; }
@@ -236,7 +236,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::BlenderMusgraveType type;
 	blender::BlenderNoiseBasis noisebasis;
 	float dimension;
@@ -283,9 +283,9 @@ private:
 
 class BlenderStucciTexture : public Texture {
 public:
-	BlenderStucciTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoisebasis,
+	BlenderStucciTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoisebasis,
 		const float noisesize, float turb, bool hard, float bright, float contrast);
-	virtual ~BlenderStucciTexture() { delete mapping; }
+	virtual ~BlenderStucciTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_STUCCI; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -295,7 +295,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::BlenderStucciType GetStucciType() const { return type; }
 	blender::BlenderNoiseBasis GetNoiseBasis() const { return noisebasis; }
 	float GetNoiseSize() const { return noisesize; }
@@ -307,7 +307,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::BlenderStucciType type;
 	blender::BlenderNoiseBasis noisebasis;
 	float noisesize, turbulence;
@@ -321,9 +321,9 @@ private:
 
 class BlenderVoronoiTexture : public Texture {
 public:
-	BlenderVoronoiTexture(const TextureMapping3D *mp, const float intensity, const float exponent, const float fw1, const float fw2, const float fw3, const float fw4,
+	BlenderVoronoiTexture(TextureMapping3DConstPtr mp, const float intensity, const float exponent, const float fw1, const float fw2, const float fw3, const float fw4,
 		const std::string distmetric, const float noisesize, float bright, float contrast);
-	virtual ~BlenderVoronoiTexture() { delete mapping; }
+	virtual ~BlenderVoronoiTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_VORONOI; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -333,7 +333,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	float GetBright() const { return bright; }
 	float GetContrast() const { return contrast; }
 	blender::DistanceMetric GetDistMetric() const { return distancemetric; }
@@ -348,7 +348,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 
 	float intensity;
 	float feature_weight1;
@@ -367,8 +367,8 @@ private:
 
 class BlenderWoodTexture : public Texture {
 public:
-	BlenderWoodTexture(const TextureMapping3D *mp, const std::string &ptype, const std::string &pnoise, const std::string &pnoisebasis, const float noisesize, float turb, bool hard, float bright, float contrast);
-	virtual ~BlenderWoodTexture() { delete mapping; }
+	BlenderWoodTexture(TextureMapping3DConstPtr mp, const std::string &ptype, const std::string &pnoise, const std::string &pnoisebasis, const float noisesize, float turb, bool hard, float bright, float contrast);
+	virtual ~BlenderWoodTexture() {  }
 
 	virtual TextureType GetType() const { return BLENDER_WOOD; }
 	virtual float GetFloatValue(const HitPoint &hitPoint) const;
@@ -378,7 +378,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	blender::BlenderWoodType GetWoodType() const { return type; }
 	blender::BlenderNoiseBasis GetNoiseBasis() const { return noisebasis; }
 	blender::BlenderNoiseBase GetNoiseBasis2() const { return noisebasis2; }
@@ -391,7 +391,7 @@ public:
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 	blender::BlenderWoodType type;
 	blender::BlenderNoiseBasis noisebasis;
 	blender::BlenderNoiseBase noisebasis2;

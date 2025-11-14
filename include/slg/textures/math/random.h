@@ -29,7 +29,7 @@ namespace slg {
 
 class RandomTexture : public Texture {
 public:
-	RandomTexture(const Texture *t, const u_int o) : tex(t), seedOffset(o) { }
+	RandomTexture(TextureConstPtr t, const u_int o) : tex(t), seedOffset(o) { }
 	virtual ~RandomTexture() { }
 
 	virtual TextureType GetType() const { return RANDOM_TEX; }
@@ -38,26 +38,26 @@ public:
 	virtual float Y() const { return luxrays::Spectrum(.5f).Y(); }
 	virtual float Filter() const { return .5f; }
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		tex->AddReferencedTextures(referencedTexs);
+		tex->AddReferencedTextures(referencedTexs, tex);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		tex->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (tex == oldTex)
 			tex = newTex;
 	}
 
-	const Texture *GetTexture() const { return tex; }
+	TextureConstPtr GetTexture() const { return tex; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const Texture *tex;
+	TextureConstPtr tex;
 	const u_int seedOffset;
 };
 

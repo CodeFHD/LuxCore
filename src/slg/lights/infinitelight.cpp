@@ -77,7 +77,7 @@ void InfiniteLight::GetPreprocessedData(const Distribution2D **imageMapDistribut
 		*elvc = visibilityMapCache;
 }
 
-float InfiniteLight::GetPower(const Scene &scene) const {
+float InfiniteLight::GetPower(SceneConstPtr scene) const {
 	const float envRadius = GetEnvRadius(scene);
 
 	// TODO: I should consider sampleUpperHemisphereOnly here
@@ -93,7 +93,7 @@ UV InfiniteLight::GetEnvUV(const luxrays::Vector &dir) const {
 	return uv;
 }
 
-Spectrum InfiniteLight::GetRadiance(const Scene &scene,
+Spectrum InfiniteLight::GetRadiance(SceneConstPtr scene,
 		const BSDF *bsdf, const Vector &dir,
 		float *directPdfA, float *emissionPdfW) const {
 	const Vector localDir = Normalize(Inverse(lightToWorld) * -dir);
@@ -121,7 +121,7 @@ Spectrum InfiniteLight::GetRadiance(const Scene &scene,
 	return temperatureScale * gain * imageMap->GetSpectrum(UV(u, v));
 }
 
-Spectrum InfiniteLight::Emit(const Scene &scene,
+Spectrum InfiniteLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -147,7 +147,7 @@ Spectrum InfiniteLight::Emit(const Scene &scene,
     float d1, d2;
     ConcentricSampleDisk(u2, u3, &d1, &d2);
 
-	const Point worldCenter = scene.dataSet->GetBSphere().center;
+	const Point worldCenter = scene->dataSet->GetBSphere().center;
 	const float envRadius = GetEnvRadius(scene);
 	const Point pDisk = worldCenter + envRadius * (d1 * x + d2 * y);
 	const Point rayOrig = pDisk - envRadius * rayDir;
@@ -169,7 +169,7 @@ Spectrum InfiniteLight::Emit(const Scene &scene,
 	return result;
 }
 
-Spectrum InfiniteLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum InfiniteLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
@@ -190,7 +190,7 @@ Spectrum InfiniteLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 
 	const Vector shadowRayDir = Normalize(lightToWorld * localDir);
 	
-	const Point worldCenter = scene.dataSet->GetBSphere().center;
+	const Point worldCenter = scene->dataSet->GetBSphere().center;
 	const float envRadius = GetEnvRadius(scene);
 
 	const Point shadowRayOrig = bsdf.GetRayOrigin(shadowRayDir);
@@ -223,7 +223,7 @@ Spectrum InfiniteLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 	return result;
 }
 
-void InfiniteLight::UpdateVisibilityMap(const Scene *scene, const bool useRTMode) {
+void InfiniteLight::UpdateVisibilityMap(SceneConstPtr scene, const bool useRTMode) {
 	delete visibilityMapCache;
 	visibilityMapCache = nullptr;
 
@@ -232,13 +232,13 @@ void InfiniteLight::UpdateVisibilityMap(const Scene *scene, const bool useRTMode
 
 	if (useVisibilityMapCache) {
 		// Scale the infinitelight image map to the requested size
-		unique_ptr<ImageMap> luminanceMapImage(imageMap->Copy());
+		ImageMapPtr luminanceMapImage(imageMap->Copy());
 		// Select the image luminance
 		luminanceMapImage->SelectChannel(ImageMapStorage::WEIGHTED_MEAN);
 		luminanceMapImage->Preprocess();
 
 		visibilityMapCache = new EnvLightVisibilityCache(scene, this,
-				luminanceMapImage.get(), visibilityMapCacheParams);		
+				luminanceMapImage, visibilityMapCacheParams);		
 		visibilityMapCache->Build();
 	}
 }

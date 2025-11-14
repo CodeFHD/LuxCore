@@ -52,7 +52,7 @@ public:
 	friend class CPURenderEngine;
 
 protected:
-	virtual std::jthread *AllocRenderThread() = 0;
+	virtual JThreadPtr AllocRenderThread() = 0;
 
 	virtual void StartRenderThread();
 	virtual void StopRenderThread();
@@ -60,7 +60,7 @@ protected:
 	u_int threadIndex;
 	CPURenderEngine *renderEngine;
 
-	std::jthread *renderThread;
+	JThreadPtr renderThread;
 	luxrays::IntersectionDevice *device;
 
 	bool started, editMode, threadDone;
@@ -68,7 +68,7 @@ protected:
 
 class CPURenderEngine : public RenderEngine {
 public:
-	CPURenderEngine(const RenderConfig *cfg);
+	CPURenderEngine(RenderConfigConstRef cfg);
 	virtual ~CPURenderEngine();
 
 	virtual bool HasDone() const;
@@ -113,7 +113,7 @@ public:
 
 class CPUNoTileRenderEngine : public CPURenderEngine {
 public:
-	CPUNoTileRenderEngine(const RenderConfig *cfg);
+	CPUNoTileRenderEngine(RenderConfigConstRef cfg);
 	virtual ~CPUNoTileRenderEngine();
 
 	virtual void StartLockLess();
@@ -150,12 +150,12 @@ public:
 protected:
 	virtual void StartRenderThread();
 
-	Film *tileFilm;
+	FilmPtr tileFilm;
 };
 
 class CPUTileRenderEngine : public CPURenderEngine {
 public:
-	CPUTileRenderEngine(const RenderConfig *cfg);
+	CPUTileRenderEngine(RenderConfigConstRef cfg);
 	virtual ~CPUTileRenderEngine();
 
 	void GetPendingTiles(std::deque<const Tile *> &tiles) { return tileRepository->GetPendingTiles(tiles); }

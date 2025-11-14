@@ -51,7 +51,7 @@ using namespace std;
 // PathOCLBaseRenderEngine
 //------------------------------------------------------------------------------
 
-PathOCLBaseRenderEngine::PathOCLBaseRenderEngine(const RenderConfig *rcfg,
+PathOCLBaseRenderEngine::PathOCLBaseRenderEngine(RenderConfigConstRef rcfg,
 		const bool supportsNativeThreads) :	OCLRenderEngine(rcfg, supportsNativeThreads),
 		compiledScene(nullptr), pixelFilterDistribution(nullptr), oclSampler(nullptr),
 		oclPixelFilter(nullptr), photonGICache(nullptr), lightSamplerSharedData(nullptr) {
@@ -173,7 +173,7 @@ void PathOCLBaseRenderEngine::InitGPUTaskConfiguration() {
 
 	// Film configuration
 	CompiledScene::CompileFilm(*film, taskConfig.film);
-	taskConfig.film.usePixelAtomics = renderConfig->GetProperty("pathocl.pixelatomics.enable").Get<bool>();
+	taskConfig.film.usePixelAtomics = renderConfig.GetProperty("pathocl.pixelatomics.enable").Get<bool>();
 	if ((taskConfig.sampler.type == slg::ocl::SOBOL) && (taskConfig.sampler.sobol.overlapping > 1)) {
 		// I need to use atomics in this case
 		taskConfig.film.usePixelAtomics = true;
@@ -181,7 +181,7 @@ void PathOCLBaseRenderEngine::InitGPUTaskConfiguration() {
 }
 
 void PathOCLBaseRenderEngine::InitPixelFilterDistribution() {
-	unique_ptr<Filter> pixelFilter(renderConfig->AllocPixelFilter());
+	unique_ptr<Filter> pixelFilter(renderConfig.AllocPixelFilter());
 
 	// Compile sample distribution
 	delete[] pixelFilterDistribution;
@@ -200,13 +200,13 @@ void PathOCLBaseRenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_PIXEL_NORMALIZED);
 
 	// pathTracer has not yet been initialized
-	const bool hybridBackForwardEnable = renderConfig->cfg.Get(PathTracer::GetDefaultProps().
+	const bool hybridBackForwardEnable = renderConfig.cfg.Get(PathTracer::GetDefaultProps().
 			Get("path.hybridbackforward.enable")).Get<bool>();
 	if (hybridBackForwardEnable)
 		film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
 		lightSamplerSharedData = MetropolisSamplerSharedData::FromProperties(Properties(), &seedBaseGenerator, film);
 
-	film->SetRadianceGroupCount(renderConfig->scene->lightDefs.GetLightGroupCount());
+	film->SetRadianceGroupCount(renderConfig.scene->lightDefs.GetLightGroupCount());
 	film->Init();
 }
 
@@ -268,7 +268,7 @@ bool PathOCLBaseRenderEngine::HasCachedKernels(const RenderConfig &renderConfig)
 }
 
 void PathOCLBaseRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Sampler
@@ -309,7 +309,7 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 	// note: photonGICache could have been restored from the render state
 	if ((GetType() != RTPATHOCL) && !photonGICache) {
 		delete photonGICache;
-		photonGICache = PhotonGICache::FromProperties(renderConfig->scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
 		
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)
@@ -322,7 +322,7 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 	// Compile the scene
 	//--------------------------------------------------------------------------
 
-	compiledScene = new CompiledScene(renderConfig->scene, &pathTracer);
+	compiledScene = new CompiledScene(renderConfig.scene, &pathTracer);
 	compiledScene->SetMaxMemPageSize(maxMemPageSize);
 	compiledScene->EnableCode(cfg.Get(Property("opencl.code.alwaysenabled")("")).Get<string>());
 	compiledScene->Compile();
@@ -352,7 +352,7 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 	}
 
 	// I know kernels has been compiled at this point
-	SetCachedKernels(*renderConfig);
+	SetCachedKernels(renderConfig);
 
 	//--------------------------------------------------------------------------
 	// Start native render threads

@@ -29,22 +29,22 @@ using namespace slg;
 // SceneObject
 //------------------------------------------------------------------------------
 
-void SceneObject::AddReferencedMeshes(std::unordered_set<const luxrays::ExtMesh *> &referencedMesh) const {
+void SceneObject::AddReferencedMeshes(std::unordered_set<luxrays::ExtMeshConstPtr > &referencedMesh) const {
 	referencedMesh.insert(mesh);
 
 	// Check if it is an instance and add referenced mesh
 	if (mesh->GetType() == TYPE_EXT_TRIANGLE_INSTANCE) {
-		ExtInstanceTriangleMesh *imesh = (ExtInstanceTriangleMesh *)mesh;
+		auto imesh = static_pointer_cast<ExtInstanceTriangleMesh>(mesh);
 		referencedMesh.insert(imesh->GetExtTriangleMesh());
-	}	
+	}
 }
 
-void SceneObject::UpdateMaterialReferences(const Material *oldMat, const Material *newMat) {
+void SceneObject::UpdateMaterialReferences(MaterialConstPtr oldMat, MaterialConstPtr newMat) {
 	if (mat == oldMat)
 		mat = newMat;
 }
 
-bool SceneObject::UpdateMeshReference(const luxrays::ExtMesh *oldMesh, luxrays::ExtMesh *newMesh) {
+bool SceneObject::UpdateMeshReference(luxrays::ExtMeshConstPtr oldMesh, luxrays::ExtMeshPtr newMesh) {
 	if (mesh == oldMesh) {
 		mesh = newMesh;
 		return true;
@@ -67,23 +67,22 @@ Properties SceneObject::ToProperties(const ExtMeshCache &extMeshCache,
 	switch (mesh->GetType()) {
 		case TYPE_EXT_TRIANGLE: {
 			// I have to output the applied transformation
-			const ExtTriangleMesh *extMesh = (const ExtTriangleMesh *)mesh;
-
+			auto extMesh = static_pointer_cast<const ExtTriangleMesh>(mesh);
 			Transform trans;
 			extMesh->GetLocal2World(0.f, trans);
 
-			props.Set(Property("scene.objects." + name + ".appliedtransformation")(trans.m));			
+			props.Set(Property("scene.objects." + name + ".appliedtransformation")(trans.m));
 			break;
 		}
 		case TYPE_EXT_TRIANGLE_INSTANCE: {
 			// I have to output also the transformation
-			const ExtInstanceTriangleMesh *inst = (const ExtInstanceTriangleMesh *)mesh;
+			auto inst = static_pointer_cast<const ExtInstanceTriangleMesh>(mesh);
 			props.Set(Property("scene.objects." + name + ".transformation")(inst->GetTransformation().m));
 			break;
 		}
 		case TYPE_EXT_TRIANGLE_MOTION: {
 			// I have to output also the motion blur key transformations
-			const ExtMotionTriangleMesh *mot = (const ExtMotionTriangleMesh *)mesh;
+			auto mot = static_pointer_cast<const ExtMotionTriangleMesh>(mesh);
 			props.Set(mot->GetMotionSystem().ToProperties("scene.objects." + name, true));
 			break;
 		}
@@ -110,7 +109,7 @@ Properties SceneObject::ToProperties(const ExtMeshCache &extMeshCache,
 	return props;
 }
 
-void SceneObject::SetBakeMap(const ImageMap *map, const BakeMapType type, const u_int uvIndex) {
+void SceneObject::SetBakeMap(ImageMapConstPtr map, const BakeMapType type, const u_int uvIndex) {
 	bakeMap = map;
 	bakeMapType = type;
 	bakeMapUVIndex = uvIndex;
@@ -122,12 +121,15 @@ Spectrum SceneObject::GetBakeMapValue(const UV &uv) const {
 	return bakeMap->GetSpectrum(uv);
 }
 
-void SceneObject::AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+void SceneObject::AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 	if (bakeMap)
 		referencedImgMaps.insert(bakeMap);
 }
 
-void SceneObject::AddReferencedMaterials(std::unordered_set<const Material *> &referencedMats) const {
-	mat->AddReferencedMaterials(referencedMats);
+void SceneObject::AddReferencedMaterials(
+	std::unordered_set<MaterialConstPtr> &referencedMats,
+	MaterialConstPtr self
+) const {
+	mat->AddReferencedMaterials(referencedMats, self);
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

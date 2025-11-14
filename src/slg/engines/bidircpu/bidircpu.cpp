@@ -28,10 +28,10 @@ using namespace std;
 // BiDirCPURenderEngine
 //------------------------------------------------------------------------------
 
-BiDirCPURenderEngine::BiDirCPURenderEngine(const RenderConfig *rcfg) :
+BiDirCPURenderEngine::BiDirCPURenderEngine(RenderConfigConstRef rcfg) :
 		CPUNoTileRenderEngine(rcfg), sampleSplatter(nullptr),
 		photonGICache(nullptr) {
-	if (rcfg->scene->camera->GetType() == Camera::STEREO)
+	if (rcfg.scene->camera->GetType() == Camera::STEREO)
 		throw std::runtime_error("BIDIRCPU render engine doesn't support stereo camera");
 
 	lightPathsCount = 1;
@@ -46,12 +46,12 @@ BiDirCPURenderEngine::~BiDirCPURenderEngine() {
 	delete aovWarmupSamplerSharedData;
 }
 
-RenderState *BiDirCPURenderEngine::GetRenderState() {
-	return new BiDirCPURenderState(bootStrapSeed, photonGICache);
+RenderStatePtr BiDirCPURenderEngine::GetRenderState() {
+	return std::make_shared<BiDirCPURenderState>(bootStrapSeed, photonGICache);
 }
 
 void BiDirCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
@@ -88,7 +88,7 @@ void BiDirCPURenderEngine::StartLockLess() {
 		// Check if the render state is of the right type
 		startRenderState->CheckEngineTag(GetObjectTag());
 
-		BiDirCPURenderState *rs = (BiDirCPURenderState *)startRenderState;
+		auto rs = static_pointer_cast<BiDirCPURenderState>(startRenderState);
 
 		// Use a new seed to continue the rendering
 		const u_int newSeed = rs->bootStrapSeed + 1;
@@ -102,9 +102,8 @@ void BiDirCPURenderEngine::StartLockLess() {
 		// I have to set the scene pointer in photonGICache because it is not
 		// saved by serialization
 		if (photonGICache)
-			photonGICache->SetScene(renderConfig->scene);
+			photonGICache->SetScene(renderConfig.scene);
 
-		delete startRenderState;
 		startRenderState = nullptr;
 	}
 
@@ -114,7 +113,7 @@ void BiDirCPURenderEngine::StartLockLess() {
 
 	// note: photonGICache could have been restored from the render state
 	if (!photonGICache) {
-		photonGICache = PhotonGICache::FromProperties(renderConfig->scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
 
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)
@@ -142,7 +141,7 @@ void BiDirCPURenderEngine::StartLockLess() {
 void BiDirCPURenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_PIXEL_NORMALIZED);
 	film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
-	film->SetRadianceGroupCount(renderConfig->scene->lightDefs.GetLightGroupCount());
+	film->SetRadianceGroupCount(renderConfig.scene->lightDefs.GetLightGroupCount());
 	film->SetThreadCount(renderThreads.size());
 	film->Init();
 }
@@ -176,7 +175,7 @@ Properties BiDirCPURenderEngine::ToProperties(const Properties &cfg) {
 			PhotonGICache::ToProperties(cfg);
 }
 
-RenderEngine *BiDirCPURenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *BiDirCPURenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new BiDirCPURenderEngine(rcfg);
 }
 

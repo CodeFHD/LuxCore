@@ -145,7 +145,7 @@ void Film::CreateHWContext() {
 		}
 
 		// Just an empty data set
-		dataSet = new DataSet(ctx);
+		dataSet = std::make_shared<DataSet>(ctx);
 		dataSet->Preprocess();
 		ctx->SetDataSet(dataSet);
 		ctx->Start();
@@ -180,8 +180,7 @@ void Film::DeleteHWContext() {
 
 	delete ctx;
 	ctx = nullptr;
-	delete dataSet;
-	dataSet = nullptr;
+	dataSet.reset();
 }
 
 void Film::AllocateHWBuffers() {

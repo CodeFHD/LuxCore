@@ -28,17 +28,17 @@ using namespace slg;
 // LuxRender Metal2 material porting.
 //------------------------------------------------------------------------------
 
-Metal2Material::Metal2Material(const Texture *frontTransp, const Texture *backTransp,
-		const Texture *emitted, const Texture *bump,
-		const Texture *nn, const Texture *kk, const Texture *u, const Texture *v) :
+Metal2Material::Metal2Material(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+		TextureConstPtr emitted, TextureConstPtr bump,
+		TextureConstPtr nn, TextureConstPtr kk, TextureConstPtr u, TextureConstPtr v) :
 			Material(frontTransp, backTransp, emitted, bump),
 			fresnelTex(NULL), n(nn), k(kk), nu(u), nv(v) {
 	glossiness = ComputeGlossiness(nu, nv);
 }
 
-Metal2Material::Metal2Material(const Texture *frontTransp, const Texture *backTransp,
-		const Texture *emitted, const Texture *bump,
-		const FresnelTexture *ft, const Texture *u, const Texture *v) :
+Metal2Material::Metal2Material(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+		TextureConstPtr emitted, TextureConstPtr bump,
+		FresnelTextureConstPtr ft, TextureConstPtr u, TextureConstPtr v) :
 			Material(frontTransp, backTransp, emitted, bump),
 			fresnelTex(ft), n(NULL), k(NULL), nu(u), nv(v) {
 	glossiness = ComputeGlossiness(nu, nv);
@@ -167,26 +167,26 @@ void Metal2Material::Pdf(const HitPoint &hitPoint,
 		*reversePdfW = SchlickDistribution_Pdf(roughness, wh, anisotropy) / (4.f * AbsDot(localLightDir, wh));
 }
 
-void Metal2Material::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void Metal2Material::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs) const {
 	Material::AddReferencedTextures(referencedTexs);
 
 	if (fresnelTex)
-		fresnelTex->AddReferencedTextures(referencedTexs);
+		fresnelTex->AddReferencedTextures(referencedTexs, fresnelTex);
 	if (n)
-		n->AddReferencedTextures(referencedTexs);
+		n->AddReferencedTextures(referencedTexs, n);
 	if (k)
-		k->AddReferencedTextures(referencedTexs);
+		k->AddReferencedTextures(referencedTexs, k);
 
-	nu->AddReferencedTextures(referencedTexs);
-	nv->AddReferencedTextures(referencedTexs);
+	nu->AddReferencedTextures(referencedTexs, nu);
+	nv->AddReferencedTextures(referencedTexs, nv);
 }
 
-void Metal2Material::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void Metal2Material::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	bool updateGlossiness = false;
 	if (fresnelTex == oldTex)
-		fresnelTex = (FresnelTexture *)newTex;
+		fresnelTex = static_pointer_cast<const FresnelTexture>(newTex);
 	if (n == oldTex)
 		n = newTex;
 	if (k == oldTex)

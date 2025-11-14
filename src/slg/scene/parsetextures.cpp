@@ -109,17 +109,17 @@ void Scene::ParseTextures(const Properties &props) {
 			SDL_LOG("Texture definition: " << texName);
 		}
 
-		Texture *tex = CreateTexture(texName, props);
+		auto tex = CreateTexture(texName, props);
 		// Density grid data are stored with image maps
 		if ((tex->GetType() == IMAGEMAP) || (tex->GetType() == DENSITYGRID_TEX))
 			editActions.AddAction(IMAGEMAPS_EDIT);
 
 		if (texDefs.IsTextureDefined(texName)) {
 			// A replacement for an existing texture
-			const Texture *oldTex = texDefs.GetTexture(texName);
+			auto oldTex = texDefs.GetTexture(texName);
 
 			// FresnelTexture can be replaced only with other FresnelTexture
-			if (dynamic_cast<const FresnelTexture *>(oldTex) && !dynamic_cast<const FresnelTexture *>(tex))
+			if (dynamic_pointer_cast<const FresnelTexture>(oldTex) && !dynamic_pointer_cast<FresnelTexture>(tex))
 				throw runtime_error("You can not replace a fresnel texture with the texture: " + texName);
 
 			texDefs.DefineTexture(tex);
@@ -133,23 +133,24 @@ void Scene::ParseTextures(const Properties &props) {
 	editActions.AddActions(MATERIALS_EDIT | MATERIAL_TYPES_EDIT);
 }
 
-Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
+TexturePtr Scene::CreateTexture(const string &texName, const Properties &props) {
 	const string propName = "scene.textures." + texName;
 	const string texType = props.Get(Property(propName + ".type")("imagemap")).Get<string>();
 
-	Texture *tex = NULL;
+	TexturePtr tex = NULL;
 	if (texType == "imagemap") {
 		const string name = props.Get(Property(propName + ".file")("image.png")).Get<string>();
 
-		ImageMap *im = imgMapCache.GetImageMap(name, ImageMapConfig(props, propName), true);
+		ImageMapPtr im = imgMapCache.GetImageMap(name, ImageMapConfig(props, propName), true);
 
 		const bool randomizedTiling = props.Get(Property(propName + ".randomizedtiling.enable")(false)).Get<bool>();
 		if (randomizedTiling && (im->GetStorage()->wrapType != ImageMapStorage::REPEAT))
 			throw runtime_error("Randomized tiling requires REPEAT wrap type in imagemap texture: " + propName);
 
 		const float gain = props.Get(Property(propName + ".gain")(1.0)).Get<double>();
+		auto mapping = CreateTextureMapping2D(propName + ".mapping", props);
 		tex = ImageMapTexture::AllocImageMapTexture(texName, imgMapCache, im,
-				CreateTextureMapping2D(propName + ".mapping", props),
+				mapping,
 				gain, randomizedTiling);
 	} else if (texType == "constfloat1") {
 		float v = props.Get(Property(propName + ".value")(1.0)).Get<double>();
@@ -158,7 +159,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		ColorSpaceConfig::FromProperties(props, propName, colorCfg, ColorSpaceConfig::defaultNopConfig);
 		colorSpaceConv.ConvertFrom(colorCfg, v);
 		
-		tex = new ConstFloatTexture(v);
+		tex = std::make_shared<ConstFloatTexture>(v);
 	} else if (texType == "constfloat3") {
 		Spectrum c = props.Get(Property(propName + ".value")(1.f, 1.f, 1.f)).Get<Spectrum>();
 
@@ -166,27 +167,28 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		ColorSpaceConfig::FromProperties(props, propName, colorCfg, ColorSpaceConfig::defaultNopConfig);
 		colorSpaceConv.ConvertFrom(colorCfg, c);
 
-		tex = new ConstFloat3Texture(c);
+		tex = std::make_shared<ConstFloat3Texture>(c);
 	} else if (texType == "scale") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new ScaleTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<ScaleTexture>(tex1, tex2);
 	} else if (texType == "fresnelapproxn") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(.5f, .5f, .5f)));
-		tex = new FresnelApproxNTexture(tex1);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture")(.5f, .5f, .5f)));
+		tex = std::make_shared<FresnelApproxNTexture>(tex1);
 	} else if (texType == "fresnelapproxk") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(.5f, .5f, .5f)));
-		tex = new FresnelApproxKTexture(tex1);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture")(.5f, .5f, .5f)));
+		tex = std::make_shared<FresnelApproxKTexture>(tex1);
 	} else if (texType == "checkerboard2d") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(0.f)));
-
-		tex = new CheckerBoard2DTexture(CreateTextureMapping2D(propName + ".mapping", props), tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(0.f)));
+		tex = std::make_shared<CheckerBoard2DTexture>(
+			CreateTextureMapping2D(propName + ".mapping", props), tex1, tex2
+		);
 	} else if (texType == "checkerboard3d") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(0.f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(0.f)));
 
-		tex = new CheckerBoard3DTexture(CreateTextureMapping3D(propName + ".mapping", props), tex1, tex2);
+		tex = std::make_shared<CheckerBoard3DTexture>(CreateTextureMapping3D(propName + ".mapping", props), tex1, tex2);
 	} else if (texType == "densitygrid") {
 		if (!props.IsDefined(propName + ".nx") || !props.IsDefined(propName + ".ny") || !props.IsDefined(propName + ".nz"))
 			throw runtime_error("Missing dimensions property in densitygrid texture: " + propName);
@@ -199,7 +201,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const ImageMapStorage::StorageType storageType = ImageMapStorage::String2StorageType(
 				props.Get(Property(propName + ".storage")("auto")).Get<string>());
 
-		ImageMap *imgMap;
+		ImageMapPtr imgMap;
 		if (props.IsDefined(propName + ".data")) {
 			const Property &dataProp = props.Get(Property(propName + ".data"));
 
@@ -235,33 +237,33 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		imgMap->SetName(name);
 		imgMapCache.DefineImageMap(imgMap);
 
-		tex = new DensityGridTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<DensityGridTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				nx, ny, nz, imgMap);
 	} else if (texType == "mix") {
-		const Texture *amtTex = GetTexture(props.Get(Property(propName + ".amount")(.5f)));
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(0.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		auto amtTex = GetTexture(props.Get(Property(propName + ".amount")(.5f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(0.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
 
-		tex = new MixTexture(amtTex, tex1, tex2);
+		tex = std::make_shared<MixTexture>(amtTex, tex1, tex2);
 	} else if (texType == "fbm") {
 		const int octaves = props.Get(Property(propName + ".octaves")(8)).Get<int>();
 		const float omega = props.Get(Property(propName + ".roughness")(.5)).Get<double>();
 
-		tex = new FBMTexture(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega);
+		tex = std::make_shared<FBMTexture>(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega);
 	} else if (texType == "marble") {
 		const int octaves = props.Get(Property(propName + ".octaves")(8)).Get<int>();
 		const float omega = props.Get(Property(propName + ".roughness")(.5)).Get<double>();
 		const float scale = props.Get(Property(propName + ".scale")(1.0)).Get<double>();
 		const float variation = props.Get(Property(propName + ".variation")(.2)).Get<double>();
 
-		tex = new MarbleTexture(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega, scale, variation);
+		tex = std::make_shared<MarbleTexture>(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega, scale, variation);
 	} else if (texType == "blender_blend") {
 		const string progressiontype = props.Get(Property(propName + ".progressiontype")("linear")).Get<string>();
 		const string direct = props.Get(Property(propName + ".direction")("horizontal")).Get<string>();
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderBlendTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderBlendTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				progressiontype, (direct=="vertical"), bright, contrast);
 	} else if (texType == "blender_clouds") {
 		const string hard = props.Get(Property(propName + ".noisetype")("soft_noise")).Get<string>();
@@ -271,7 +273,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderCloudsTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderCloudsTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				noisebasis, noisesize, noisedepth, (hard == "hard_noise"), bright, contrast);
 	} else if (texType == "blender_distortednoise") {
 		const string noisedistortion = props.Get(Property(propName + ".noise_distortion")("blender_original")).Get<string>();
@@ -281,7 +283,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderDistortedNoiseTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderDistortedNoiseTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				noisedistortion, noisebasis, distortion, noisesize, bright, contrast);
 	} else if (texType == "blender_magic") {
 		const int noisedepth = Clamp(props.Get(Property(propName + ".noisedepth")(2)).Get<int>(), 0, 25);
@@ -289,7 +291,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderMagicTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderMagicTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				noisedepth, turbulence, bright, contrast);
 	} else if (texType == "blender_marble") {
 		const string marbletype = props.Get(Property(propName + ".marbletype")("soft")).Get<string>();
@@ -302,7 +304,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderMarbleTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderMarbleTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				marbletype, noisebasis, noisebasis2, noisesize, turbulence, noisedepth, (hard=="hard_noise"), bright, contrast);
 	} else if (texType == "blender_musgrave") {
 		const string musgravetype = props.Get(Property(propName + ".musgravetype")("multifractal")).Get<string>();
@@ -317,14 +319,14 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderMusgraveTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderMusgraveTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				musgravetype, noisebasis, dimension, intensity, lacunarity, offset, gain, octaves, noisesize, bright, contrast);
 	} else if (texType == "blender_noise") {
 		const int noisedepth = Clamp(props.Get(Property(propName + ".noisedepth")(2)).Get<int>(), 0, 25);
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderNoiseTexture(noisedepth, bright, contrast);
+		tex = std::make_shared<BlenderNoiseTexture>(noisedepth, bright, contrast);
 	} else if (texType == "blender_stucci") {
 		const string stuccitype = props.Get(Property(propName + ".stuccitype")("plastic")).Get<string>();
 		const string noisebasis = props.Get(Property(propName + ".noisebasis")("blender_original")).Get<string>();
@@ -334,7 +336,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderStucciTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderStucciTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				stuccitype, noisebasis, noisesize, turbulence, (hard=="hard_noise"), bright, contrast);
 	} else if (texType == "blender_wood") {
 		const string woodtype = props.Get(Property(propName + ".woodtype")("bands")).Get<string>();
@@ -346,7 +348,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderWoodTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<BlenderWoodTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				woodtype, noisebasis2, noisebasis, noisesize, turbulence, (hard=="hard_noise"), bright, contrast);
 	} else if (texType == "blender_voronoi") {
 		const float intensity = props.Get(Property(propName + ".intensity")(1.0)).Get<double>();
@@ -360,16 +362,16 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float bright = props.Get(Property(propName + ".bright")(1.0)).Get<double>();
 		const float contrast = props.Get(Property(propName + ".contrast")(1.0)).Get<double>();
 
-		tex = new BlenderVoronoiTexture(CreateTextureMapping3D(propName + ".mapping", props), intensity, exponent, fw1, fw2, fw3, fw4, distmetric, noisesize, bright, contrast);
+		tex = std::make_shared<BlenderVoronoiTexture>(CreateTextureMapping3D(propName + ".mapping", props), intensity, exponent, fw1, fw2, fw3, fw4, distmetric, noisesize, bright, contrast);
 	} else if (texType == "dots") {
-		const Texture *insideTex = GetTexture(props.Get(Property(propName + ".inside")(1.f)));
-		const Texture *outsideTex = GetTexture(props.Get(Property(propName + ".outside")(0.f)));
+		auto insideTex = GetTexture(props.Get(Property(propName + ".inside")(1.f)));
+		auto outsideTex = GetTexture(props.Get(Property(propName + ".outside")(0.f)));
 
-		tex = new DotsTexture(CreateTextureMapping2D(propName + ".mapping", props), insideTex, outsideTex);
+		tex = std::make_shared<DotsTexture>(CreateTextureMapping2D(propName + ".mapping", props), insideTex, outsideTex);
 	} else if (texType == "brick") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".bricktex")(1.f, 1.f, 1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".mortartex")(.2f, .2f, .2f)));
-		const Texture *tex3 = GetTexture(props.Get(Property(propName + ".brickmodtex")(1.f, 1.f, 1.f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".bricktex")(1.f, 1.f, 1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".mortartex")(.2f, .2f, .2f)));
+		auto tex3 = GetTexture(props.Get(Property(propName + ".brickmodtex")(1.f, 1.f, 1.f)));
 
 		const float modulationBias = Clamp(props.Get(Property(propName + ".brickmodbias")(0.0)).Get<double>(), -1.0, 1.0);
 		const string brickbond = props.Get(Property(propName + ".brickbond")("running")).Get<string>();
@@ -379,30 +381,30 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float mortarsize = props.Get(Property(propName + ".mortarsize")(.010)).Get<double>();
 		const float brickrun = props.Get(Property(propName + ".brickrun")(.750)).Get<double>();
 
-		tex = new BrickTexture(CreateTextureMapping3D(propName + ".mapping", props), tex1, tex2, tex3,
+		tex = std::make_shared<BrickTexture>(CreateTextureMapping3D(propName + ".mapping", props), tex1, tex2, tex3,
 				brickwidth, brickheight, brickdepth, mortarsize, brickrun, brickbond, modulationBias);
 	} else if (texType == "add") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new AddTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<AddTexture>(tex1, tex2);
 	} else if (texType == "subtract") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new SubtractTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<SubtractTexture>(tex1, tex2);
 	} else if (texType == "windy") {
-		tex = new WindyTexture(CreateTextureMapping3D(propName + ".mapping", props));
+		tex = std::make_shared<WindyTexture>(CreateTextureMapping3D(propName + ".mapping", props));
 	} else if (texType == "wrinkled") {
 		const int octaves = props.Get(Property(propName + ".octaves")(8)).Get<int>();
 		const float omega = props.Get(Property(propName + ".roughness")(.50)).Get<double>();
 
-		tex = new WrinkledTexture(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega);
+		tex = std::make_shared<WrinkledTexture>(CreateTextureMapping3D(propName + ".mapping", props), octaves, omega);
 	} else if (texType == "uv") {
-		tex = new UVTexture(CreateTextureMapping2D(propName + ".mapping", props));
+		tex = std::make_shared<UVTexture>(CreateTextureMapping2D(propName + ".mapping", props));
 	} else if (texType == "band") {
 		const string interpTypeString = props.Get(Property(propName + ".interpolation")("linear")).Get<string>();
 		const BandTexture::InterpolationType interpType = BandTexture::String2InterpolationType(interpTypeString);
 
-		const Texture *amtTex = GetTexture(props.Get(Property(propName + ".amount")(.5f)));
+		auto amtTex = GetTexture(props.Get(Property(propName + ".amount")(.5f)));
 
 		vector<float> offsets;
 		vector<Spectrum> values;
@@ -416,30 +418,30 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		if (offsets.size() == 0)
 			throw runtime_error("Empty Band texture: " + texName);
 
-		tex = new BandTexture(interpType, amtTex, offsets, values);
+		tex = std::make_shared<BandTexture>(interpType, amtTex, offsets, values);
 	} else if (texType == "hitpointcolor") {
 		const u_int dataIndex = Clamp(props.Get(Property(propName + ".dataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		tex = new HitPointColorTexture(dataIndex);
+		tex = std::make_shared<HitPointColorTexture>(dataIndex);
 	} else if (texType == "hitpointalpha") {
 		const u_int dataIndex = Clamp(props.Get(Property(propName + ".dataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		tex = new HitPointAlphaTexture(dataIndex);
+		tex = std::make_shared<HitPointAlphaTexture>(dataIndex);
 	} else if (texType == "hitpointgrey") {
 		const u_int dataIndex = Clamp(props.Get(Property(propName + ".dataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 		const int channel = props.Get(Property(propName + ".channel")(-1)).Get<int>();
 
-		tex = new HitPointGreyTexture(dataIndex,
+		tex = std::make_shared<HitPointGreyTexture>(dataIndex,
 				((channel != 0) && (channel != 1) && (channel != 2)) ?
 					numeric_limits<u_int>::max() : static_cast<u_int>(channel));
 	} else if (texType == "hitpointvertexaov") {
 		const u_int dataIndex = Clamp(props.Get(Property(propName + ".dataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		tex = new HitPointVertexAOVTexture(dataIndex);
+		tex = std::make_shared<HitPointVertexAOVTexture>(dataIndex);
 	} else if (texType == "hitpointtriangleaov") {
 		const u_int dataIndex = Clamp(props.Get(Property(propName + ".dataindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
-		tex = new HitPointTriangleAOVTexture(dataIndex);
+		tex = std::make_shared<HitPointTriangleAOVTexture>(dataIndex);
 	} else if (texType == "cloud") {
 		const float radius = props.Get(Property(propName + ".radius")(.50)).Get<double>();
 		const float noisescale = props.Get(Property(propName + ".noisescale")(.50)).Get<double>();
@@ -453,12 +455,12 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 		const float baseflatness = props.Get(Property(propName + ".baseflatness")(.80)).Get<double>();
 		const float spheresize = props.Get(Property(propName + ".spheresize")(.150)).Get<double>();
 
-		tex = new CloudTexture(CreateTextureMapping3D(propName + ".mapping", props), radius, noisescale, turbulence,
+		tex = std::make_shared<CloudTexture>(CreateTextureMapping3D(propName + ".mapping", props), radius, noisescale, turbulence,
 								sharpness, noiseoffset, spheres, octaves, omega, variability, baseflatness, spheresize);
 	} else if (texType == "blackbody") {
 		const float temperature = Max(props.Get(Property(propName + ".temperature")(6500.0)).Get<double>(), 0.0);
 		const bool normalize = props.Get(Property(propName + ".normalize")(false)).Get<bool>();
-		tex = new BlackBodyTexture(temperature, normalize);
+		tex = std::make_shared<BlackBodyTexture>(temperature, normalize);
 	} else if (texType == "irregulardata") {
 		if (!props.IsDefined(propName + ".wavelengths"))
 			throw runtime_error("Missing wavelengths property in irregulardata texture: " + propName);
@@ -480,7 +482,7 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 
 		const float resolution = props.Get(Property(propName + ".resolution")(5.0)).Get<double>();
 		const bool emission = props.Get(Property(propName + ".emission")(true)).Get<bool>();
-		tex = new IrregularDataTexture(waveLengths.size(), &waveLengths[0], &data[0], resolution, emission);
+		tex = std::make_shared<IrregularDataTexture>(waveLengths.size(), &waveLengths[0], &data[0], resolution, emission);
 	} else if (texType == "lampspectrum") {
 		tex = AllocLampSpectrumTex(props, propName);
 	} else if (texType == "fresnelabbe") {
@@ -488,14 +490,14 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 	} else if (texType == "fresnelcauchy") {
 		tex = AllocFresnelCauchyTex(props, propName);
 	} else if (texType == "fresnelcolor") {
-		const Texture *col = GetTexture(props.Get(Property(propName + ".kr")(.5f)));
+		auto col = GetTexture(props.Get(Property(propName + ".kr")(.5f)));
 
-		tex = new FresnelColorTexture(col);
+		tex = std::make_shared<FresnelColorTexture>(col);
 	} else if (texType == "fresnelconst") {
 		const Spectrum n = GetColor(props.Get(Property(propName + ".n")(1.f, 1.f, 1.f)));
 		const Spectrum k = GetColor(props.Get(Property(propName + ".k")(1.f, 1.f, 1.f)));
 
-		tex = new FresnelConstTexture(n, k);
+		tex = std::make_shared<FresnelConstTexture>(n, k);
 	} else if (texType == "fresnelluxpop") {
 		tex = AllocFresnelLuxPopTex(props, propName);
 	} else if (texType == "fresnelpreset") {
@@ -503,138 +505,138 @@ Texture *Scene::CreateTexture(const string &texName, const Properties &props) {
 	} else if (texType == "fresnelsopra") {
 		tex = AllocFresnelSopraTex(props, propName);
 	} else if (texType == "abs") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
 
-		tex = new AbsTexture(tex1);
+		tex = std::make_shared<AbsTexture>(tex1);
 	} else if (texType == "clamp") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
 		const float minVal = props.Get(Property(propName + ".min")(0.0)).Get<double>();
 		const float maxVal = props.Get(Property(propName + ".max")(0.0)).Get<double>();
 
-		tex = new ClampTexture(tex1, minVal, maxVal);
+		tex = std::make_shared<ClampTexture>(tex1, minVal, maxVal);
 	} else if (texType == "colordepth") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".kt")(1.f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".kt")(1.f)));
 		const float depth = props.Get(Property(propName + ".depth")(1.00)).Get<double>();
 
-		tex = new ColorDepthTexture(depth, tex1);
+		tex = std::make_shared<ColorDepthTexture>(depth, tex1);
 	} else if (texType == "normalmap") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
 		const float scale = Max(0.0, props.Get(Property(propName + ".scale")(1.0)).Get<double>());
 
-		tex = new NormalMapTexture(tex1, scale);
+		tex = std::make_shared<NormalMapTexture>(tex1, scale);
 	} else if (texType == "bilerp") {
-		const Texture *t00 = GetTexture(props.Get(Property(propName + ".texture00")(0.f)));
-		const Texture *t01 = GetTexture(props.Get(Property(propName + ".texture01")(1.f)));
-		const Texture *t10 = GetTexture(props.Get(Property(propName + ".texture10")(0.f)));
-		const Texture *t11 = GetTexture(props.Get(Property(propName + ".texture11")(1.f)));
+		auto t00 = GetTexture(props.Get(Property(propName + ".texture00")(0.f)));
+		auto t01 = GetTexture(props.Get(Property(propName + ".texture01")(1.f)));
+		auto t10 = GetTexture(props.Get(Property(propName + ".texture10")(0.f)));
+		auto t11 = GetTexture(props.Get(Property(propName + ".texture11")(1.f)));
 
-		tex = new BilerpTexture(t00, t01, t10, t11);
+		tex = std::make_shared<BilerpTexture>(t00, t01, t10, t11);
 	} else if (texType == "hsv") {
-		const Texture *t = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
-		const Texture *h = GetTexture(props.Get(Property(propName + ".hue")(0.5f)));
-		const Texture *s = GetTexture(props.Get(Property(propName + ".saturation")(1.f)));
-		const Texture *v = GetTexture(props.Get(Property(propName + ".value")(1.f)));
+		auto t = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto h = GetTexture(props.Get(Property(propName + ".hue")(0.5f)));
+		auto s = GetTexture(props.Get(Property(propName + ".saturation")(1.f)));
+		auto v = GetTexture(props.Get(Property(propName + ".value")(1.f)));
 
-		tex = new HsvTexture(t, h, s, v);
+		tex = std::make_shared<HsvTexture>(t, h, s, v);
 	} else if (texType == "divide") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new DivideTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<DivideTexture>(tex1, tex2);
 	} else if (texType == "remap") {
-		const Texture *value = GetTexture(props.Get(Property(propName + ".value")(0.5f)));
-		const Texture *sourceMin = GetTexture(props.Get(Property(propName + ".sourcemin")(0.f)));
-		const Texture *sourceMax = GetTexture(props.Get(Property(propName + ".sourcemax")(1.f)));
-		const Texture *targetMin = GetTexture(props.Get(Property(propName + ".targetmin")(0.f)));
-		const Texture *targetMax = GetTexture(props.Get(Property(propName + ".targetmax")(1.f)));
-		tex = new RemapTexture(value, sourceMin, sourceMax, targetMin, targetMax);
+		auto value = GetTexture(props.Get(Property(propName + ".value")(0.5f)));
+		auto sourceMin = GetTexture(props.Get(Property(propName + ".sourcemin")(0.f)));
+		auto sourceMax = GetTexture(props.Get(Property(propName + ".sourcemax")(1.f)));
+		auto targetMin = GetTexture(props.Get(Property(propName + ".targetmin")(0.f)));
+		auto targetMax = GetTexture(props.Get(Property(propName + ".targetmax")(1.f)));
+		tex = std::make_shared<RemapTexture>(value, sourceMin, sourceMax, targetMin, targetMax);
 	} else if (texType == "objectid") {
-		tex = new ObjectIDTexture();
+		tex = std::make_shared<ObjectIDTexture>();
 	} else if (texType == "objectidcolor") {
-		tex = new ObjectIDColorTexture();
+		tex = std::make_shared<ObjectIDColorTexture>();
 	} else if (texType == "objectidnormalized") {
-		tex = new ObjectIDNormalizedTexture();
+		tex = std::make_shared<ObjectIDNormalizedTexture>();
 	} else if (texType == "dotproduct") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new DotProductTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<DotProductTexture>(tex1, tex2);
 	} else if (texType == "power") {
-		const Texture *base = GetTexture(props.Get(Property(propName + ".base")(1.f)));
-		const Texture *exponent = GetTexture(props.Get(Property(propName + ".exponent")(1.f)));
-		tex = new PowerTexture(base, exponent);
+		auto base = GetTexture(props.Get(Property(propName + ".base")(1.f)));
+		auto exponent = GetTexture(props.Get(Property(propName + ".exponent")(1.f)));
+		tex = std::make_shared<PowerTexture>(base, exponent);
 	} else if (texType == "lessthan") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new LessThanTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<LessThanTexture>(tex1, tex2);
 	} else if (texType == "greaterthan") {
-		const Texture *tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		tex = new GreaterThanTexture(tex1, tex2);
+		auto tex1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto tex2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		tex = std::make_shared<GreaterThanTexture>(tex1, tex2);
 	} else if (texType == "shadingnormal") {
-		tex = new ShadingNormalTexture();
+		tex = std::make_shared<ShadingNormalTexture>();
 	} else if (texType == "position") {
-		tex = new PositionTexture();
+		tex = std::make_shared<PositionTexture>();
 	} else if (texType == "splitfloat3") {
-		const Texture *t = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto t = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
 		const int channel = Min(2, Max(0, props.Get(Property(propName + ".channel")(0)).Get<int>()));
-		tex = new SplitFloat3Texture(t, static_cast<u_int>(channel));
+		tex = std::make_shared<SplitFloat3Texture>(t, static_cast<u_int>(channel));
 	} else if (texType == "makefloat3") {
-		const Texture *t1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *t2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		const Texture *t3 = GetTexture(props.Get(Property(propName + ".texture3")(1.f)));
-		tex = new MakeFloat3Texture(t1, t2, t3);
+		auto t1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto t2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		auto t3 = GetTexture(props.Get(Property(propName + ".texture3")(1.f)));
+		tex = std::make_shared<MakeFloat3Texture>(t1, t2, t3);
     } else if (texType == "rounding") {
-        const Texture *texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
-        const Texture *increment = GetTexture(props.Get(Property(propName + ".increment")(0.5f)));
-        tex = new RoundingTexture(texture, increment);
+        auto texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+        auto increment = GetTexture(props.Get(Property(propName + ".increment")(0.5f)));
+        tex = std::make_shared<RoundingTexture>(texture, increment);
     } else if (texType == "modulo") {
-		const Texture *texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
-		const Texture *modulo = GetTexture(props.Get(Property(propName + ".modulo")(0.5f)));
-		tex = new ModuloTexture(texture, modulo);
+		auto texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto modulo = GetTexture(props.Get(Property(propName + ".modulo")(0.5f)));
+		tex = std::make_shared<ModuloTexture>(texture, modulo);
 	} else if (texType == "brightcontrast") {
-		const Texture *texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
-		const Texture *brightnessTex = GetTexture(props.Get(Property(propName + ".brightness")(0.f)));
-		const Texture *contrastTex = GetTexture(props.Get(Property(propName + ".contrast")(0.f)));
-		tex = new BrightContrastTexture(texture, brightnessTex, contrastTex);
+		auto texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto brightnessTex = GetTexture(props.Get(Property(propName + ".brightness")(0.f)));
+		auto contrastTex = GetTexture(props.Get(Property(propName + ".contrast")(0.f)));
+		tex = std::make_shared<BrightContrastTexture>(texture, brightnessTex, contrastTex);
 	} else if (texType == "triplanar") {
-		const Texture *t1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
-		const Texture *t2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
-		const Texture *t3 = GetTexture(props.Get(Property(propName + ".texture3")(1.f)));
+		auto t1 = GetTexture(props.Get(Property(propName + ".texture1")(1.f)));
+		auto t2 = GetTexture(props.Get(Property(propName + ".texture2")(1.f)));
+		auto t3 = GetTexture(props.Get(Property(propName + ".texture3")(1.f)));
 		const bool enableUVlessBumpMap = props.Get(Property(propName + ".uvlessbumpmap.enable")(true)).Get<bool>();
-		tex = new TriplanarTexture(CreateTextureMapping3D(propName + ".mapping", props),
+		tex = std::make_shared<TriplanarTexture>(CreateTextureMapping3D(propName + ".mapping", props),
 				t1, t2, t3, enableUVlessBumpMap);
     } else if (texType == "random") {
-		const Texture *texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
+		auto texture = GetTexture(props.Get(Property(propName + ".texture")(1.f)));
 		const u_int seedOffset = props.Get(Property(propName + ".seed")(0u)).Get<u_int>();
-		tex = new RandomTexture(texture, seedOffset);
+		tex = std::make_shared<RandomTexture>(texture, seedOffset);
 	} else if (texType == "wireframe") {
-		const Texture *borderTex = GetTexture(props.Get(Property(propName + ".border")(1.f)));
-		const Texture *insideTex = GetTexture(props.Get(Property(propName + ".inside")(0.f)));
+		auto borderTex = GetTexture(props.Get(Property(propName + ".border")(1.f)));
+		auto insideTex = GetTexture(props.Get(Property(propName + ".inside")(0.f)));
 		const float width = props.Get(Property(propName + ".width")(0.0)).Get<double>();
 
-		tex = new WireFrameTexture(width, borderTex, insideTex);
+		tex = std::make_shared<WireFrameTexture>(width, borderTex, insideTex);
 	/*} else if (texType == "bevel") {
-		const Texture *bumpTex = props.IsDefined(propName + ".bumptex") ?
+		auto bumpTex = props.IsDefined(propName + ".bumptex") ?
 			GetTexture(props.Get(Property(propName + ".bumptex")(1.f))) : nullptr;
 		
 		const float radius = props.Get(Property(propName + ".radius")(.0250)).Get<double>();
 
-		tex = new BevelTexture(bumpTex, radius);*/
+		tex = std::make_shared<BevelTexture(bumpTex, radius);*/
 	} else if (texType == "distort") {
-		const Texture *texture = GetTexture(props.Get(Property(propName + ".texture")(0.f)));
-		const Texture *offset = GetTexture(props.Get(Property(propName + ".offset")(0.f)));
+		auto texture = GetTexture(props.Get(Property(propName + ".texture")(0.f)));
+		auto offset = GetTexture(props.Get(Property(propName + ".offset")(0.f)));
 		const float strength = props.Get(Property(propName + ".strength")(1.0)).Get<double>();
 
-		tex = new DistortTexture(texture, offset, strength);
+		tex = std::make_shared<DistortTexture>(texture, offset, strength);
 	} else if (texType == "bombing") {
-		const Texture *background = GetTexture(props.Get(Property(propName + ".background")(1.f)));
-		const Texture *bullet = GetTexture(props.Get(Property(propName + ".bullet")(1.f)));
-		const Texture *bulletMask = GetTexture(props.Get(Property(propName + ".bullet.mask")(0.f)));
+		auto background = GetTexture(props.Get(Property(propName + ".background")(1.f)));
+		auto bullet = GetTexture(props.Get(Property(propName + ".bullet")(1.f)));
+		auto bulletMask = GetTexture(props.Get(Property(propName + ".bullet.mask")(0.f)));
 		
 		const float randomScaleFactor = Max(props.Get(Property(propName + ".bullet.randomscale.range")(.250)).Get<double>(), 0.0);
 		const bool useRandomRotation = props.Get(Property(propName + ".bullet.randomrotation.enable")(true)).Get<bool>();
 		const u_int multiBulletCount = Max(props.Get(Property(propName + ".bullet.count")(1u)).Get<u_int>(), 1u);
 
-		tex = new BombingTexture(CreateTextureMapping2D(propName + ".mapping", props),
+		tex = std::make_shared<BombingTexture>(CreateTextureMapping2D(propName + ".mapping", props),
 				background, bullet, bulletMask, randomScaleFactor, useRandomRotation,
 				multiBulletCount);
 	} else
@@ -683,7 +685,7 @@ Spectrum Scene::GetColor(const luxrays::Property &prop) {
 		throw runtime_error("Wrong number of arguments in the color definition with a color space: " + prop.ToString());
 }
 
-const Texture *Scene::GetTexture(const luxrays::Property &prop) {
+TextureConstPtr Scene::GetTexture(const luxrays::Property &prop) {
 	const string &name = prop.GetValuesString();
 
 	if (texDefs.IsTextureDefined(name))
@@ -700,7 +702,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						float v = prop.Get<double>(1);				
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig::defaultNopConfig, v);
 		
-						ConstFloatTexture *tex = new ConstFloatTexture(v);
+						auto tex = std::make_shared<ConstFloatTexture>(v);
 						tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture"));
 						texDefs.DefineTexture(tex);
 
@@ -709,7 +711,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						Spectrum c(prop.Get<double>(1), prop.Get<double>(2), prop.Get<double>(3));
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig::defaultNopConfig, c);
 
-						ConstFloat3Texture *tex = new ConstFloat3Texture(c);
+						auto tex = std::make_shared<ConstFloat3Texture>(c);
 						tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture3"));
 						texDefs.DefineTexture(tex);
 
@@ -722,7 +724,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						float v = prop.Get<double>(2);
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(gamma), v);
 		
-						ConstFloatTexture *tex = new ConstFloatTexture(v);
+						auto tex = std::make_shared<ConstFloatTexture>(v);
 						tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture"));
 						texDefs.DefineTexture(tex);
 
@@ -732,7 +734,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						Spectrum c(prop.Get<double>(2), prop.Get<double>(3), prop.Get<double>(4));
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(gamma), c);
 
-						ConstFloat3Texture *tex = new ConstFloat3Texture(c);
+						auto tex = std::make_shared<ConstFloat3Texture>(c);
 						tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture3"));
 						texDefs.DefineTexture(tex);
 
@@ -746,7 +748,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						float v = prop.Get<double>(3);
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(configName, colorSapceName), v);
 		
-						ConstFloatTexture *tex = new ConstFloatTexture(v);
+						auto tex = std::make_shared<ConstFloatTexture>(v);
 						tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture"));
 						texDefs.DefineTexture(tex);
 
@@ -757,7 +759,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 						Spectrum c(prop.Get<double>(3), prop.Get<double>(4), prop.Get<double>(5));
 						colorSpaceConv.ConvertFrom(ColorSpaceConfig(configName, colorSapceName), c);
 
-						ConstFloat3Texture *tex = new ConstFloat3Texture(c);
+						auto tex = std::make_shared<ConstFloat3Texture>(c);
 						tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture3"));
 						texDefs.DefineTexture(tex);
 
@@ -780,13 +782,13 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 			}
 		
 			if (floats.size() == 1) {
-				ConstFloatTexture *tex = new ConstFloatTexture(floats.at(0));
+				auto tex = std::make_shared<ConstFloatTexture>(floats.at(0));
 				tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture"));
 				texDefs.DefineTexture(tex);
 
 				return tex;
 			} else if (floats.size() == 3) {
-				ConstFloat3Texture *tex = new ConstFloat3Texture(Spectrum(floats.at(0), floats.at(1), floats.at(2)));
+				auto tex = std::make_shared<ConstFloat3Texture>(Spectrum(floats.at(0), floats.at(1), floats.at(2)));
 				tex->SetName(NamedObject::GetUniqueName("Implicit-ConstFloatTexture3"));
 				texDefs.DefineTexture(tex);
 
@@ -802,7 +804,7 @@ const Texture *Scene::GetTexture(const luxrays::Property &prop) {
 
 //------------------------------------------------------------------------------
 
-TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const Properties &props) {
+TextureMapping2DPtr Scene::CreateTextureMapping2D(const string &prefixName, const Properties &props) {
 	const string mapType = props.Get(Property(prefixName + ".type")("uvmapping2d")).Get<string>();
 
 	if (mapType == "uvmapping2d") {
@@ -812,7 +814,7 @@ TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const 
 		const UV uvScale = props.Get(Property(prefixName + ".uvscale")(1.f, 1.f)).Get<UV>();
 		const UV uvDelta = props.Get(Property(prefixName + ".uvdelta")(0.f, 0.f)).Get<UV>();
 
-		return new UVMapping2D(dataIndex, rotation, uvScale.u, uvScale.v, uvDelta.u, uvDelta.v);
+		return std::make_shared<UVMapping2D>(dataIndex, rotation, uvScale.u, uvScale.v, uvDelta.u, uvDelta.v);
 	} else if (mapType == "uvrandommapping2d") {
 		const u_int dataIndex = Clamp(props.Get(Property(prefixName + ".uvindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 
@@ -842,7 +844,7 @@ TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const 
 		const float vDeltaMin = uvDeltaProp.Get<double>(2);
 		const float vDeltaMax = uvDeltaProp.Get<double>(3);
 
-		return new UVRandomMapping2D(dataIndex, seedType, triAOVIndex, objectIDOffset,
+		return std::make_shared<UVRandomMapping2D>(dataIndex, seedType, triAOVIndex, objectIDOffset,
 				uvRotationMin, uvRotationMax, uvRotationStep,
 				uScaleMin, uScaleMax, vScaleMin, vScaleMax,
 				uDeltaMin, uDeltaMax, vDeltaMin, vDeltaMax,
@@ -851,7 +853,7 @@ TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const 
 		throw runtime_error("Unknown 2D texture coordinate mapping type: " + mapType);
 }
 
-TextureMapping3D *Scene::CreateTextureMapping3D(const string &prefixName, const Properties &props) {
+TextureMapping3DPtr Scene::CreateTextureMapping3D(const string &prefixName, const Properties &props) {
 	const string mapType = props.Get(Property(prefixName + ".type")("uvmapping3d")).Get<string>();
 
 	if (mapType == "uvmapping3d") {
@@ -859,17 +861,17 @@ TextureMapping3D *Scene::CreateTextureMapping3D(const string &prefixName, const 
 		const Matrix4x4 mat = props.Get(Property(prefixName + ".transformation")(Matrix4x4::MAT_IDENTITY)).Get<Matrix4x4>();
 		const Transform trans(mat);
 
-		return new UVMapping3D(dataIndex, trans);
+		return std::make_shared<UVMapping3D>(dataIndex, trans);
 	} else if (mapType == "globalmapping3d") {
 		const Matrix4x4 mat = props.Get(Property(prefixName + ".transformation")(Matrix4x4::MAT_IDENTITY)).Get<Matrix4x4>();
 		const Transform trans(mat);
 
-		return new GlobalMapping3D(trans);
+		return std::make_shared<GlobalMapping3D>(trans);
 	} else if (mapType == "localmapping3d") {
 		const Matrix4x4 mat = props.Get(Property(prefixName + ".transformation")(Matrix4x4::MAT_IDENTITY)).Get<Matrix4x4>();
 		const Transform trans(mat);
 
-		return new LocalMapping3D(trans);
+		return std::make_shared<LocalMapping3D>(trans);
 	} else if (mapType == "localrandommapping3d") {
 		const Matrix4x4 mat = props.Get(Property(prefixName + ".transformation")(Matrix4x4::MAT_IDENTITY)).Get<Matrix4x4>();
 		const Transform trans(mat);
@@ -925,7 +927,7 @@ TextureMapping3D *Scene::CreateTextureMapping3D(const string &prefixName, const 
 		const float zTranslateMin = zTranslateProp.Get<double>(0);
 		const float zTranslateMax = zTranslateProp.Get<double>(1);
 
-		return new LocalRandomMapping3D(trans, seedType, triAOVIndex, objectIDOffset,
+		return std::make_shared<LocalRandomMapping3D>(trans, seedType, triAOVIndex, objectIDOffset,
 				xRotationMin, xRotationMax, xRotationStep,
 				yRotationMin, yRotationMax, yRotationStep,
 				zRotationMin, zRotationMax, zRotationStep,

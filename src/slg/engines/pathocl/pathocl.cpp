@@ -56,7 +56,7 @@ using namespace slg;
 // PathOCLRenderEngine
 //------------------------------------------------------------------------------
 
-PathOCLRenderEngine::PathOCLRenderEngine(const RenderConfig *rcfg) :
+PathOCLRenderEngine::PathOCLRenderEngine(RenderConfigConstRef rcfg) :
 		PathOCLBaseRenderEngine(rcfg, true) {
 	lightSampleSplatter = nullptr; 
 	eyeSamplerSharedData = nullptr;
@@ -79,12 +79,12 @@ PathOCLBaseNativeRenderThread *PathOCLRenderEngine::CreateNativeThread(const u_i
 	return new PathOCLNativeRenderThread(index, device, this);
 }
 
-RenderState *PathOCLRenderEngine::GetRenderState() {
-	return new PathOCLRenderState(bootStrapSeed, photonGICache);
+RenderStatePtr PathOCLRenderEngine::GetRenderState() {
+	return std::make_shared<PathOCLRenderState>(bootStrapSeed, photonGICache);
 }
 
 void PathOCLRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
@@ -113,7 +113,7 @@ void PathOCLRenderEngine::StartLockLess() {
 		// Check if the render state is of the right type
 		startRenderState->CheckEngineTag(GetObjectTag());
 
-		PathOCLRenderState *rs = (PathOCLRenderState *)startRenderState;
+		auto rs = static_pointer_cast<PathOCLRenderState>(startRenderState);
 
 		// Use a new seed to continue the rendering
 		const u_int newSeed = rs->bootStrapSeed + 1;
@@ -123,14 +123,13 @@ void PathOCLRenderEngine::StartLockLess() {
 		// Transfer the ownership of PhotonGI cache pointer
 		photonGICache = rs->photonGICache;
 		rs->photonGICache = nullptr;
-		
+
 		// I have to set the scene pointer in photonGICache because it is not
 		// saved by serialization
 		if (photonGICache)
-			photonGICache->SetScene(renderConfig->scene);
+			photonGICache->SetScene(renderConfig.scene);
 
-		delete startRenderState;
-		startRenderState = NULL;
+		startRenderState = nullptr;
 
 		hasStartFilm = true;
 	} else
@@ -141,8 +140,8 @@ void PathOCLRenderEngine::StartLockLess() {
 	//--------------------------------------------------------------------------
 
 	if (nativeRenderThreadCount > 0) {
-		eyeSamplerSharedData = renderConfig->AllocSamplerSharedData(&seedBaseGenerator, film);
-		
+		eyeSamplerSharedData = renderConfig.AllocSamplerSharedData(&seedBaseGenerator, film);
+
 	}
 
 	//--------------------------------------------------------------------------
@@ -209,7 +208,7 @@ void PathOCLRenderEngine::UpdateCounters() {
 }
 
 void PathOCLRenderEngine::UpdateTaskCount() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 	if (!cfg.IsDefined("opencl.task.count") && (GetType() == RTPATHOCL)) {
 		// In this case, I will tune task count for RTPATHOCL
 		taskCount = film->GetWidth() * film->GetHeight() / intersectionDevices.size();
@@ -250,7 +249,7 @@ u_int PathOCLRenderEngine::GetTotalEyeSPP() const {
 		for (size_t i = 0; i < renderOCLThreads.size(); ++i) {
 			if (renderOCLThreads[i]) {
 				const PathOCLOpenCLRenderThread *thread = (const PathOCLOpenCLRenderThread *)renderOCLThreads[i];
-				const Film *film = thread->threadFilms[0]->film;
+				FilmConstPtr film = thread->threadFilms[0]->film;
 				spp += film->GetTotalEyeSampleCount() / film->GetPixelCount();
 			}
 		}
@@ -259,7 +258,7 @@ u_int PathOCLRenderEngine::GetTotalEyeSPP() const {
 			// All threads use the film of the first one
 			if (renderNativeThreads[0]) {
 				const PathOCLNativeRenderThread *thread = (const PathOCLNativeRenderThread *)renderNativeThreads[0];
-				const Film *film = thread->threadFilm;
+				FilmConstPtr film = thread->threadFilm;
 				spp += film->GetTotalEyeSampleCount() / film->GetPixelCount();
 			}
 		}
@@ -287,7 +286,7 @@ Properties PathOCLRenderEngine::ToProperties(const Properties &cfg) {
 	return props;
 }
 
-RenderEngine *PathOCLRenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *PathOCLRenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new PathOCLRenderEngine(rcfg);
 }
 

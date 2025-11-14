@@ -30,7 +30,7 @@ using namespace slg;
 // SamplerSharedData
 //------------------------------------------------------------------------------
 
-SamplerSharedData *SamplerSharedData::FromProperties(const Properties &cfg, RandomGenerator *rndGen, Film *film) {
+SamplerSharedData *SamplerSharedData::FromProperties(const Properties &cfg, RandomGenerator *rndGen, FilmPtr film) {
 	const string type = cfg.Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
 
 	SamplerSharedDataRegistry::FromProperties func;
@@ -72,7 +72,7 @@ Properties Sampler::ToProperties(const Properties &cfg) {
 }
 
 Sampler *Sampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	const string type = cfg.Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
 
 	SamplerRegistry::FromProperties func;

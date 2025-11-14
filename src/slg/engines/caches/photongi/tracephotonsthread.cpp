@@ -59,15 +59,15 @@ void TracePhotonsThread::Start() {
 	indirectPhotons.clear();
 	causticPhotons.clear();
 
-	renderThread = new std::jthread(std::bind_front(&TracePhotonsThread::RenderFunc, this));
+	renderThread = std::make_shared<std::jthread>(
+		std::bind_front(&TracePhotonsThread::RenderFunc, this)
+	);
+	SetThreadName(renderThread, "LxTracePhotons");
 }
 
 void TracePhotonsThread::Join() {
 	if (renderThread) {
 		renderThread->join();
-
-		delete renderThread;
-		renderThread = nullptr;
 	}
 }
 
@@ -114,8 +114,8 @@ bool TracePhotonsThread::TracePhotonPath(RandomGenerator &rndGen,
 	newCausticPhotons.clear();
 	vector<u_int> allNearEntryIndices;
 	
-	const Scene *scene = pgic.scene;
-	const Camera *camera = scene->camera;
+	SceneConstPtr scene = pgic.scene;
+	auto camera = scene->camera;
 
 	bool usefulPath = false;
 	
@@ -128,14 +128,14 @@ bool TracePhotonsThread::TracePhotonPath(RandomGenerator &rndGen,
 
 	// Select one light source
 	float lightPickPdf;
-	const LightSource *light = scene->lightDefs.GetEmitLightStrategy()->
-			SampleLights(samples[1], &lightPickPdf);
+	auto light = scene->lightDefs.GetEmitLightStrategy()->
+			SampleLights(scene, samples[1], &lightPickPdf);
 
 	if (light) {
 		// Initialize the light path
 		float lightEmitPdfW;
 		Ray nextEventRay;
-		lightPathFlux = light->Emit(*scene,
+		lightPathFlux = light->Emit(scene,
 				time, samples[2], samples[3], samples[4], samples[5], samples[6],
 				nextEventRay, lightEmitPdfW);
 

@@ -42,7 +42,7 @@ public:
 	virtual void Reset() { }
 
 	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, Film *film);
+			luxrays::RandomGenerator *rndGen, FilmPtr film);
 
 	// Nothing to share
 };
@@ -53,7 +53,7 @@ public:
 
 class TilePathSampler : public Sampler {
 public:
-	TilePathSampler(luxrays::RandomGenerator *rnd, Film *flm,
+	TilePathSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 			const FilmSampleSplatter *flmSplatter);
 	virtual ~TilePathSampler();
 
@@ -69,7 +69,7 @@ public:
 	//--------------------------------------------------------------------------
 
 	void SetAASamples(const u_int aaSamp);
-	void Init(TileWork *tileWork, Film *tileFilm);
+	void Init(TileWork *tileWork, FilmPtr tileFilm);
 	
 	//--------------------------------------------------------------------------
 	// Static methods used by SamplerRegistry
@@ -79,7 +79,7 @@ public:
 	static std::string GetObjectTag() { return "TILEPATHSAMPLER"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 
@@ -92,7 +92,7 @@ private:
 	SobolSequence sobolSequence;
 
 	TileWork *tileWork;
-	Film *tileFilm;
+	FilmPtr tileFilm;
 	u_int tileX, tileY, tilePass;
 
 	float sample0, sample1;

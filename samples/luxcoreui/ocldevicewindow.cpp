@@ -43,7 +43,7 @@ Properties OCLDeviceWindow::GetOpenCLDeviceProperties(const Properties &cfgProps
 }
 
 void OCLDeviceWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = GetOpenCLDeviceProperties(config->ToProperties());
 	} catch(exception &ex) {

@@ -49,7 +49,7 @@ void PathOCLBaseOCLRenderThread::InitFilm() {
 	u_int threadFilmWidth, threadFilmHeight, threadFilmSubRegion[4];
 	GetThreadFilmSize(&threadFilmWidth, &threadFilmHeight, threadFilmSubRegion);
 
-	for(ThreadFilm *threadFilm: threadFilms)
+	for(ThreadFilmPtr threadFilm: threadFilms)
 		threadFilm->Init(renderEngine->film, threadFilmWidth, threadFilmHeight,
 			threadFilmSubRegion);
 }
@@ -664,7 +664,7 @@ void PathOCLBaseOCLRenderThread::InitRender() {
 	SetKernelArgs();
 
 	// Clear all thread films
-	for(ThreadFilm *threadFilm: threadFilms) {
+	for(ThreadFilmPtr threadFilm: threadFilms) {
 		intersectionDevice->PushThreadCurrentDevice();
 		threadFilm->ClearFilm(intersectionDevice, filmClearKernel, filmClearWorkGroupSize);
 		intersectionDevice->PopThreadCurrentDevice();

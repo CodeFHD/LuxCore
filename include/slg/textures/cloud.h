@@ -36,7 +36,7 @@ typedef struct {
 
 class CloudTexture : public Texture {
 public:
-	CloudTexture(const TextureMapping3D *mp,
+	CloudTexture(TextureMapping3DConstPtr mp,
 		const float r, const float noiseScale, const float t,
 		const float sharp, const float v, const float baseflatness,
 		const u_int octaves, const float o, const float offset,
@@ -49,7 +49,7 @@ public:
 	virtual float Y() const { return .5f; }
 	virtual float Filter() const { return .5f; }
 
-	const TextureMapping3D *GetTextureMapping() const { return mapping; }
+	TextureMapping3DConstPtr GetTextureMapping() const { return mapping; }
 	const float GetRadius() const { return radius; }
 	const u_int GetNumSpheres() const { return numSpheres; }
 	const u_int GetSphereSize() const { return sphereSize; }
@@ -93,7 +93,7 @@ private:
 	const float omega, firstNoiseScale, noiseOffset, turbulenceAmount;
 	const u_int numOctaves;
 
-	const TextureMapping3D *mapping;
+	TextureMapping3DConstPtr mapping;
 };
 
 }

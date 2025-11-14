@@ -44,7 +44,7 @@ public:
 	virtual void Reset();
 
 	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, Film *film);
+			luxrays::RandomGenerator *rndGen, FilmPtr film);
 
 	// I'm storing totalLuminance, sampleCount and noBlackSampleCount on shared variables
 	// in order to have far more accurate estimation in the image mean intensity
@@ -73,7 +73,7 @@ typedef enum {
 
 class MetropolisSampler : public Sampler {
 public:
-	MetropolisSampler(luxrays::RandomGenerator *rnd, Film *film,
+	MetropolisSampler(luxrays::RandomGenerator *rnd, FilmPtr film,
 			const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 			const u_int maxRej, const float pLarge, const float imgRange,
 			const bool addOnlyCstcs, MetropolisSamplerSharedData *samplerSharedData);
@@ -101,7 +101,7 @@ public:
 	static std::string GetObjectTag() { return "METROPOLIS"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 

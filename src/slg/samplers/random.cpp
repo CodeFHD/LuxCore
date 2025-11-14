@@ -31,7 +31,7 @@ using namespace slg;
 // RandomSamplerSharedData
 //------------------------------------------------------------------------------
 
-RandomSamplerSharedData::RandomSamplerSharedData(Film *engineFlm) {
+RandomSamplerSharedData::RandomSamplerSharedData(FilmPtr engineFlm) {
 	engineFilm = engineFlm;
 
 	Reset();
@@ -47,7 +47,7 @@ void RandomSamplerSharedData::GetNewBucket(const u_int bucketCount,
 }
 
 SamplerSharedData *RandomSamplerSharedData::FromProperties(const Properties &cfg,
-		RandomGenerator *rndGen, Film *film) {
+		RandomGenerator *rndGen, FilmPtr film) {
 	return new RandomSamplerSharedData(film);
 }
 
@@ -55,7 +55,7 @@ SamplerSharedData *RandomSamplerSharedData::FromProperties(const Properties &cfg
 // Random sampler
 //------------------------------------------------------------------------------
 
-RandomSampler::RandomSampler(luxrays::RandomGenerator *rnd, Film *flm,
+RandomSampler::RandomSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 		const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 		const float adaptiveStr, const float adaptiveUserImpWeight,
 		const u_int bucketSz, const u_int tileSz, const u_int superSmpl,
@@ -123,7 +123,7 @@ void RandomSampler::InitNewSample() {
 			pixelY = filmSubRegion[2] + subRegionPixelY;
 
 			// Check if the current pixel is over or under the convergence threshold
-			const Film *film = sharedData->engineFilm;
+			FilmConstPtr film = sharedData->engineFilm;
 			if ((adaptiveStrength > 0.f) && film->HasChannel(Film::NOISE)) {
 				// Pixels are sampled in accordance with how far from convergence they are
 				const float noise = *(film->channel_NOISE->GetPixel(pixelX, pixelY));
@@ -236,7 +236,7 @@ Properties RandomSampler::ToProperties(const Properties &cfg) {
 }
 
 Sampler *RandomSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
 	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<double>(), 0.0, .95);

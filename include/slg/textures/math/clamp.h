@@ -29,7 +29,7 @@ namespace slg {
 
 class ClampTexture : public Texture {
 public:
-	ClampTexture(const Texture *t, const float minv, const float maxv) : tex(t),
+	ClampTexture(TextureConstPtr t, const float minv, const float maxv) : tex(t),
 			minVal(minv), maxVal(maxv) { }
 	virtual ~ClampTexture() { }
 
@@ -39,28 +39,28 @@ public:
 	virtual float Y() const { return luxrays::Clamp(tex->Y(), minVal, maxVal); } // This can be not correct
 	virtual float Filter() const { return luxrays::Clamp(tex->Filter(), minVal, maxVal); } // This can be not correct
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		tex->AddReferencedTextures(referencedTexs);
+		tex->AddReferencedTextures(referencedTexs, tex);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		tex->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (tex == oldTex)
 			tex = newTex;
 	}
 
-	const Texture *GetTexture() const { return tex; }
+	TextureConstPtr GetTexture() const { return tex; }
 	float GetMinVal() const { return minVal; }
 	float GetMaxVal() const { return maxVal; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const Texture *tex;
+	TextureConstPtr tex;
 	const float minVal, maxVal;
 };
 

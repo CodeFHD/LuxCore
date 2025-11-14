@@ -25,24 +25,24 @@ using namespace luxrays;
 using namespace slg;
 
 DisneyMaterial::DisneyMaterial(
-	const Texture *frontTransp,
-	const Texture *backTransp,
-	const Texture *emitted,
-	const Texture *bump,
-	const Texture *baseColor,
-	const Texture *subsurface,
-	const Texture *roughness,
-	const Texture *metallic,
-	const Texture *specular,
-	const Texture *specularTint,
-	const Texture *clearcoat,
-	const Texture *clearcoatGloss,
-	const Texture *anisotropic,
-	const Texture *sheen,
-	const Texture *sheenTint,
-	const Texture *filmAmount,
-	const Texture *filmThickness,
-	const Texture *filmIor
+	TextureConstPtr frontTransp,
+	TextureConstPtr backTransp,
+	TextureConstPtr emitted,
+	TextureConstPtr bump,
+	TextureConstPtr baseColor,
+	TextureConstPtr subsurface,
+	TextureConstPtr roughness,
+	TextureConstPtr metallic,
+	TextureConstPtr specular,
+	TextureConstPtr specularTint,
+	TextureConstPtr clearcoat,
+	TextureConstPtr clearcoatGloss,
+	TextureConstPtr anisotropic,
+	TextureConstPtr sheen,
+	TextureConstPtr sheenTint,
+	TextureConstPtr filmAmount,
+	TextureConstPtr filmThickness,
+	TextureConstPtr filmIor
 ) : Material(frontTransp, backTransp, emitted, bump), 
 	BaseColor(baseColor), 
 	Subsurface(subsurface),
@@ -559,7 +559,7 @@ Properties DisneyMaterial::ToProperties(const ImageMapCache &imgMapCache, const 
 	return props;
 }
 
-void DisneyMaterial::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void DisneyMaterial::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Material::UpdateTextureReferences(oldTex, newTex);
 
 	bool updateGlossiness = false;
@@ -585,25 +585,25 @@ void DisneyMaterial::UpdateTextureReferences(const Texture *oldTex, const Textur
 		UpdateGlossiness();
 }
 
-void DisneyMaterial::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
+void DisneyMaterial::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs) const {
 	Material::AddReferencedTextures(referencedTexs);
 
-	BaseColor->AddReferencedTextures(referencedTexs);
-	Subsurface->AddReferencedTextures(referencedTexs);
-	Roughness->AddReferencedTextures(referencedTexs);
-	Metallic->AddReferencedTextures(referencedTexs);
-	Specular->AddReferencedTextures(referencedTexs);
-	SpecularTint->AddReferencedTextures(referencedTexs);
-	Clearcoat->AddReferencedTextures(referencedTexs);
-	ClearcoatGloss->AddReferencedTextures(referencedTexs);
-	Anisotropic->AddReferencedTextures(referencedTexs);
-	Sheen->AddReferencedTextures(referencedTexs);
-	SheenTint->AddReferencedTextures(referencedTexs);
+	BaseColor->AddReferencedTextures(referencedTexs, BaseColor);
+	Subsurface->AddReferencedTextures(referencedTexs, Subsurface);
+	Roughness->AddReferencedTextures(referencedTexs, Roughness);
+	Metallic->AddReferencedTextures(referencedTexs, Metallic);
+	Specular->AddReferencedTextures(referencedTexs, Specular);
+	SpecularTint->AddReferencedTextures(referencedTexs, SpecularTint);
+	Clearcoat->AddReferencedTextures(referencedTexs, Clearcoat);
+	ClearcoatGloss->AddReferencedTextures(referencedTexs, ClearcoatGloss);
+	Anisotropic->AddReferencedTextures(referencedTexs, Anisotropic);
+	Sheen->AddReferencedTextures(referencedTexs, Sheen);
+	SheenTint->AddReferencedTextures(referencedTexs, SheenTint);
 	if (filmAmount)
-		filmAmount->AddReferencedTextures(referencedTexs);
+		filmAmount->AddReferencedTextures(referencedTexs, filmAmount);
 	if (filmThickness)
-		filmThickness->AddReferencedTextures(referencedTexs);
+		filmThickness->AddReferencedTextures(referencedTexs, filmThickness);
 	if (filmIor)
-		filmIor->AddReferencedTextures(referencedTexs);
+		filmIor->AddReferencedTextures(referencedTexs, filmIor);
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

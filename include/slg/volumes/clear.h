@@ -29,7 +29,7 @@ namespace slg {
 
 class ClearVolume : public Volume {
 public:
-	ClearVolume(const Texture *iorTex, const Texture *emiTex, const Texture *a);
+	ClearVolume(TextureConstPtr iorTex, TextureConstPtr emiTex, TextureConstPtr a);
 
 	virtual float Scatter(const luxrays::Ray &ray, const float u, const bool scatteredStart,
 		luxrays::Spectrum *connectionThroughput, luxrays::Spectrum *connectionEmission) const;
@@ -52,19 +52,19 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs, TextureConstPtr self) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties() const;
 
-	const Texture *GetSigmaA() const { return sigmaA; }
+	TextureConstPtr GetSigmaA() const { return sigmaA; }
 
 protected:
 	virtual luxrays::Spectrum SigmaA(const HitPoint &hitPoint) const;
 	virtual luxrays::Spectrum SigmaS(const HitPoint &hitPoint) const;
 
 private:
-	const Texture *sigmaA;
+	TextureConstPtr sigmaA;
 };
 
 }

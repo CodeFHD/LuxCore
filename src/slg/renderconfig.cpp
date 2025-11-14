@@ -23,8 +23,11 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp> 
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 
 #include "luxrays/utils/serializationutils.h"
+#include "slg/usings.h"
 #include "slg/renderconfig.h"
 #include "slg/engines/renderengine.h"
 #include "slg/film/film.h"
@@ -59,9 +62,44 @@ using namespace slg;
 //------------------------------------------------------------------------------
 
 static std::mutex defaultPropertiesMutex;
-static unique_ptr<Properties> defaultProperties;
+static std::unique_ptr<Properties> defaultProperties;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::RenderConfig)
+
+RenderConfigUPtr RenderConfig::Create(const luxrays::Properties &props, ScenePtr scene) {
+	return std::make_unique<RenderConfig>(Private(), props, scene);
+}
+
+RenderConfig::RenderConfig(Private p, const Properties &props, ScenePtr scn) : scene(scn) {
+	InitDefaultProperties();
+
+	SLG_LOG("Configuration: ");
+	const vector<string> &keys = props.GetAllNames();
+	for (vector<string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
+		SLG_LOG("  " << props.Get(*i));
+
+	SLG_FileNameResolver.Print();
+
+	// Set the Scene
+	if (scn) {
+		scene = scn;
+		allocatedScene = false;
+	} else {
+		// Create the Scene
+		const string defaultSceneName = GetDefaultProperties().Get("scene.file").Get<string>();
+		const string sceneFileName = SLG_FileNameResolver.ResolveFile(props.Get(Property("scene.file")(defaultSceneName)).Get<string>());
+
+		SDL_LOG("Reading scene: " << sceneFileName);
+		scene = std::make_shared<Scene>(sceneFileName, &props);
+		allocatedScene = true;
+	}
+
+	if (!scene->camera)
+		throw runtime_error("You can not build a RenderConfig with a scene not including a camera");
+	
+	// Parse the configuration
+	Parse(props);
+}
 
 void RenderConfig::InitDefaultProperties() {
 	// Check if I have to initialize the default Properties
@@ -82,42 +120,6 @@ const Properties &RenderConfig::GetDefaultProperties() {
 	return *defaultProperties;
 }
 
-RenderConfig::RenderConfig(const Properties &props, Scene *scn) : scene(scn) {
-	InitDefaultProperties();
-
-	SLG_LOG("Configuration: ");
-	const vector<string> &keys = props.GetAllNames();
-	for (vector<string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
-		SLG_LOG("  " << props.Get(*i));
-
-	SLG_FileNameResolver.Print();
-	
-	// Set the Scene
-	if (scn) {
-		scene = scn;
-		allocatedScene = false;
-	} else {
-		// Create the Scene
-		const string defaultSceneName = GetDefaultProperties().Get("scene.file").Get<string>();
-		const string sceneFileName = SLG_FileNameResolver.ResolveFile(props.Get(Property("scene.file")(defaultSceneName)).Get<string>());
-				
-		SDL_LOG("Reading scene: " << sceneFileName);
-		scene = new Scene(sceneFileName, &props);
-		allocatedScene = true;
-	}
-
-	if (!scene->camera)
-		throw runtime_error("You can not build a RenderConfig with a scene not including a camera");
-	
-	// Parse the configuration
-	Parse(props);
-}
-
-RenderConfig::~RenderConfig() {
-	// Check if the scene was allocated by me
-	if (allocatedScene)
-		delete scene;
-}
 
 bool RenderConfig::HasCachedKernels() {
 #if !defined(LUXRAYS_DISABLE_OPENCL)
@@ -277,8 +279,8 @@ Filter *RenderConfig::AllocPixelFilter() const {
 	return Filter::FromProperties(cfg);
 }
 
-Film *RenderConfig::AllocFilm() const {
-	Film *film = Film::FromProperties(cfg);
+FilmPtr RenderConfig::AllocFilm() const {
+	FilmPtr film = Film::FromProperties(cfg);
 
 	// Add the channels required by the Sampler
 	Film::FilmChannels channels;
@@ -289,11 +291,11 @@ Film *RenderConfig::AllocFilm() const {
 	return film;
 }
 
-SamplerSharedData *RenderConfig::AllocSamplerSharedData(RandomGenerator *rndGen, Film *film) const {
+SamplerSharedData *RenderConfig::AllocSamplerSharedData(RandomGenerator *rndGen, FilmPtr film) const {
 	return SamplerSharedData::FromProperties(cfg, rndGen, film);
 }
 
-Sampler *RenderConfig::AllocSampler(RandomGenerator *rndGen, Film *film, const FilmSampleSplatter *flmSplatter,
+Sampler *RenderConfig::AllocSampler(RandomGenerator *rndGen, FilmPtr film, const FilmSampleSplatter *flmSplatter,
 		SamplerSharedData *sharedData, const Properties &additionalProps) const {
 	Properties props = cfg;
 	props << additionalProps;
@@ -301,7 +303,7 @@ Sampler *RenderConfig::AllocSampler(RandomGenerator *rndGen, Film *film, const F
 	return Sampler::FromProperties(props, rndGen, film, flmSplatter, sharedData);
 }
 
-RenderEngine *RenderConfig::AllocRenderEngine() const {
+RenderEngineUPtr RenderConfig::AllocRenderEngine() const {
 #if defined(LUXRAYS_DISABLE_OPENCL)
 	// This is a specific test for OpenCL-less version in order to print
 	// a more clear error
@@ -312,7 +314,7 @@ RenderEngine *RenderConfig::AllocRenderEngine() const {
 		throw runtime_error(type + " render engine is not supported by OpenCL-less version of the binaries. Download the OpenCL-enabled version or change the render engine used.");
 #endif
 
-	return RenderEngine::FromProperties(this);
+	return RenderEngine::FromProperties(*this);
 }
 
 const Properties &RenderConfig::ToProperties() const {
@@ -390,10 +392,10 @@ Properties RenderConfig::ToProperties(const Properties &cfg) {
 // Serialization methods
 //------------------------------------------------------------------------------
 
-RenderConfig *RenderConfig::LoadSerialized(const std::string &fileName) {
+RenderConfigUPtr RenderConfig::LoadSerialized(const std::string &fileName) {
 	SerializationInputFile sif(fileName);
 
-	RenderConfig *renderConfig;
+	RenderConfigUPtr renderConfig;
 	sif.GetArchive() >> renderConfig;
 
 	if (!sif.IsGood())
@@ -402,13 +404,20 @@ RenderConfig *RenderConfig::LoadSerialized(const std::string &fileName) {
 	return renderConfig;
 }
 
-void RenderConfig::SaveSerialized(const std::string &fileName, const RenderConfig *renderConfig) {
+// Save serialized method - pointer argument
+void RenderConfig::SaveSerialized(
+	const std::string &fileName,
+	const RenderConfigUPtr& renderConfig
+) {
 	Properties emptyProps;
 	SaveSerialized(fileName, renderConfig, emptyProps);
 }
 
-void RenderConfig::SaveSerialized(const std::string &fileName, const RenderConfig *renderConfig,
-		const luxrays::Properties &additionalCfg) {
+void RenderConfig::SaveSerialized(
+	const std::string &fileName,
+	const RenderConfigUPtr& renderConfig,
+	const luxrays::Properties &additionalCfg
+) {
 	SerializationOutputFile sof(fileName);
 
 	// This is quite a trick
@@ -418,7 +427,7 @@ void RenderConfig::SaveSerialized(const std::string &fileName, const RenderConfi
 	sof.GetArchive() << renderConfig;
 
 	renderConfig->saveAdditionalCfg.Clear();
-	
+
 	if (!sof.IsGood())
 		throw runtime_error("Error while saving serialized render configuration: " + fileName);
 
@@ -426,6 +435,31 @@ void RenderConfig::SaveSerialized(const std::string &fileName, const RenderConfi
 
 	SLG_LOG("Render configuration saved: " << (sof.GetPosition() / 1024) << " Kbytes");
 }
+
+// Save serialized method - reference argument
+void RenderConfig::SaveSerialized(
+	const std::string &fileName,
+	const RenderConfigConstRef renderConfig,
+	const luxrays::Properties &additionalCfg
+) {
+	SerializationOutputFile sof(fileName);
+
+	// This is quite a trick
+	renderConfig.saveAdditionalCfg.Clear();
+	renderConfig.saveAdditionalCfg.Set(additionalCfg);
+
+	sof.GetArchive() << renderConfig;
+
+	renderConfig.saveAdditionalCfg.Clear();
+
+	if (!sof.IsGood())
+		throw runtime_error("Error while saving serialized render configuration: " + fileName);
+
+	sof.Flush();
+
+	SLG_LOG("Render configuration saved: " << (sof.GetPosition() / 1024) << " Kbytes");
+}
+
 
 template<class Archive> void RenderConfig::save(Archive &ar, const unsigned int version) const {
 	Properties completeCfg;

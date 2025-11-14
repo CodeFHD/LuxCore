@@ -963,8 +963,12 @@ UV ImageMap::GetDuv(const UV &uv) const {
 	return pixelStorage->GetDuv(uv);
 }
 
-ImageMap *ImageMap::AllocImageMap(const u_int channels, const u_int width, const u_int height,
-		const ImageMapConfig &cfg) {
+ImageMapPtr ImageMap::AllocImageMap(
+	const u_int channels,
+	const u_int width,
+	const u_int height,
+	const ImageMapConfig &cfg
+) {
 	ImageMapStorage *imageMapStorage;
 	switch (cfg.storageType) {
 		case ImageMapStorage::BYTE:
@@ -979,12 +983,12 @@ ImageMap *ImageMap::AllocImageMap(const u_int channels, const u_int width, const
 		default:
 			throw runtime_error("Unknown storage type in ImageMap::AllocImageMap(): " + ToString(cfg.storageType));
 	}
-	ImageMap *imageMap = new ImageMap(imageMapStorage, 0.f, 0.f);
+	auto imageMap = std::make_shared<ImageMap>(imageMapStorage, 0.f, 0.f);
 
 	return imageMap;
 }
 
-ImageMap *ImageMap::AllocImageMap(void *pixels, const u_int channels,
+ImageMapPtr ImageMap::AllocImageMap(void *pixels, const u_int channels,
 		const u_int width, const u_int height, const ImageMapConfig &cfg) {
 	ImageMapStorage *imageMapStorage;
 	switch (cfg.storageType) {
@@ -1001,7 +1005,7 @@ ImageMap *ImageMap::AllocImageMap(void *pixels, const u_int channels,
 			throw runtime_error("Unknown storage type in ImageMap::AllocImageMap(): " + ToString(cfg.storageType));
 	}
 
-	ImageMap *imageMap = new ImageMap(imageMapStorage, 0.f , 0.f);
+	auto imageMap = std::make_shared<ImageMap>(imageMapStorage, 0.f , 0.f);
 	memcpy(imageMap->GetStorage()->GetPixelsData(), pixels, imageMap->GetStorage()->GetMemorySize());
 
 	switch (cfg.colorSpaceCfg.colorSpaceType) {
@@ -1324,15 +1328,15 @@ void ImageMap::WriteImage(const string &fileName) const {
 		throw runtime_error("Failed image save: " + fileName);
 }
 
-ImageMap *ImageMap::Copy() const {
-	return new ImageMap(pixelStorage->Copy(), imageMean, imageMeanY);
+ImageMapPtr ImageMap::Copy() const {
+	return std::make_shared<ImageMap>(pixelStorage->Copy(), imageMean, imageMeanY);
 }
 
-ImageMap *ImageMap::Merge(const ImageMap *map0, const ImageMap *map1, const u_int channels,
+ImageMapPtr ImageMap::Merge(ImageMapConstPtr map0, ImageMapConstPtr map1, const u_int channels,
 		const u_int width, const u_int height) {
 	if (channels == 1) {
 		// I assume the images have the same gamma
-		ImageMap *imgMap = AllocImageMap(1, width, height,
+		auto imgMap = AllocImageMap(1, width, height,
 				ImageMapConfig(1.f,
 					ImageMapStorage::StorageType::FLOAT,
 					map0->GetStorage()->wrapType,
@@ -1349,7 +1353,7 @@ ImageMap *ImageMap::Merge(const ImageMap *map0, const ImageMap *map1, const u_in
 		return imgMap;
 	} else if (channels == 3) {
 		// I assume the images have the same gamma
-		ImageMap *imgMap = AllocImageMap(3, width, height,
+		auto imgMap = AllocImageMap(3, width, height,
 				ImageMapConfig(1.f,
 					ImageMapStorage::StorageType::FLOAT,
 					map0->GetStorage()->wrapType,
@@ -1373,17 +1377,17 @@ ImageMap *ImageMap::Merge(const ImageMap *map0, const ImageMap *map1, const u_in
 		throw runtime_error("Unsupported number of channels in ImageMap::Merge(): " + ToString(channels));
 }
 
-ImageMap *ImageMap::Merge(const ImageMap *map0, const ImageMap *map1, const u_int channels) {
+ImageMapPtr ImageMap::Merge(ImageMapConstPtr map0, ImageMapConstPtr map1, const u_int channels) {
 	const u_int width = Max(map0->GetWidth(), map1->GetWidth());
 	const u_int height = Max(map0->GetHeight(), map1->GetHeight());
 
 	return ImageMap::Merge(map0, map1, channels, width, height);
 }
 
-ImageMap *ImageMap::Resample(const ImageMap *map, const u_int channels,
+ImageMapPtr ImageMap::Resample(ImageMapConstPtr map, const u_int channels,
 		const u_int width, const u_int height) {
 	if (channels == 1) {
-		ImageMap *imgMap = AllocImageMap(1, width, height,
+		auto imgMap = AllocImageMap(1, width, height,
 				ImageMapConfig(1.f,
 					ImageMapStorage::StorageType::FLOAT,
 					map->GetStorage()->wrapType,
@@ -1399,7 +1403,7 @@ ImageMap *ImageMap::Resample(const ImageMap *map, const u_int channels,
 
 		return imgMap;
 	} else if (channels == 3) {
-		ImageMap *imgMap = AllocImageMap(3, width, height,
+		auto imgMap = AllocImageMap(3, width, height,
 				ImageMapConfig(1.f,
 					ImageMapStorage::StorageType::FLOAT,
 					map->GetStorage()->wrapType,
@@ -1452,13 +1456,13 @@ void ImageMap::MakeTx(const std::string &srcFileName, const std::string &dstFile
 		throw runtime_error("ImageMap::MakeTx error: " + s.str());
 }
 
-ImageMap *ImageMap::FromProperties(const Properties &props, const string &prefix) {
-	ImageMap *im;
+ImageMapPtr ImageMap::FromProperties(const Properties &props, const string &prefix) {
+	ImageMapPtr im;
 	if (props.IsDefined(prefix + ".file")) {
 		// Read the image map from a file
 		const string fileName = props.Get(Property(prefix + ".file")("image.png")).Get<string>();
 		
-		im = new ImageMap(fileName, ImageMapConfig(props, prefix));
+		im = std::make_shared<ImageMap>(fileName, ImageMapConfig(props, prefix));
 	} else if (props.IsDefined(prefix + ".blob")) {
 		// Read the image map from embedded data
 		const u_int width = props.Get(Property(prefix + ".blob.width")(512)).Get<u_int>();
@@ -1493,7 +1497,7 @@ ImageMap *ImageMap::FromProperties(const Properties &props, const string &prefix
 		const Blob &blob = props.Get(Property(prefix + ".blob")).Get<const Blob &>();
 		copy(blob.GetData(), blob.GetData() + blob.GetSize(), (char *)pixelStorage->GetPixelsData());
 
-		im = new ImageMap(pixelStorage, 0.f, 0.f);
+		im = std::make_shared<ImageMap>(pixelStorage, 0.f, 0.f);
 		im->Preprocess();
 	} else
 		throw runtime_error("Missing data ImageMap::FromProperties()");

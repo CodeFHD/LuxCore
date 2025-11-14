@@ -27,7 +27,7 @@ using namespace slg;
 //------------------------------------------------------------------------------
 
 bool WireFrameTexture::Evaluate(const HitPoint &hitPoint) const {
-	const ExtMesh *mesh = hitPoint.mesh;
+	auto mesh = hitPoint.mesh;
 	if (!mesh)
 		return false;
 	

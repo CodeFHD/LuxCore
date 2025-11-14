@@ -43,9 +43,9 @@ void LuxCoreApp::BakeAllSceneObjects() {
 	session->Stop();
 
 	// The render configuration and the scene properties
-	const RenderConfig &renderConfig = session->GetRenderConfig();
-	const Properties &cfgProps =  renderConfig.ToProperties();
-	const Properties &sceneProps =  renderConfig.GetScene().ToProperties();
+	auto renderConfig = session->GetRenderConfig();
+	const Properties &cfgProps =  renderConfig->ToProperties();
+	const Properties &sceneProps =  renderConfig->GetScene().ToProperties();
 
 	// Build the list of scene objects
 	vector<string> objKeys = sceneProps.GetAllUniqueSubNames("scene.objects");

@@ -33,11 +33,11 @@ using namespace slg;
 // BakeCPURenderEngine
 //------------------------------------------------------------------------------
 
-BakeCPURenderEngine::BakeCPURenderEngine(const RenderConfig *rcfg) :
+BakeCPURenderEngine::BakeCPURenderEngine(RenderConfigConstRef rcfg) :
 		CPUNoTileRenderEngine(rcfg), photonGICache(nullptr), sampleSplatter(nullptr),
 		lightSamplerSharedData(nullptr), mapFilm(nullptr), currentSceneObjsDist(nullptr),
 		threadsSyncBarrier(nullptr) {
-	const Properties &cfg = rcfg->cfg;
+	const Properties &cfg = rcfg.cfg;
 
 	minMapAutoSize = cfg.Get(Property("bake.minmapautosize")(32u)).Get<u_int>();
 	maxMapAutoSize = Max(cfg.Get(Property("bake.maxmapautosize")(1024u)).Get<u_int>(), minMapAutoSize);
@@ -101,7 +101,6 @@ BakeCPURenderEngine::~BakeCPURenderEngine() {
 	delete photonGICache;
 	delete lightSamplerSharedData;
 	delete sampleSplatter;
-	delete mapFilm;
 	delete threadsSyncBarrier;
 }
 
@@ -109,22 +108,22 @@ void BakeCPURenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_PIXEL_NORMALIZED);
 
 	// pathTracer has not yet been initialized
-	const bool hybridBackForwardEnable = renderConfig->cfg.Get(PathTracer::GetDefaultProps().
+	const bool hybridBackForwardEnable = renderConfig.cfg.Get(PathTracer::GetDefaultProps().
 			Get("path.hybridbackforward.enable")).Get<bool>();
 	if (hybridBackForwardEnable)
 		film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
 
-	film->SetRadianceGroupCount(renderConfig->scene->lightDefs.GetLightGroupCount());
+	film->SetRadianceGroupCount(renderConfig.scene->lightDefs.GetLightGroupCount());
 	film->SetThreadCount(renderThreads.size());
 	film->Init();
 }
 
-RenderState *BakeCPURenderEngine::GetRenderState() {
-	return new BakeCPURenderState(bootStrapSeed, photonGICache);
+RenderStatePtr BakeCPURenderEngine::GetRenderState() {
+	return std::make_shared<BakeCPURenderState>(bootStrapSeed, photonGICache);
 }
 
 void BakeCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
@@ -148,7 +147,7 @@ void BakeCPURenderEngine::StartLockLess() {
 		// Check if the render state is of the right type
 		startRenderState->CheckEngineTag(GetObjectTag());
 
-		BakeCPURenderState *rs = (BakeCPURenderState *)startRenderState;
+		auto rs = static_pointer_cast<BakeCPURenderState>(startRenderState);
 
 		// Use a new seed to continue the rendering
 		const u_int newSeed = rs->bootStrapSeed + 1;
@@ -162,10 +161,9 @@ void BakeCPURenderEngine::StartLockLess() {
 		// I have to set the scene pointer in photonGICache because it is not
 		// saved by serialization
 		if (photonGICache)
-			photonGICache->SetScene(renderConfig->scene);
+			photonGICache->SetScene(renderConfig.scene);
 
-		delete startRenderState;
-		startRenderState = NULL;
+		startRenderState = nullptr;
 	}
 
 	//--------------------------------------------------------------------------
@@ -174,7 +172,7 @@ void BakeCPURenderEngine::StartLockLess() {
 
 	// note: photonGICache could have been restored from the render state
 	if (!photonGICache) {
-		photonGICache = PhotonGICache::FromProperties(renderConfig->scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
 
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)
@@ -217,10 +215,10 @@ void BakeCPURenderEngine::StartLockLess() {
 		const BakeMapInfo &mapInfo = mapInfos[mapInfoIndex];
 
 		for (auto const &objName : mapInfo.objectNames) {
-			const SceneObject *sceneObj = renderConfig->scene->objDefs.GetSceneObject(objName);
+			auto sceneObj = renderConfig.scene->objDefs.GetSceneObject(objName);
 			if (sceneObj) {
-				const ExtMesh *mesh = sceneObj->GetExtMesh();
-				
+				auto mesh = sceneObj->GetExtMesh();
+
 				Transform localToWorld;
 				sceneObj->GetExtMesh()->GetLocal2World(0.f, localToWorld);
 
@@ -291,9 +289,6 @@ void BakeCPURenderEngine::StopLockLess() {
 	delete sampleSplatter;
 	sampleSplatter = nullptr;
 
-	delete mapFilm;
-	mapFilm = nullptr;
-
 	delete threadsSyncBarrier;
 	threadsSyncBarrier = nullptr;
 }
@@ -336,7 +331,7 @@ Properties BakeCPURenderEngine::ToProperties(const Properties &cfg) {
 	return props;
 }
 
-RenderEngine *BakeCPURenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *BakeCPURenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new BakeCPURenderEngine(rcfg);
 }
 

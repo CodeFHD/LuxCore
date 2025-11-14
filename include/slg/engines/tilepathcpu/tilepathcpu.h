@@ -20,6 +20,7 @@
 #define	_SLG_TILEPATHCPU_H
 
 #include "slg/slg.h"
+#include "luxrays/utils/thread.h"
 #include "slg/engines/cpurenderengine.h"
 #include "slg/engines/pathtracer.h"
 #include "slg/samplers/sampler.h"
@@ -44,7 +45,13 @@ public:
 	friend class TilePathCPURenderEngine;
 
 private:
-	virtual std::jthread *AllocRenderThread() { return new std::jthread(std::bind_front(&TilePathCPURenderThread::RenderFunc, this)); }
+	virtual JThreadPtr AllocRenderThread() {
+		auto t = std::make_shared<std::jthread>(
+			std::bind_front(&TilePathCPURenderThread::RenderFunc, this)
+		);
+		luxrays::SetThreadName(t, "LxTilePathCPU");
+		return t;
+	}
 
 	void RenderFunc(std::stop_token stop_token);
 
@@ -54,13 +61,13 @@ private:
 
 class TilePathCPURenderEngine : public CPUTileRenderEngine {
 public:
-	TilePathCPURenderEngine(const RenderConfig *cfg);
+	TilePathCPURenderEngine(RenderConfigConstRef cfg);
 	~TilePathCPURenderEngine();
 
 	virtual RenderEngineType GetType() const { return GetObjectType(); }
 	virtual std::string GetTag() const { return GetObjectTag(); }
 
-	virtual RenderState *GetRenderState();
+	virtual RenderStatePtr GetRenderState();
 
 	//--------------------------------------------------------------------------
 	// Static methods used by RenderEngineRegistry
@@ -69,7 +76,7 @@ public:
 	static RenderEngineType GetObjectType() { return TILEPATHCPU; }
 	static std::string GetObjectTag() { return "TILEPATHCPU"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static RenderEngine *FromProperties(const RenderConfig *rcfg);
+	static RenderEngine *FromProperties(RenderConfigConstRef rcfg);
 
 	friend class TilePathCPURenderThread;
 

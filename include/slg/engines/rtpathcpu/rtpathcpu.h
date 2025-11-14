@@ -42,7 +42,13 @@ public:
 
 protected:
 	void RTRenderFunc(std::stop_token stop_token);
-	virtual std::jthread *AllocRenderThread() { return new std::jthread(std::bind_front(&RTPathCPURenderThread::RTRenderFunc, this)); }
+	virtual JThreadPtr AllocRenderThread() {
+		auto t = std::make_shared<std::jthread>(
+			std::bind_front(&RTPathCPURenderThread::RTRenderFunc, this)
+		);
+		luxrays::SetThreadName(t, "LxRTPathCPU");
+		return t;
+	}
 
 	virtual void StartRenderThread();
 };
@@ -51,7 +57,7 @@ class RTPathCPUSampler;
 
 class RTPathCPURenderEngine : public PathCPURenderEngine {
 public:
-	RTPathCPURenderEngine(const RenderConfig *cfg);
+	RTPathCPURenderEngine(RenderConfigConstRef cfg);
 	~RTPathCPURenderEngine();
 
 	virtual RenderEngineType GetType() const { return GetObjectType(); }
@@ -68,7 +74,7 @@ public:
 	static RenderEngineType GetObjectType() { return RTPATHCPU; }
 	static std::string GetObjectTag() { return "RTPATHCPU"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static RenderEngine *FromProperties(const RenderConfig *rcfg);
+	static RenderEngine *FromProperties(RenderConfigConstRef rcfg);
 
 	friend class PathCPURenderEngine;
 	friend class RTPathCPURenderThread;
@@ -95,7 +101,7 @@ protected:
 	virtual void EndSceneEditLockLess(const EditActionList &editActions);
 
 	virtual void BeginFilmEdit();
-	virtual void EndFilmEdit(Film *film, std::mutex *flmMutex);
+	virtual void EndFilmEdit(FilmPtr film, std::mutex *flmMutex);
 
 	virtual void UpdateFilmLockLess();
 

@@ -22,6 +22,7 @@
 #include <sstream>
 
 #include "luxrays/luxrays.h"
+#include "slg/usings.h"
 
 /*!
  * \namespace slg

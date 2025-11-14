@@ -72,11 +72,11 @@ void PointLight::GetPreprocessedData(float *localPosData, float *absolutePosData
 	}
 }
 
-float PointLight::GetPower(const Scene &scene) const {
+float PointLight::GetPower(SceneConstPtr scene) const {
 	return emittedFactor.Y();
 }
 
-Spectrum PointLight::Emit(const Scene &scene,
+Spectrum PointLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -95,7 +95,7 @@ Spectrum PointLight::Emit(const Scene &scene,
 	return emittedFactor * (1.f / (4.f * M_PI));
 }
 
-Spectrum PointLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum PointLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {

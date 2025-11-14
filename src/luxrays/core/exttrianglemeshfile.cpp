@@ -255,7 +255,7 @@ static int TriAOVCB(p_ply_argument argument) {
 	return 1;
 }
 
-ExtTriangleMesh *ExtTriangleMesh::LoadPly(const string &fileName) {
+ExtTriangleMeshPtr ExtTriangleMesh::LoadPly(const string &fileName) {
 	p_ply plyfile = ply_open(fileName.c_str(), nullptr);
 	if (!plyfile) {
 		stringstream ss;
@@ -421,7 +421,7 @@ ExtTriangleMesh *ExtTriangleMesh::LoadPly(const string &fileName) {
 	Triangle *tris = TriangleMesh::AllocTrianglesBuffer(vi.size());
 	copy(vi.begin(), vi.end(), tris);
 
-	ExtTriangleMesh *mesh = new ExtTriangleMesh(plyNbVerts, vi.size(), p, tris, n, &uvs, &cols, &alphas);
+	auto mesh = std::make_shared<ExtTriangleMesh>(plyNbVerts, vi.size(), p, tris, n, &uvs, &cols, &alphas);
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		mesh->SetVertexAOV(i, vertexAOVs[i]);
 		mesh->SetTriAOV(i, TriAOVs[i]);
@@ -434,7 +434,7 @@ ExtTriangleMesh *ExtTriangleMesh::LoadPly(const string &fileName) {
 // ExtTriangleMesh Load
 //------------------------------------------------------------------------------
 
-ExtTriangleMesh *ExtTriangleMesh::Load(const string &fileName) {
+ExtTriangleMeshPtr ExtTriangleMesh::Load(const string &fileName) {
 	const std::filesystem::path ext = std::filesystem::path(fileName).extension();
 	if (ext == ".ply")
 		return LoadPly(fileName);

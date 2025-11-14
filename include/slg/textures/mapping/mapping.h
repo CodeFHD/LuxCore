@@ -53,7 +53,7 @@ typedef enum {
 	UVMAPPING2D, UVRANDOMMAPPING2D
 } TextureMapping2DType;
 
-class TextureMapping2D {
+class TextureMapping2D{
 public:
 	TextureMapping2D(const u_int index) : dataIndex(index) { }
 	virtual ~TextureMapping2D() { }
@@ -248,6 +248,7 @@ public:
 
 	const bool uniformScale;
 };
+
 
 }
 

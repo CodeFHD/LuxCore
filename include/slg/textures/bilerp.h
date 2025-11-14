@@ -29,7 +29,7 @@ namespace slg {
 
 class BilerpTexture : public Texture {
 public:
-	BilerpTexture(const Texture *tex00, const Texture *tex01, const Texture *tex10, const Texture *tex11) : t00(tex00), t01(tex01), t10(tex10), t11(tex11) { }
+	BilerpTexture(TextureConstPtr tex00, TextureConstPtr tex01, TextureConstPtr tex10, TextureConstPtr tex11) : t00(tex00), t01(tex01), t10(tex10), t11(tex11) { }
 	virtual ~BilerpTexture() { }
 
 	virtual TextureType GetType() const { return BILERP_TEX; }
@@ -38,20 +38,20 @@ public:
 	virtual float Y() const;
 	virtual float Filter() const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const;
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs, TextureConstPtr self) const;
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const;
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
-	const Texture *GetTexture00() const { return t00; }
-	const Texture *GetTexture01() const { return t01; }
-	const Texture *GetTexture10() const { return t10; }
-	const Texture *GetTexture11() const { return t11; }
+	TextureConstPtr GetTexture00() const { return t00; }
+	TextureConstPtr GetTexture01() const { return t01; }
+	TextureConstPtr GetTexture10() const { return t10; }
+	TextureConstPtr GetTexture11() const { return t11; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const Texture *t00, *t01, *t10, *t11;
+	TextureConstPtr t00, t01, t10, t11;
 };
 
 }

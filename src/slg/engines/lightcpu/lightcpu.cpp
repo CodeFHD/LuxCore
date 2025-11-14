@@ -26,9 +26,9 @@ using namespace slg;
 // LightCPURenderEngine
 //------------------------------------------------------------------------------
 
-LightCPURenderEngine::LightCPURenderEngine(const RenderConfig *rcfg) :
+LightCPURenderEngine::LightCPURenderEngine(RenderConfigConstRef rcfg) :
 		CPUNoTileRenderEngine(rcfg), sampleSplatter(nullptr) {
-	if (rcfg->scene->camera->GetType() == Camera::STEREO)
+	if (rcfg.scene->camera->GetType() == Camera::STEREO)
 		throw std::runtime_error("Light render engine doesn't support stereo camera");
 }
 
@@ -38,17 +38,17 @@ LightCPURenderEngine::~LightCPURenderEngine() {
 
 void LightCPURenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
-	film->SetRadianceGroupCount(renderConfig->scene->lightDefs.GetLightGroupCount());
+	film->SetRadianceGroupCount(renderConfig.scene->lightDefs.GetLightGroupCount());
 	film->SetThreadCount(renderThreads.size());
 	film->Init();
 }
 
-RenderState *LightCPURenderEngine::GetRenderState() {
-	return new LightCPURenderState(bootStrapSeed);
+RenderStatePtr LightCPURenderEngine::GetRenderState() {
+	return std::make_shared<LightCPURenderState>(bootStrapSeed);
 }
 
 void LightCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
@@ -64,15 +64,15 @@ void LightCPURenderEngine::StartLockLess() {
 		// Check if the render state is of the right type
 		startRenderState->CheckEngineTag(GetObjectTag());
 
-		LightCPURenderEngine *rs = (LightCPURenderEngine *)startRenderState;
+		//auto rs = static_pointer_cast<LightCPURenderEngine>(startRenderState);
+		auto rs = static_pointer_cast<LightCPURenderState>(startRenderState);
 
 		// Use a new seed to continue the rendering
 		const u_int newSeed = rs->bootStrapSeed + 1;
 		SLG_LOG("Continuing the rendering with new LIGHTCPU seed: " + ToString(newSeed));
 		SetSeed(newSeed);
-		
-		delete startRenderState;
-		startRenderState = NULL;
+
+		startRenderState = nullptr;
 	}
 
 	//--------------------------------------------------------------------------
@@ -113,7 +113,7 @@ Properties LightCPURenderEngine::ToProperties(const Properties &cfg) {
 			Sampler::ToProperties(cfg);
 }
 
-RenderEngine *LightCPURenderEngine::FromProperties(const RenderConfig *rcfg) {
+RenderEngine *LightCPURenderEngine::FromProperties(RenderConfigConstRef rcfg) {
 	return new LightCPURenderEngine(rcfg);
 }
 

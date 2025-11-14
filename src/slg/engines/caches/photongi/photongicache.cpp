@@ -45,7 +45,7 @@ PhotonGICache::PhotonGICache() :
 		causticPhotonsBVH(nullptr) {
 }
 
-PhotonGICache::PhotonGICache(const Scene *scn, const PhotonGICacheParams &p) :
+PhotonGICache::PhotonGICache(SceneConstPtr scn, const PhotonGICacheParams &p) :
 		scene(scn), params(p),
 		visibilityParticlesKdTree(nullptr),
 		radiancePhotonsBVH(nullptr) ,

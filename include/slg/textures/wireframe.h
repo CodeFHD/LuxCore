@@ -30,7 +30,7 @@ namespace slg {
 class WireFrameTexture : public Texture {
 public:
 	WireFrameTexture(const float w,
-			const Texture *borderTx, const Texture *insideTx) :
+			TextureConstPtr borderTx, TextureConstPtr insideTx) :
 		width(w), borderTex(borderTx), insideTex(insideTx) { }
 	virtual ~WireFrameTexture() { }
 
@@ -44,18 +44,18 @@ public:
 		return (borderTex->Filter() + insideTex->Filter()) * .5f;
 	}
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		borderTex->AddReferencedTextures(referencedTexs);
-		insideTex->AddReferencedTextures(referencedTexs);
+		borderTex->AddReferencedTextures(referencedTexs, borderTex);
+		insideTex->AddReferencedTextures(referencedTexs, insideTex);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		borderTex->AddReferencedImageMaps(referencedImgMaps);
 		insideTex->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (borderTex == oldTex)
 			borderTex = newTex;
 		if (insideTex == oldTex)
@@ -63,8 +63,8 @@ public:
 	}
 
 	float GetWidth() const { return width; }
-	const Texture *GetBorderTex() const { return borderTex; }
-	const Texture *GetInsideTex() const { return insideTex; }
+	TextureConstPtr GetBorderTex() const { return borderTex; }
+	TextureConstPtr GetInsideTex() const { return insideTex; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
@@ -72,8 +72,8 @@ private:
 	bool Evaluate(const HitPoint &hitPoint) const;
 
 	const float width;
-	const Texture *borderTex;
-	const Texture *insideTex;
+	TextureConstPtr borderTex;
+	TextureConstPtr insideTex;
 };
 
 }

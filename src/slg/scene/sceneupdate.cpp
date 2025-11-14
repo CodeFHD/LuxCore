@@ -28,10 +28,10 @@ void Scene::UpdateObjectTransformation(const string &objName, const Transform &t
 	if (!objDefs.IsSceneObjectDefined(objName))
 		throw runtime_error("Unknown object in Scene::UpdateObjectTransformation(): " + objName);
 
-	SceneObject *obj = objDefs.GetSceneObject(objName);
-	ExtMesh *mesh = obj->GetExtMesh();
+	auto obj = objDefs.GetSceneObject(objName);
+	auto mesh = obj->GetExtMesh();
 
-	ExtInstanceTriangleMesh *instanceMesh = dynamic_cast<ExtInstanceTriangleMesh *>(mesh);
+	auto instanceMesh = dynamic_pointer_cast<ExtInstanceTriangleMesh>(mesh);
 	if (instanceMesh) {
 		instanceMesh->SetTransformation(trans);
 		editActions.AddAction(GEOMETRY_TRANS_EDIT);
@@ -57,7 +57,7 @@ void Scene::UpdateObjectMaterial(const string &objName, const string &matName) {
 	if (!matDefs.IsMaterialDefined(matName))
 		throw runtime_error("Unknown material in Scene::UpdateObjectMaterial(): " + matName);
 
-	SceneObject *obj = objDefs.GetSceneObject(objName);
+	auto obj = objDefs.GetSceneObject(objName);
 
 	// Check if the object is a light source
 	if (obj->GetMaterial()->IsLightSource()) {
@@ -68,7 +68,7 @@ void Scene::UpdateObjectMaterial(const string &objName, const string &matName) {
 	}
 	
 	// Get the material
-	const Material *mat = matDefs.GetMaterial(matName);
+	auto mat = matDefs.GetMaterial(matName);
 	obj->SetMaterial(mat);
 	
 	// Check if the object is now a light source

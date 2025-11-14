@@ -68,16 +68,16 @@ float BilerpTexture::Filter() const
 	return (t00->Filter() + t01->Filter() + t10->Filter() + t11->Filter()) * .25f;
 }
 
-void BilerpTexture::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const
+void BilerpTexture::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const
 {
-	Texture::AddReferencedTextures(referencedTexs);
+	Texture::AddReferencedTextures(referencedTexs, self);
 
-	t00->AddReferencedTextures(referencedTexs);
-	t01->AddReferencedTextures(referencedTexs);
-	t10->AddReferencedTextures(referencedTexs);
-	t11->AddReferencedTextures(referencedTexs);
+	t00->AddReferencedTextures(referencedTexs, t00);
+	t01->AddReferencedTextures(referencedTexs, t01);
+	t10->AddReferencedTextures(referencedTexs, t10);
+	t11->AddReferencedTextures(referencedTexs, t11);
 }
-void BilerpTexture::AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const
+void BilerpTexture::AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const
 {
 	t00->AddReferencedImageMaps(referencedImgMaps);
 	t01->AddReferencedImageMaps(referencedImgMaps);
@@ -85,7 +85,7 @@ void BilerpTexture::AddReferencedImageMaps(std::unordered_set<const ImageMap *> 
 	t11->AddReferencedImageMaps(referencedImgMaps);
 }
 
-void BilerpTexture::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex)
+void BilerpTexture::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex)
 {
 	if (t00 == oldTex)
 		t00 = newTex;

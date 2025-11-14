@@ -30,7 +30,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-RandomTriangleAOVShape::RandomTriangleAOVShape(luxrays::ExtTriangleMesh *srcMesh,
+RandomTriangleAOVShape::RandomTriangleAOVShape(luxrays::ExtTriangleMeshPtr srcMesh,
 		const u_int srcDataIndex, const u_int dstDataIndex) {
 	SDL_LOG("RandomTriangleAOV shape " << srcMesh->GetName());
 
@@ -62,11 +62,9 @@ RandomTriangleAOVShape::RandomTriangleAOVShape(luxrays::ExtTriangleMesh *srcMesh
 }
 
 RandomTriangleAOVShape::~RandomTriangleAOVShape() {
-	if (!refined)
-		delete mesh;
 }
 
-ExtTriangleMesh *RandomTriangleAOVShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr RandomTriangleAOVShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

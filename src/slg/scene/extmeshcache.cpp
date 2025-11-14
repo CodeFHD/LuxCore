@@ -33,11 +33,11 @@ ExtMeshCache::ExtMeshCache() {
 }
 
 ExtMeshCache::~ExtMeshCache() {
-	for(NamedObject *no: meshes.GetObjs()) {
-		ExtMesh *mesh = static_cast<ExtMesh *>(no);
+	for(auto& no: meshes.GetObjs()) {
+		ExtMesh& mesh = static_cast<ExtMesh &>(*no);
 
 		if (deleteMeshData)
-			mesh->Delete();
+			mesh.Delete();
 
 		// Mesh are deleted by NameObjectVector destructor
 	}
@@ -47,7 +47,7 @@ bool ExtMeshCache::IsExtMeshDefined(const std::string &meshName) const {
 	return meshes.IsObjDefined(meshName);
 }
 
-void ExtMeshCache::DefineExtMesh(ExtMesh *mesh) {
+void ExtMeshCache::DefineExtMesh(ExtMeshPtr mesh) {
 	const string &meshName = mesh->GetName();
 
 	if (!meshes.IsObjDefined(meshName)) {
@@ -55,29 +55,32 @@ void ExtMeshCache::DefineExtMesh(ExtMesh *mesh) {
 		meshes.DefineObj(mesh);
 	} else {
 		// Check if the meshes are of the same type
-		const ExtMesh *meshToReplace = static_cast<const ExtMesh *>(meshes.GetObj(meshName));
-		if (meshToReplace->GetType() != mesh->GetType())
-			throw runtime_error("Mesh " + meshName + " of type " + ToString(mesh->GetType()) +
-					" can not replace a mesh of type " + ToString(meshToReplace->GetType()) + ". Delete the old mesh first.");
+		auto meshToReplace = static_pointer_cast<const ExtMesh>(meshes.GetObj(meshName));
+		if (meshToReplace->GetType() != mesh->GetType()) {
+			throw runtime_error(
+				"Mesh " + meshName + " of type " + ToString(mesh->GetType()) +
+				" can not replace a mesh of type " + ToString(meshToReplace->GetType())
+				+ ". Delete the old mesh first.");
+		}
 
 		// Replace an old mesh
-		ExtMesh *oldMesh = static_cast<ExtMesh *>(meshes.DefineObj(mesh));
+		auto oldMesh = static_pointer_cast<ExtMesh>(meshes.DefineObj(mesh));
 
 		if (oldMesh->GetType() == TYPE_EXT_TRIANGLE) {
 			// I have also to check/update all instances and motion blur meshes for
 			// reference to the old mesh
-			ExtTriangleMesh *om = static_cast<ExtTriangleMesh *>(oldMesh);
-			ExtTriangleMesh *nm = static_cast<ExtTriangleMesh *>(mesh);
+			auto om = static_pointer_cast<ExtTriangleMesh>(oldMesh);
+			auto nm = static_pointer_cast<ExtTriangleMesh>(mesh);
 
-			for(NamedObject *no: meshes.GetObjs()) {
-				ExtMesh *mesh = static_cast<ExtMesh *>(no);
+			for(auto& no: meshes.GetObjs()) {
+				auto mesh = static_pointer_cast<ExtMesh>(no);
 
 				switch (mesh->GetType()) {
 					case TYPE_EXT_TRIANGLE_INSTANCE:
-						static_cast<ExtInstanceTriangleMesh *>(mesh)->UpdateMeshReferences(om, nm);
+						static_pointer_cast<ExtInstanceTriangleMesh>(mesh)->UpdateMeshReferences(om, nm);
 						break;
 					case TYPE_EXT_TRIANGLE_MOTION:
-						static_cast<ExtMotionTriangleMesh *>(mesh)->UpdateMeshReferences(om, nm);
+						static_pointer_cast<ExtMotionTriangleMesh>(mesh)->UpdateMeshReferences(om, nm);
 						break;
 					default:
 						break;
@@ -85,9 +88,9 @@ void ExtMeshCache::DefineExtMesh(ExtMesh *mesh) {
 			}
 		}
 
+		// TODO Should be automatic
 		if (deleteMeshData)
 			oldMesh->Delete();
-		delete oldMesh;
 	}
 }
 
@@ -96,11 +99,11 @@ void ExtMeshCache::SetMeshVertexAOV(const string &meshName,
 	if (!meshes.IsObjDefined(meshName))
 		throw runtime_error("Unknown mesh " + meshName + " while trying to set vertex AOV");
 
-	ExtMesh *mesh = static_cast<ExtMesh *>(meshes.GetObj(meshName));
+	auto mesh = static_pointer_cast<ExtMesh>(meshes.GetObj(meshName));
 	if (mesh->GetType() != TYPE_EXT_TRIANGLE)
 		throw runtime_error("Can not set vertex AOV of mesh " + meshName + " of type " + ToString(mesh->GetType()));
 
-	ExtTriangleMesh *triMesh = static_cast<ExtTriangleMesh *>(mesh);
+	auto triMesh = static_pointer_cast<ExtTriangleMesh>(mesh);
 	triMesh->DeleteVertexAOV(index);
 	triMesh->SetVertexAOV(index, data);
 }
@@ -110,18 +113,18 @@ void ExtMeshCache::SetMeshTriangleAOV(const string &meshName,
 	if (!meshes.IsObjDefined(meshName))
 		throw runtime_error("Unknown mesh " + meshName + " while trying to set triangle AOV");
 
-	ExtMesh *mesh = static_cast<ExtMesh *>(meshes.GetObj(meshName));
+	auto mesh = static_pointer_cast<ExtMesh>(meshes.GetObj(meshName));
 	if (mesh->GetType() != TYPE_EXT_TRIANGLE)
 		throw runtime_error("Can not set triangle AOV of mesh " + meshName + " of type " + ToString(mesh->GetType()));
 
-	ExtTriangleMesh *triMesh = static_cast<ExtTriangleMesh *>(mesh);
+	auto triMesh = static_pointer_cast<ExtTriangleMesh>(mesh);
 	triMesh->DeleteTriAOV(index);
 	triMesh->SetTriAOV(index, data);
 }
 
 void ExtMeshCache::DeleteExtMesh(const string &meshName) {
 	if (deleteMeshData) {
-		ExtMesh *mesh = static_cast<ExtMesh *>(meshes.GetObj(meshName));
+		auto mesh = static_pointer_cast<ExtMesh>(meshes.GetObj(meshName));
 		mesh->Delete();
 	}
 	meshes.DeleteObj(meshName);
@@ -135,29 +138,29 @@ void ExtMeshCache::GetExtMeshNames(std::vector<std::string> &names) const {
 	meshes.GetNames(names);
 }
 
-ExtMesh *ExtMeshCache::GetExtMesh(const string &meshName) {
-	return static_cast<ExtMesh *>(meshes.GetObj(meshName));
+ExtMeshPtr ExtMeshCache::GetExtMesh(const string &meshName) {
+	return static_pointer_cast<ExtMesh>(meshes.GetObj(meshName));
 }
 
-ExtMesh *ExtMeshCache::GetExtMesh(const u_int index) {
-	return static_cast<ExtMesh *>(meshes.GetObj(index));
+ExtMeshPtr ExtMeshCache::GetExtMesh(const u_int index) {
+	return static_pointer_cast<ExtMesh>(meshes.GetObj(index));
 }
 
 u_int ExtMeshCache::GetExtMeshIndex(const string &meshName) const {
 	return meshes.GetIndex(meshName);
 }
 
-u_int ExtMeshCache::GetExtMeshIndex(const ExtMesh *m) const {
+u_int ExtMeshCache::GetExtMeshIndex(ExtMeshConstPtr m) const {
 	return meshes.GetIndex(m);
 }
 
-string ExtMeshCache::GetRealFileName(const ExtMesh *m) const {
-	const ExtMesh *meshToFind;
+string ExtMeshCache::GetRealFileName(ExtMeshConstPtr m) const {
+	ExtMeshConstPtr meshToFind;
 	if (m->GetType() == TYPE_EXT_TRIANGLE_MOTION) {
-		const ExtMotionTriangleMesh *mot = (const ExtMotionTriangleMesh *)m;
+		auto mot = static_pointer_cast<const ExtMotionTriangleMesh>(m);
 		meshToFind = mot->GetExtTriangleMesh();
 	} else if (m->GetType() == TYPE_EXT_TRIANGLE_INSTANCE) {
-		const ExtInstanceTriangleMesh *inst = (const ExtInstanceTriangleMesh *)m;
+		auto inst = static_pointer_cast<const ExtInstanceTriangleMesh>(m);
 		meshToFind = inst->GetExtTriangleMesh();
 	} else
 		meshToFind = m;
@@ -165,14 +168,14 @@ string ExtMeshCache::GetRealFileName(const ExtMesh *m) const {
 	return meshes.GetName(meshToFind);
 }
 
-string ExtMeshCache::GetSequenceFileName(const ExtMesh *m) const {
+string ExtMeshCache::GetSequenceFileName(ExtMeshConstPtr m) const {
 
 	u_int meshIndex;
 	if (m->GetType() == TYPE_EXT_TRIANGLE_MOTION) {
-		const ExtMotionTriangleMesh *mot = (const ExtMotionTriangleMesh *)m;
+		auto mot = static_pointer_cast<const ExtMotionTriangleMesh>(m);
 		meshIndex = GetExtMeshIndex(mot->GetExtTriangleMesh());
 	} else if (m->GetType() == TYPE_EXT_TRIANGLE_INSTANCE) {
-		const ExtInstanceTriangleMesh *inst = (const ExtInstanceTriangleMesh *)m;
+		auto inst = static_pointer_cast<const ExtInstanceTriangleMesh>(m);
 		meshIndex = GetExtMeshIndex(inst->GetExtTriangleMesh());
 	} else
 		meshIndex = GetExtMeshIndex(m);

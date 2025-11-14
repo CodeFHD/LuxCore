@@ -36,7 +36,7 @@ public:
 	} InterpolationType;
 
 	BandTexture(const InterpolationType interp,
-			const Texture *amnt,
+			TextureConstPtr amnt,
 			const std::vector<float> &os,
 			const std::vector<luxrays::Spectrum> &vs) :
 			interpType(interp), amount(amnt), offsets(os), values(vs) { }
@@ -48,22 +48,22 @@ public:
 	virtual float Y() const;
 	virtual float Filter() const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		amount->AddReferencedTextures(referencedTexs);
+		amount->AddReferencedTextures(referencedTexs, amount);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		amount->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (amount == oldTex)
 			amount = newTex;
 	}
 
 	InterpolationType GetInterpolationType() const { return interpType; }
-	const Texture *GetAmountTexture() const { return amount; }
+	TextureConstPtr GetAmountTexture() const { return amount; }
 	const std::vector<float> &GetOffsets() const { return offsets; }
 	const std::vector<luxrays::Spectrum> &GetValues() const { return values; }
 
@@ -75,7 +75,7 @@ public:
 private:
 	const InterpolationType interpType;
 
-	const Texture *amount;
+	TextureConstPtr amount;
 	const std::vector<float> offsets;
 	const std::vector<luxrays::Spectrum> values; 
 };

@@ -42,9 +42,9 @@ static string GetFileNameExt(const string &fileName) {
 	return boost::algorithm::to_lower_copy(std::filesystem::path(fileName).extension().string());
 }
 
-static void BatchRendering(RenderConfig *config, RenderState *startState, Film *startFilm,
+static void BatchRendering(RenderConfigPtr config, RenderStatePtr startState, FilmPtr startFilm,
 		const bool showDevicesStats) {
-	RenderSession *session = RenderSession::Create(config, startState, startFilm);
+	auto session = RenderSession::Create(config, &startState, &startFilm);
 
 	const unsigned int haltTime = config->GetProperty("batch.halttime").Get<unsigned int>();
 	const unsigned int haltSpp = config->GetProperty("batch.haltspp").Get<unsigned int>(0);
@@ -104,10 +104,10 @@ static void BatchRendering(RenderConfig *config, RenderState *startState, Film *
 	const string renderEngine = config->GetProperty("renderengine.type").Get<string>();
 	if (renderEngine != "FILESAVER") {
 		// Save the rendered image
-		session->GetFilm().SaveOutputs();
+		session->GetFilm()->SaveOutputs();
 	}
 
-	delete session;
+	session.reset();
 }
 
 int main(int argc, char *argv[]) {
@@ -187,10 +187,10 @@ int main(int argc, char *argv[]) {
 			throw runtime_error("You must specify a file to render");
 
 		// Check if we have to parse a LuxCore SDL file or a LuxRender SDL file
-		Scene *scene = NULL;
-		RenderConfig *config;
-		RenderState *startRenderState = NULL;
-		Film *startFilm = NULL;
+		ScenePtr scene;
+		RenderConfigPtr config;
+		RenderStatePtr startRenderState;
+		FilmPtr startFilm;
 		
 		if (configFileName.compare("") != 0) {
 			// Clear the file name resolver list
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
 			config->Parse(cmdLineProp);
 		} else if (configFileNameExt == ".rsm") {
 			// It is a rendering resume file
-			config = RenderConfig::Create(configFileName, &startRenderState, &startFilm);
+			config = RenderConfig::Create(configFileName, startRenderState, startFilm);
 			config->Parse(cmdLineProp);
 		} else
 			throw runtime_error("Unknown file extension: " + configFileName);
@@ -248,8 +248,6 @@ int main(int argc, char *argv[]) {
 		
 		BatchRendering(config, startRenderState, startFilm, showDevicesStats);
 
-		delete config;
-		delete scene;
 
 		LC_LOG("Done.");
 	} catch (runtime_error &err) {
@@ -262,3 +260,4 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

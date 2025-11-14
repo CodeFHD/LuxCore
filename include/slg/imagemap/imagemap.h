@@ -36,6 +36,7 @@
 #include "luxrays/utils/properties.h"
 #include "luxrays/utils/serializationutils.h"
 #include "luxrays/utils/ocl.h"
+#include "slg/usings.h"
 #include "slg/core/colorspace.h"
 #include "slg/utils/halfserialization.h"
 
@@ -902,6 +903,7 @@ class ImageMap : public luxrays::NamedObject {
 public:
 	ImageMap(const std::string &fileName, const ImageMapConfig &cfg,
 			const u_int widthHint = 0, const u_int heightHint = 0);
+	ImageMap(ImageMapStorage *pixels, const float imageMean, const float imageMeanY);
 	~ImageMap();
 
 	void Reload();
@@ -942,21 +944,21 @@ public:
 	float GetSpectrumMean() const { return imageMean; }
 	float GetSpectrumMeanY() const { return imageMeanY; }
 
-	ImageMap *Copy() const;
+	ImageMapPtr Copy() const;
 
 	luxrays::Properties ToProperties(const std::string &prefix, const bool includeBlobImg) const;
 	
 	// The following 3 methods always return an ImageMap with FLOAT storage
-	static ImageMap *Merge(const ImageMap *map0, const ImageMap *map1, const u_int channels);
-	static ImageMap *Merge(const ImageMap *map0, const ImageMap *map1, const u_int channels,
+	static ImageMapPtr Merge(ImageMapConstPtr map0, ImageMapConstPtr map1, const u_int channels);
+	static ImageMapPtr Merge(ImageMapConstPtr map0, ImageMapConstPtr map1, const u_int channels,
 		const u_int width, const u_int height);
-	static ImageMap *Resample(const ImageMap *map, const u_int channels,
+	static ImageMapPtr Resample(ImageMapConstPtr map, const u_int channels,
 		const u_int width, const u_int height);
-	static ImageMap *FromProperties(const luxrays::Properties &props, const std::string &prefix);
+	static ImageMapPtr FromProperties(const luxrays::Properties &props, const std::string &prefix);
 
-	static ImageMap *AllocImageMap(const u_int channels, const u_int width, const u_int height,
+	static ImageMapPtr AllocImageMap(const u_int channels, const u_int width, const u_int height,
 		const ImageMapConfig &cfg);
-	static ImageMap *AllocImageMap(void *pixels, const u_int channels, const u_int width, const u_int height,
+	static ImageMapPtr AllocImageMap(void *pixels, const u_int channels, const u_int width, const u_int height,
 		const ImageMapConfig &cfg);
 
 	static std::pair<u_int, u_int> GetSize(const std::string &fileName);
@@ -1023,7 +1025,6 @@ protected:
 	
 	// Used by serialization
 	ImageMap();
-	ImageMap(ImageMapStorage *pixels, const float imageMean, const float imageMeanY);
 
 	void Init(const std::string &fileName, const ImageMapConfig &cfg,
 		const u_int widthHint = 0, const u_int heightHint = 0);

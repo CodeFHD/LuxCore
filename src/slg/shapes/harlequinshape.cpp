@@ -27,7 +27,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-HarlequinShape::HarlequinShape(luxrays::ExtTriangleMesh *srcMesh) {
+HarlequinShape::HarlequinShape(luxrays::ExtTriangleMeshPtr srcMesh) {
 	SDL_LOG("Harlequin shape " << srcMesh->GetName());
 
 	const double startTime = WallClockTime();
@@ -57,23 +57,21 @@ HarlequinShape::HarlequinShape(luxrays::ExtTriangleMesh *srcMesh) {
 		newVertices[newTri.v[2]] = vertices[tri.v[2]];
 		newVertCols[newTri.v[2]] = col;
 	}
-	
-	mesh = new ExtTriangleMesh(triCount * 3, triCount, newVertices, newTris,
+
+	mesh = std::make_shared<ExtTriangleMesh>(triCount * 3, triCount, newVertices, newTris,
 			nullptr, nullptr, newVertCols);
-	
+
 	// For some debugging
 	//mesh->Save("debug.ply");
-	
+
 	const double endTime = WallClockTime();
 	SDL_LOG("Harlequin time: " << (boost::format("%.3f") % (endTime - startTime)) << "secs");
 }
 
 HarlequinShape::~HarlequinShape() {
-	if (!refined)
-		delete mesh;
 }
 
-ExtTriangleMesh *HarlequinShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr HarlequinShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

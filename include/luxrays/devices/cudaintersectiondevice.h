@@ -36,7 +36,7 @@ public:
 		CUDADeviceDescription *desc, const size_t devIndex);
 	virtual ~CUDAIntersectionDevice();
 
-	virtual void SetDataSet(DataSet *newDataSet);
+	virtual void SetDataSet(DataSetPtr newDataSet);
 	virtual void Start();
 	virtual void Stop();
 

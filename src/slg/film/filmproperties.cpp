@@ -102,7 +102,7 @@ bool Film::GetFilmSize(const Properties &cfg,
 	return subRegionUsed;
 }
 
-Film *Film::FromProperties(const Properties &cfg) {
+FilmPtr Film::FromProperties(const Properties &cfg) {
 	//--------------------------------------------------------------------------
 	// Create the Film
 	//--------------------------------------------------------------------------
@@ -113,8 +113,9 @@ Film *Film::FromProperties(const Properties &cfg) {
 	SLG_LOG("Film resolution: " << filmFullWidth << "x" << filmFullHeight);
 	if (filmSubRegionUsed)
 		SLG_LOG("Film sub-region: " << filmSubRegion[0] << " " << filmSubRegion[1] << filmSubRegion[2] << " " << filmSubRegion[3]);
-	unique_ptr<Film> film(new Film(filmFullWidth, filmFullHeight,
-			filmSubRegionUsed ? filmSubRegion : NULL));
+
+	FilmPtr film = Film::Create(filmFullWidth, filmFullHeight,
+			filmSubRegionUsed ? filmSubRegion : nullptr);
 
 	// For compatibility with the past
 	if (cfg.IsDefined("film.alphachannel.enable")) {
@@ -159,5 +160,5 @@ Film *Film::FromProperties(const Properties &cfg) {
 
 	film->Parse(cfg);
 
-	return film.release();
+	return film;
 }// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

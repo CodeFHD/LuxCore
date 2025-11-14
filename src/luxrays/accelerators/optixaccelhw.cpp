@@ -118,21 +118,21 @@ public:
 		vector<OptixInstance> optixInstances;
 		vector<OptixAabb> optixBBs;
 		
-		auto uniqueMeshTraversableHandle = map<const Mesh *, OptixTraversableHandle,
-				function<bool(const Mesh *, const Mesh *)>>{
-			[](const Mesh *p0, const Mesh *p1) {
+		auto uniqueMeshTraversableHandle = map<MeshConstPtr , OptixTraversableHandle,
+				function<bool(MeshConstPtr , MeshConstPtr )>>{
+			[](MeshConstPtr p0, MeshConstPtr p1) {
 				return p0 < p1;
 			}
 		};
 
 		bool usesMotionBlur = false;
 		for (u_int i = 0; i < optixAccel.meshes.size(); ++i) {
-			const Mesh *mesh = optixAccel.meshes[i];
+			MeshConstPtr mesh = optixAccel.meshes[i];
 			
 			switch (mesh->GetType()) {
 				case TYPE_TRIANGLE:
 				case TYPE_EXT_TRIANGLE: {
-					const TriangleMesh *tm = dynamic_cast<const TriangleMesh *>(mesh);
+					auto tm = dynamic_pointer_cast<const TriangleMesh>(mesh);
 
 					OptixTraversableHandle handle;
 					HardwareDeviceBuffer *outputBuffer = nullptr;
@@ -160,14 +160,14 @@ public:
 				}
 				case TYPE_TRIANGLE_INSTANCE:
 				case TYPE_EXT_TRIANGLE_INSTANCE: {
-					const InstanceTriangleMesh *itm = dynamic_cast<const InstanceTriangleMesh *>(mesh);
+					auto itm = dynamic_pointer_cast<const InstanceTriangleMesh>(mesh);
 
 					// Check if a OptixTraversableHandle has already been created
 					auto it = uniqueMeshTraversableHandle.find(itm->GetTriangleMesh());
 
 					OptixTraversableHandle instancedMeshHandle;
 					if (it == uniqueMeshTraversableHandle.end()) {
-						TriangleMesh *instancedMesh = itm->GetTriangleMesh();
+						auto instancedMesh = itm->GetTriangleMesh();
 
 						// Create a new OptixTraversableHandle
 						HardwareDeviceBuffer *outputBuffer = nullptr;
@@ -209,14 +209,14 @@ public:
 				}
 				case TYPE_TRIANGLE_MOTION:
 				case TYPE_EXT_TRIANGLE_MOTION: {
-					const MotionTriangleMesh *mtm = dynamic_cast<const MotionTriangleMesh *>(mesh);
+					auto mtm = dynamic_pointer_cast<const MotionTriangleMesh>(mesh);
 
 					// Check if a OptixTraversableHandle has already been created
 					auto it = uniqueMeshTraversableHandle.find(mtm->GetTriangleMesh());
 
 					OptixTraversableHandle instancedMeshHandle;
 					if (it == uniqueMeshTraversableHandle.end()) {
-						TriangleMesh *instancedMesh = mtm->GetTriangleMesh();
+						auto instancedMesh = mtm->GetTriangleMesh();
 
 						// Create a new OptixTraversableHandle
 						HardwareDeviceBuffer *outputBuffer = nullptr;
@@ -580,12 +580,12 @@ public:
 		
 	}
 
-	virtual void Update(const DataSet *newDataSet) { assert(false); }
+	virtual void Update(DataSetConstPtr newDataSet) { assert(false); }
 	virtual void EnqueueTraceRayBuffer(HardwareDeviceBuffer *rayBuff,
 			HardwareDeviceBuffer *rayHitBuff, const unsigned int rayCount);
 
 private:
-	void BuildTraversable(const TriangleMesh *mesh,
+	void BuildTraversable(TriangleMeshConstPtr mesh,
 			OptixTraversableHandle &handle,
 			HardwareDeviceBuffer **outputBuffer) {
 		CUDAIntersectionDevice *cudaDevice = dynamic_cast<CUDAIntersectionDevice *>(&device);

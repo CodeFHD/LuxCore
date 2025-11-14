@@ -29,7 +29,7 @@ namespace slg {
 
 class PowerTexture : public Texture {
 public:
-	PowerTexture(const Texture *base, const Texture *exponent) : base(base), exponent(exponent) { }
+	PowerTexture(TextureConstPtr base, TextureConstPtr exponent) : base(base), exponent(exponent) { }
 	virtual ~PowerTexture() { }
 
 	virtual TextureType GetType() const { return POWER_TEX; }
@@ -42,32 +42,32 @@ public:
 		return SafePow(base->Filter(), exponent->Filter()); 
 	}
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-		Texture::AddReferencedTextures(referencedTexs);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+		Texture::AddReferencedTextures(referencedTexs, self);
 
-		base->AddReferencedTextures(referencedTexs);
-		exponent->AddReferencedTextures(referencedTexs);
+		base->AddReferencedTextures(referencedTexs, base);
+		exponent->AddReferencedTextures(referencedTexs, exponent);
 	}
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const {
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const {
 		base->AddReferencedImageMaps(referencedImgMaps);
 		exponent->AddReferencedImageMaps(referencedImgMaps);
 	}
 
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 		if (base == oldTex)
 			base = newTex;
 		if (exponent == oldTex)
 			exponent = newTex;
 	}
 
-	const Texture *GetBase() const { return base; }
-	const Texture *GetExponent() const { return exponent; }
+	TextureConstPtr GetBase() const { return base; }
+	TextureConstPtr GetExponent() const { return exponent; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
 private:
-	const Texture *base;
-	const Texture *exponent;
+	TextureConstPtr base;
+	TextureConstPtr exponent;
 
 	inline float SafePow(const float base, const float exponent) const {
 		if (base < 0.f && exponent != static_cast<int>(exponent))

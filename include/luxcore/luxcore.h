@@ -41,6 +41,7 @@
 #include <stdexcept>
 #include <string>
 #include <array>
+#include <memory>
 
 #include <luxcore/cfg.h>
 #include <luxrays/utils/exportdefs.h>
@@ -60,6 +61,21 @@
  * \brief The LuxCore classes are defined within this namespace.
  */
 namespace luxcore {
+
+class Scene;
+using ScenePtr = std::shared_ptr<Scene>;
+
+class Film;
+using FilmPtr = std::shared_ptr<Film>;
+
+class RenderConfig;
+using RenderConfigPtr = std::shared_ptr<RenderConfig>;
+
+class RenderState;
+using RenderStatePtr = std::shared_ptr<RenderState>;
+
+class RenderSession;
+using RenderSessionPtr = std::shared_ptr<RenderSession>;
 
 #define LC_MESH_MAX_DATA_COUNT 8
 
@@ -324,7 +340,7 @@ public:
 	 *
 	 * \param fileName is the name of the file with the serialized film to read.
 	 */
-	static Film *Create(const std::string &fileName);
+	static std::shared_ptr<Film> Create(const std::string &fileName);
 	/*!
 	 * \brief Create a stand alone Film (i.e. not connected to a rendering session)
 	 * from the properties.
@@ -336,7 +352,8 @@ public:
 	 * Required by BIDIRCPU and LIGHTCPU render engines.
 	 *
 	 */
-	static Film *Create(const luxrays::Properties &props,
+	static std::shared_ptr<Film> Create(
+			const luxrays::Properties &props,
 			const bool hasPixelNormalizedChannel,
 			const bool hasScreenNormalizedChannel);
 
@@ -378,7 +395,7 @@ public:
 	 * \param film the film to add.
 	 *
 	 */
-	virtual void AddFilm(const Film &film) = 0;
+	virtual void AddFilm(std::shared_ptr<const Film> film) = 0;
 	/*!
 	 * \brief Add a film.
 	 *
@@ -391,7 +408,8 @@ public:
 	 * \param dstOffsetY the Y offset of the destination film.
 	 *
 	 */
-	virtual void AddFilm(const Film &film,
+	virtual void AddFilm(
+		std::shared_ptr<const Film> film,
 		const unsigned int srcOffsetX, const unsigned int srcOffsetY,
 		const unsigned int srcWidth, const unsigned int srcHeight,
 		const unsigned int dstOffsetX, const unsigned int dstOffsetY) = 0;
@@ -769,14 +787,14 @@ public:
 	 *
 	 * \param resizePolicyProps defines texture image maps resize policy.
 	 */
-	static Scene *Create(const luxrays::Properties *resizePolicyProps = nullptr);
+	static std::shared_ptr<Scene> Create(const luxrays::Properties *resizePolicyProps = nullptr);
 	/*!
 	 * \brief Creates a new Scene as defined by props.
 	 *
 	 * \param props are the Properties used to build the new Scene.
 	 * \param resizePolicyProps defines texture image maps resize policy.
 	 */
-	static Scene *Create(const luxrays::Properties &props, const luxrays::Properties *resizePolicyProps = nullptr);
+	static std::shared_ptr<Scene> Create(const luxrays::Properties &props, const luxrays::Properties *resizePolicyProps = nullptr);
 	/*!
 	 * \brief Creates a new Scene as defined in fileName file.
 	 *
@@ -787,7 +805,7 @@ public:
 	 * This parameter has no effect when loading binary serialized binary
 	 * file.
 	 */
-	static Scene *Create(const std::string &fileName, const luxrays::Properties *resizePolicyProps = nullptr);
+	static std::shared_ptr<Scene> Create(const std::string &fileName, const luxrays::Properties *resizePolicyProps = nullptr);
 
 	virtual ~Scene();
 
@@ -1192,25 +1210,27 @@ public:
 	 * read from the file specified in the "scene.file" Property and deleted by
 	 * the destructor.
 	 */
-	static RenderConfig *Create(const luxrays::Properties &props, Scene *scene = NULL);
+	static std::shared_ptr<RenderConfig> Create(const luxrays::Properties &props, ScenePtr scene = NULL);
 	/*!
 	 * \brief Create a new RenderConfig using the provided binary file.
 	 *
 	 * \param fileName is the binary file used to build the new
 	 * RenderConfig. The extension for the binary format must be ".bcf".
 	 */
-	static RenderConfig *Create(const std::string &fileName);
+	static std::shared_ptr<RenderConfig> Create(const std::string &fileName);
 	/*!
 	 * \brief Create a new RenderConfig using the provided resume binary file.
 	 *
 	 * \param fileName is the binary file used to build the new
 	 * RenderConfig. The extension for the binary format must be ".rsm".
-	 * \param startState the pointer to the render state will be returned here.
-	 * \param startFilm the pointer to the film will be returned here.
+	 * \param startState the reference to the render state will be returned here.
+	 * \param startFilm the reference to the film will be returned here.
 	 */
-	static RenderConfig *Create(const std::string &fileName, RenderState **startState, Film **startFilm);
-
-	virtual ~RenderConfig();
+	static std::shared_ptr<RenderConfig> Create(
+		const std::string &fileName,
+		std::shared_ptr<RenderState> & startState,
+		std::shared_ptr<Film> & startFilm
+	);
 
 	/*!
 	 * \brief Returns a reference to the Properties used to create the RenderConfig.
@@ -1329,7 +1349,7 @@ public:
 	 *
 	 * \param fileName id the file name of the render state file to load.
 	 */
-	static RenderState *Create(const std::string &fileName);
+	static std::shared_ptr<RenderState> Create(const std::string &fileName);
 	virtual ~RenderState();
 	
 	/*!
@@ -1355,7 +1375,11 @@ public:
 	 * \param startFilm is the optional Film to use to resume rendering. The
 	 * memory for Film is freed by RenderSession.
 	 */
-	static RenderSession *Create(const RenderConfig *config, RenderState *startState = NULL, Film *startFilm = NULL);
+	static std::shared_ptr<RenderSession> Create(
+			std::shared_ptr<RenderConfig> config,
+			std::shared_ptr<RenderState> * startState = nullptr,
+			std::shared_ptr<Film> * startFilm = nullptr
+	);
 
 	/*!
 	 * \brief Creates a new RenderSession using the provided RenderConfig.
@@ -1365,7 +1389,11 @@ public:
 	 * \param startStateFileName is the file name of a RenderState to use to resume rendering.
 	 * \param startFilmFileName is the file name of a Film to use to resume rendering.
 	 */
-	static RenderSession *Create(const RenderConfig *config, const std::string &startStateFileName, const std::string &startFilmFileName);
+	static std::shared_ptr<RenderSession> Create(
+		std::shared_ptr<RenderConfig> config,
+		const std::string &startStateFileName,
+		const std::string &startFilmFileName
+	);
 
 	virtual ~RenderSession();
 
@@ -1375,7 +1403,7 @@ public:
 	 *
 	 * \return a reference to the RenderingConfig.
 	 */
-	virtual const RenderConfig &GetRenderConfig() const = 0;
+	virtual std::shared_ptr<RenderConfig> GetRenderConfig() = 0;
 
 	/*!
 	 * \brief Returns a pointer to the current RenderState. The session must be
@@ -1383,7 +1411,7 @@ public:
 	 *
 	 * \return a pointer to the RenderState.
 	 */
-	virtual RenderState *GetRenderState() = 0;
+	virtual std::shared_ptr<RenderState> GetRenderState() = 0;
 
 	/*!
 	 * \brief Starts the rendering.
@@ -1449,7 +1477,7 @@ public:
 	 *
 	 * \return the reference to the Film.
 	 */
-	virtual Film &GetFilm() = 0;
+	virtual FilmPtr GetFilm() = 0;
 
 	/*!
 	 * \brief Updates the statistics.

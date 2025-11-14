@@ -28,13 +28,13 @@ class Film2SceneRadiusValidator {
 public:
 	Film2SceneRadiusValidator() { }
 	virtual ~Film2SceneRadiusValidator() { }
-	
+
 	virtual bool IsValid(const BSDF &bsdf) const = 0;
 };
-	
+
 // This function estimates the value of a scene radius starting from film plane
 // radius (without material ray differential support)
-extern float Film2SceneRadius(const Scene *scene, 
+extern float Film2SceneRadius(SceneConstPtr scene,
 		const float imagePlaneRadius, const float defaultRadius,
 		const u_int maxPathDepth, const float timeStart, const float timeEnd,
 		const Film2SceneRadiusValidator *validator = nullptr);

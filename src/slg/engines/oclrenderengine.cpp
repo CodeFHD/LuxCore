@@ -34,10 +34,10 @@ using namespace slg;
 // OCLRenderEngine
 //------------------------------------------------------------------------------
 
-OCLRenderEngine::OCLRenderEngine(const RenderConfig *rcfg,
+OCLRenderEngine::OCLRenderEngine(RenderConfigConstRef rcfg,
 		const bool supportsNativeThreads) : RenderEngine(rcfg) {
 #if !defined(LUXRAYS_DISABLE_OPENCL)
-	const Properties &cfg = renderConfig->cfg;
+	const Properties &cfg = renderConfig.cfg;
 
 	const bool useCPUs = cfg.Get(GetDefaultProps().Get("opencl.cpu.use")).Get<bool>();
 	const bool useGPUs = cfg.Get(GetDefaultProps().Get("opencl.gpu.use")).Get<bool>();

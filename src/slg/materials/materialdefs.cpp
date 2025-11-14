@@ -28,49 +28,49 @@ using namespace slg;
 // MaterialDefinitions
 //------------------------------------------------------------------------------
 
-void MaterialDefinitions::DefineMaterial(Material *newMat) {
-	const Material *oldMat = static_cast<const Material *>(mats.DefineObj(newMat));
+void MaterialDefinitions::DefineMaterial(MaterialPtr newMat) {
+	auto oldMat = dynamic_pointer_cast<const Material>(mats.DefineObj(newMat));
 
 	if (oldMat) {
 		// Update all references
-		for(NamedObject *obj: mats.GetObjs()) {
+		for(auto& obj: mats.GetObjs()) {
 			// Update all references in material/volume (note: volume is also a material)
-			static_cast<Material *>(obj)->UpdateMaterialReferences(oldMat, newMat);
+			dynamic_pointer_cast<Material>(obj)->UpdateMaterialReferences(oldMat, newMat);
 		}
-
-		// Delete the old material definition
-		delete oldMat;
 	}
 }
 
-void MaterialDefinitions::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
-	for(NamedObject *mat: mats.GetObjs())
-		static_cast<Material *>(mat)->UpdateTextureReferences(oldTex, newTex);
+void MaterialDefinitions::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
+	for(auto& mat: mats.GetObjs())
+		dynamic_pointer_cast<Material>(mat)->UpdateTextureReferences(oldTex, newTex);
 }
 
 void MaterialDefinitions::GetMaterialSortedNames(vector<std::string> &names) const {
 	std::unordered_set<string> doneNames;
 
 	for (u_int i = 0; i < GetSize(); ++i) {
-		const Material *mat = GetMaterial(i);
-		
+		auto mat = GetMaterial(i);
+
 		GetMaterialSortedNamesImpl(mat, names, doneNames);
 	}
 }
 
-void MaterialDefinitions::GetMaterialSortedNamesImpl(const Material *mat,
-		vector<std::string> &names, std::unordered_set<string> &doneNames) const {
+void MaterialDefinitions::GetMaterialSortedNamesImpl(
+	MaterialConstPtr mat,
+	vector<std::string> &names,
+	std::unordered_set<string> &doneNames
+) const {
 	// Check it has not been already added
 	const string &matName = mat->GetName();
 	if (doneNames.count(matName) != 0)
 		return;
 
 	// Get the list of reference materials by this one
-	std::unordered_set<const Material *> referencedTexs;
-	mat->AddReferencedMaterials(referencedTexs);
+	std::unordered_set<MaterialConstPtr> referencedTexs;
+	mat->AddReferencedMaterials(referencedTexs, mat);
 
 	// Add all referenced texture names
-	for (auto refMat : referencedTexs) {
+	for (auto& refMat : referencedTexs) {
 		// AddReferencedMaterials() adds also itself to the list of referenced materials
 		if (refMat != mat)
 			GetMaterialSortedNamesImpl(refMat, names, doneNames);

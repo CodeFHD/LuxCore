@@ -33,7 +33,7 @@ HaltConditionsWindow::HaltConditionsWindow(LuxCoreApp *a) : ObjectEditorWindow(a
 }
 
 void HaltConditionsWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = config->ToProperties().GetAllProperties("batch.halt");
 	} catch(exception &ex) {

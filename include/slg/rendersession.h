@@ -22,6 +22,7 @@
 #include "luxrays/utils/properties.h"
 
 #include "slg/slg.h"
+#include "slg/usings.h"
 #include "slg/renderconfig.h"
 #include "slg/renderstate.h"
 #include "slg/engines/renderengine.h"
@@ -31,7 +32,11 @@ namespace slg {
 
 class RenderSession {
 public:
-	RenderSession(RenderConfig *cfg, RenderState *startState = NULL, Film *startFilm = NULL);
+	RenderSession(
+		RenderConfigRef cfg,
+		RenderStatePtr startState = nullptr,
+		FilmPtr startFilm = nullptr
+	);
 	~RenderSession();
 
 	bool IsStarted() const { return renderEngine->IsStarted(); }
@@ -49,18 +54,18 @@ public:
 	void SaveFilmOutputs();
 	void SaveFilm(const std::string &fileName);
 	void SaveResumeFile(const std::string &fileName);
-	
+
 	void CheckPeriodicSave(const bool force = false);
-	
-	RenderState *GetRenderState();
+
+	RenderStatePtr GetRenderState();
 
 	void Parse(const luxrays::Properties &props);
 
-	RenderConfig *renderConfig;
-	RenderEngine *renderEngine;
+	RenderConfigRef renderConfig;
+	RenderEngineUPtr renderEngine;
 
-	std::mutex filmMutex;
-	Film *film;
+	mutable std::mutex filmMutex;
+	FilmPtr film;
 
 protected:
 	bool HasPeriodicFilmOutputsSave();

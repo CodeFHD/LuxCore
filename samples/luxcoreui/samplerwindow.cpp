@@ -38,7 +38,7 @@ SamplerWindow::SamplerWindow(LuxCoreApp *a) : ObjectEditorWindow(a, "Sampler") {
 }
 
 void SamplerWindow::RefreshObjectProperties(Properties &props) {
-	RenderConfig *config = app->config;
+	auto config = app->config;
 	try {
 		props = config->ToProperties().GetAllProperties("sampler");
 	} catch(exception &ex) {

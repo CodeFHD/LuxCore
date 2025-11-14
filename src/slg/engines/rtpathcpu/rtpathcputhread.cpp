@@ -59,7 +59,7 @@ void RTPathCPURenderThread::RTRenderFunc(std::stop_token stop_token) {
 	// (engine->seedBase + 1) seed is used for sharedRndGen
 	RandomGenerator *rndGen = new RandomGenerator(engine->seedBase + 1 + threadIndex);
 	// Setup the sampler
-	Sampler *sampler = engine->renderConfig->AllocSampler(rndGen, engine->film, NULL,
+	Sampler *sampler = engine->renderConfig.AllocSampler(rndGen, engine->film, NULL,
 			engine->samplerSharedData, Properties());
 	((RTPathCPUSampler *)sampler)->SetRenderEngine(engine);
 	sampler->RequestSamples(PIXEL_NORMALIZED_ONLY, pathTracer.eyeSampleSize);
@@ -94,7 +94,7 @@ void RTPathCPURenderThread::RTRenderFunc(std::stop_token stop_token) {
 			((RTPathCPUSampler *)sampler)->Reset(engine->film);
 		}
 
-		pathTracer.RenderEyeSample(device, engine->renderConfig->scene,
+		pathTracer.RenderEyeSample(device, engine->renderConfig.scene,
 				engine->film, sampler, sampleResults);
 
 		// Variance clamping

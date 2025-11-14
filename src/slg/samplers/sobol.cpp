@@ -31,14 +31,14 @@ using namespace slg;
 // SobolSamplerSharedData
 //------------------------------------------------------------------------------
 
-SobolSamplerSharedData::SobolSamplerSharedData(const u_int seed, Film *engineFlm) : SamplerSharedData() {
+SobolSamplerSharedData::SobolSamplerSharedData(const u_int seed, FilmPtr engineFlm) : SamplerSharedData() {
 	engineFilm = engineFlm;
 	seedBase = seed;
 	
 	Reset();
 }
 
-SobolSamplerSharedData::SobolSamplerSharedData(RandomGenerator *rndGen, Film *engineFlm) : SamplerSharedData() {
+SobolSamplerSharedData::SobolSamplerSharedData(RandomGenerator *rndGen, FilmPtr engineFlm) : SamplerSharedData() {
 	engineFilm = engineFlm;
 	seedBase = rndGen->uintValue() % (0xFFFFFFFFu - 1u) + 1u;
 
@@ -75,7 +75,7 @@ u_int SobolSamplerSharedData::GetPassCount(const u_int bucketCount) const {
 }
 
 SamplerSharedData *SobolSamplerSharedData::FromProperties(const Properties &cfg,
-		RandomGenerator *rndGen, Film *film) {
+		RandomGenerator *rndGen, FilmPtr film) {
 	return new SobolSamplerSharedData(rndGen, film);
 }
 
@@ -85,7 +85,7 @@ SamplerSharedData *SobolSamplerSharedData::FromProperties(const Properties &cfg,
 // This sampler is based on Blender Cycles Sobol implementation.
 //------------------------------------------------------------------------------
 
-SobolSampler::SobolSampler(RandomGenerator *rnd, Film *flm,
+SobolSampler::SobolSampler(RandomGenerator *rnd, FilmPtr flm,
 		const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 		const float adaptiveStr, const float adaptiveUserImpWeight,
 		const u_int bucketSz, const u_int tileSz, const u_int superSmpl,
@@ -161,7 +161,7 @@ void SobolSampler::InitNewSample() {
 			pixelY = filmSubRegion[2] + subRegionPixelY;
 
 			// Check if the current pixel is over or under the convergence threshold
-			const Film *film = sharedData->engineFilm;
+			FilmConstPtr film = sharedData->engineFilm;
 			if ((adaptiveStrength > 0.f) && film->HasChannel(Film::NOISE)) {
 				// Pixels are sampled in accordance with how far from convergence they are
 				const float noise = *(film->channel_NOISE->GetPixel(pixelX, pixelY));
@@ -307,7 +307,7 @@ Properties SobolSampler::ToProperties(const Properties &cfg) {
 }
 
 Sampler *SobolSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
 	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<double>(), 0.0, .95);

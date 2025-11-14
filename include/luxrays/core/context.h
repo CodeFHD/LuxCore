@@ -40,6 +40,7 @@
 #include <ostream>
 
 #include "luxrays/luxrays.h"
+#include "luxrays/usings.h"
 #include "luxrays/core/dataset.h"
 #include "luxrays/utils/properties.h"
 
@@ -141,9 +142,9 @@ public:
 	// Methods dedicated to DataSet definition
 	//--------------------------------------------------------------------------
 
-	DataSet *GetCurrentDataSet() const { return currentDataSet; }
+	DataSetPtr GetCurrentDataSet() const { return currentDataSet; }
 
-	void SetDataSet(DataSet *dataSet);
+	void SetDataSet(DataSetPtr dataSet);
 	void UpdateDataSet();
 
 	//--------------------------------------------------------------------------
@@ -189,7 +190,7 @@ private:
 
 	LuxRaysDebugHandler debugHandler;
 
-	DataSet *currentDataSet;
+	DataSetPtr currentDataSet;
 	std::vector<DeviceDescription *> deviceDescriptions;
 
 	// All intersection devices

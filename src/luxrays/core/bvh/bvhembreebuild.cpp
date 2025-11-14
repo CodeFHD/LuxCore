@@ -100,7 +100,7 @@ static inline void CopyBBox(const float *src, float *dst) {
 	*dst = *src;
 }
 
-template<u_int CHILDREN_COUNT> static u_int BuildEmbreeBVHArray(const deque<const Mesh *> *meshes,
+template<u_int CHILDREN_COUNT> static u_int BuildEmbreeBVHArray(const deque<MeshConstPtr> *meshes,
 		const EmbreeBVHNode<CHILDREN_COUNT> *node, vector<BVHTreeNode *> &leafList,
 		u_int offset, luxrays::ocl::BVHArrayNode *bvhArrayTree) {
 	if (node) {
@@ -214,7 +214,7 @@ template<u_int CHILDREN_COUNT> static void NodeSetChildrensBBoxFunc(void *nodePt
 //------------------------------------------------------------------------------
 
 template<u_int CHILDREN_COUNT> static luxrays::ocl::BVHArrayNode *BuildEmbreeBVH(
-		RTCBuildQuality quality, u_int *nNodes, const std::deque<const Mesh *> *meshes,
+		RTCBuildQuality quality, u_int *nNodes, const std::deque<MeshConstPtr> *meshes,
 		std::vector<BVHTreeNode *> &leafList) {
 	//const double t1 = WallClockTime();
 
@@ -282,7 +282,7 @@ template<u_int CHILDREN_COUNT> static luxrays::ocl::BVHArrayNode *BuildEmbreeBVH
 //------------------------------------------------------------------------------
 
 luxrays::ocl::BVHArrayNode *BuildEmbreeBVHBinnedSAH(const BVHParams &params,
-		u_int *nNodes, const std::deque<const Mesh *> *meshes,
+		u_int *nNodes, const std::deque<MeshConstPtr> *meshes,
 		std::vector<BVHTreeNode *> &leafList) {
 	// Performance analysis.
 	//
@@ -338,7 +338,7 @@ luxrays::ocl::BVHArrayNode *BuildEmbreeBVHBinnedSAH(const BVHParams &params,
 //------------------------------------------------------------------------------
 
 luxrays::ocl::BVHArrayNode *BuildEmbreeBVHMorton(const BVHParams &params,
-		u_int *nNodes, const std::deque<const Mesh *> *meshes,
+		u_int *nNodes, const std::deque<MeshConstPtr> *meshes,
 		std::vector<BVHTreeNode *> &leafList) {
 	luxrays::ocl::BVHArrayNode *bvhArrayTree;
 

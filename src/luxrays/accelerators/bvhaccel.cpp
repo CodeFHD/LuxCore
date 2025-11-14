@@ -69,7 +69,7 @@ BVHParams BVHAccel::ToBVHParams(const Properties &props) {
 	return params;
 }
 
-void BVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totVert,
+void BVHAccel::Init(const deque<MeshConstPtr > &ms, const u_longlong totVert,
 		const u_longlong totTri) {
 	assert (!initialized);
 
@@ -97,7 +97,7 @@ void BVHAccel::Init(const deque<const Mesh *> &ms, const u_longlong totVert,
 	vector<BVHTreeNode *> bvList(totalTriangleCount, NULL);
 	u_int meshIndex = 0;
 	u_int bvListIndex = 0;
-	for(const Mesh *mesh: meshes) {
+	for(MeshConstPtr mesh: meshes) {
 		const Triangle *p = mesh->GetTriangles();
 		const u_int triangleCount = mesh->GetTotalTriangleCount();
 
@@ -187,7 +187,7 @@ bool BVHAccel::Intersect(const Ray *initialRay, RayHit *rayHit) const {
 		const u_int nodeData = node.nodeData;
 		if (BVHNodeData_IsLeaf(nodeData)) {
 			// It is a leaf, check the triangle
-			const Mesh *mesh = meshes[node.triangleLeaf.meshIndex];
+			MeshConstPtr mesh = meshes[node.triangleLeaf.meshIndex];
 
 			// This is a fast path because I know Mesh can be only TYPE_TRIANGLE/TYPE_EXT_TRIANGLE
 			// in BVH

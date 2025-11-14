@@ -22,6 +22,7 @@
 #include <execution>
 
 #include <boost/format.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <filesystem>
 
 #include "luxrays/core/exttrianglemesh.h"
@@ -288,7 +289,7 @@ void ExtTriangleMesh::ApplyTransform(const Transform &trans) {
 	Preprocess();
 }
 
-void ExtTriangleMesh::CopyAOV(ExtTriangleMesh *destMesh) const {
+void ExtTriangleMesh::CopyAOV(ExtTriangleMeshPtr destMesh) const {
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (HasVertexAOV(i)) {
 			float *v = new float[vertCount];
@@ -308,7 +309,7 @@ void ExtTriangleMesh::CopyAOV(ExtTriangleMesh *destMesh) const {
 	}
 }
 
-ExtTriangleMesh *ExtTriangleMesh::CopyExt(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
+ExtTriangleMeshPtr ExtTriangleMesh::CopyExt(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
 		array<UV *, EXTMESH_MAX_DATA_COUNT> *meshUVs,
 		array<Spectrum *, EXTMESH_MAX_DATA_COUNT> *meshCols,
 		array<float *, EXTMESH_MAX_DATA_COUNT> *meshAlphas,
@@ -354,17 +355,17 @@ ExtTriangleMesh *ExtTriangleMesh::CopyExt(Point *meshVertices, Triangle *meshTri
 			as[i] = meshAlphas ? (*meshAlphas)[i] : nullptr;
 	}
 
-	ExtTriangleMesh *m = new ExtTriangleMesh(vertCount, triCount,
+	auto m =  std::make_shared<ExtTriangleMesh>(vertCount, triCount,
 			vs, ts, ns, &us, &cs, &as, bRadius);
 	m->SetLocal2World(appliedTrans);
-	
+
 	// Copy AOV too
 	CopyAOV(m);
 
 	return m;
 }
 
-ExtTriangleMesh *ExtTriangleMesh::Copy(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
+ExtTriangleMeshPtr ExtTriangleMesh::Copy(Point *meshVertices, Triangle *meshTris, Normal *meshNormals,
 		UV *mUVs, Spectrum *mCols, float *mAlphas, const float bRadius) const {
 	array<UV *, EXTMESH_MAX_DATA_COUNT> meshUVs;
 	fill(meshUVs.begin(), meshUVs.end(), nullptr);
@@ -384,7 +385,7 @@ ExtTriangleMesh *ExtTriangleMesh::Copy(Point *meshVertices, Triangle *meshTris, 
 	return CopyExt(meshVertices, meshTris, meshNormals, &meshUVs, &meshCols, &meshAlphas, bRadius);
 }
 
-ExtTriangleMesh *ExtTriangleMesh::Merge(const vector<const ExtTriangleMesh *> &meshes,
+ExtTriangleMeshPtr ExtTriangleMesh::Merge(const vector<ExtTriangleMeshConstPtr > &meshes,
 		const vector<Transform> *trans) {
 	u_int totalVertexCount = 0;
 	u_int totalTriangleCount = 0;
@@ -441,7 +442,7 @@ ExtTriangleMesh *ExtTriangleMesh::Merge(const vector<const ExtTriangleMesh *> &m
 	u_int vIndex = 0;
 	u_int iIndex = 0;
 	for (u_int meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
-		const ExtTriangleMesh *mesh = meshes[meshIndex];
+		ExtTriangleMeshConstPtr mesh = meshes[meshIndex];
 		const Transform *transformation = trans ? &((*trans)[meshIndex]) : nullptr;
 
 		// It is a ExtTriangleMesh so I can use Transform::TRANS_IDENTITY everywhere
@@ -521,11 +522,11 @@ ExtTriangleMesh *ExtTriangleMesh::Merge(const vector<const ExtTriangleMesh *> &m
 			++iIndex;
 		}
 
-		
+
 		vIndex += mesh->GetTotalVertexCount();
 	}
 
-	ExtTriangleMesh *newMesh = new ExtTriangleMesh(totalVertexCount, totalTriangleCount,
+	auto newMesh = std::make_shared<ExtTriangleMesh>(totalVertexCount, totalTriangleCount,
 			meshVertices, meshTris, meshNormals, &meshUVs, &meshCols, &meshAlphas);
 	for (u_int dataIndex = 0; dataIndex < EXTMESH_MAX_DATA_COUNT; dataIndex++) {
 		newMesh->SetVertexAOV(dataIndex, meshVertAOV[dataIndex]);
@@ -538,10 +539,10 @@ ExtTriangleMesh *ExtTriangleMesh::Merge(const vector<const ExtTriangleMesh *> &m
 // For some reason, LoadSerialized() and SaveSerialized() must be in the same
 // file of BOOST_CLASS_EXPORT_IMPLEMENT()
 
-ExtTriangleMesh *ExtTriangleMesh::LoadSerialized(const string &fileName) {
+ExtTriangleMeshPtr ExtTriangleMesh::LoadSerialized(const string &fileName) {
 	SerializationInputFile sif(fileName);
 
-	ExtTriangleMesh *mesh;
+	ExtTriangleMeshPtr mesh;
 	sif.GetArchive() >> mesh;
 
 	if (!sif.IsGood())
@@ -553,8 +554,8 @@ ExtTriangleMesh *ExtTriangleMesh::LoadSerialized(const string &fileName) {
 void ExtTriangleMesh::SaveSerialized(const string &fileName) const {
 	SerializationOutputFile sof(fileName);
 
-	const ExtTriangleMesh *mesh = this;
-	sof.GetArchive() << mesh;
+	//const ExtTriangleMesh *mesh = this;
+	sof.GetArchive() << this;
 
 	if (!sof.IsGood())
 		throw runtime_error("Error while saving serialized mesh: " + fileName);
@@ -576,8 +577,8 @@ struct is_virtual_base_of<luxrays::InstanceTriangleMesh, luxrays::ExtInstanceTri
 
 BOOST_CLASS_EXPORT_IMPLEMENT(luxrays::ExtInstanceTriangleMesh)
 
-void ExtInstanceTriangleMesh::UpdateMeshReferences(ExtTriangleMesh *oldMesh, ExtTriangleMesh *newMesh) {
-	if (static_cast<ExtTriangleMesh *>(mesh) == oldMesh) {
+void ExtInstanceTriangleMesh::UpdateMeshReferences(ExtTriangleMeshPtr oldMesh, ExtTriangleMeshPtr newMesh) {
+	if (static_pointer_cast<ExtTriangleMesh>(mesh) == oldMesh) {
 		mesh = newMesh;
 		cachedArea = false;
 	}
@@ -597,8 +598,8 @@ struct is_virtual_base_of<luxrays::MotionTriangleMesh, luxrays::ExtMotionTriangl
 
 BOOST_CLASS_EXPORT_IMPLEMENT(luxrays::ExtMotionTriangleMesh)
 
-void ExtMotionTriangleMesh::UpdateMeshReferences(ExtTriangleMesh *oldMesh, ExtTriangleMesh *newMesh) {
-	if (static_cast<ExtTriangleMesh *>(mesh) == oldMesh) {
+void ExtMotionTriangleMesh::UpdateMeshReferences(ExtTriangleMeshPtr oldMesh, ExtTriangleMeshPtr newMesh) {
+	if (static_pointer_cast<ExtTriangleMesh>(mesh) == oldMesh) {
 		mesh = oldMesh;
 		cachedArea = false;
 	}

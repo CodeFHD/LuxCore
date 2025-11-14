@@ -29,9 +29,11 @@
 #include "luxrays/core/color/spds/irregular.h"
 #include "luxrays/core/namedobject.h"
 #include "luxrays/utils/mcdistribution.h"
+#include "slg/usings.h"
 #include "slg/textures/texture.h"
 #include "slg/textures/mapping/mapping.h"
 #include "slg/materials/material.h"
+#include "slg/volumes/volume.h"
 
 namespace slg {
 
@@ -76,7 +78,7 @@ public:
 	virtual float GetAvgPassThroughTransparency() const { return 1.f; }
 
 	virtual u_int GetID() const = 0;
-	virtual float GetPower(const Scene &scene) const = 0;
+	virtual float GetPower(SceneConstPtr scene) const = 0;
 	virtual float GetImportance() const = 0;
 
 	virtual bool IsDirectLightSamplingEnabled() const = 0;
@@ -86,14 +88,14 @@ public:
 	virtual bool IsVisibleIndirectSpecular() const = 0;
 
 	// Emits particle from the light
-	virtual luxrays::Spectrum Emit(const Scene &scene,
+	virtual luxrays::Spectrum Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		luxrays::Ray &ray, float &emissionPdfW,
 		float *directPdfA = NULL, float *cosThetaAtLight = NULL) const = 0;
 
 	// Illuminates bsdf.hitPoint.p
-    virtual luxrays::Spectrum Illuminate(const Scene &scene, const BSDF &bsdf,
+    virtual luxrays::Spectrum Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         luxrays::Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW = NULL, float *cosThetaAtLight = NULL) const = 0;
@@ -102,20 +104,20 @@ public:
 	// shadow (to avoid tracing the shadow ray). This method can be optionally
 	// implemented by a light source. The return value can be just false if the
 	// answer is unknown.
-	virtual bool IsAlwaysInShadow(const Scene &scene,
+	virtual bool IsAlwaysInShadow(SceneConstPtr scene,
 			const luxrays::Point &p, const luxrays::Normal &n) const {
 		return false;
 	}
-	
+
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	virtual void AddReferencedImageMaps(std::unordered_set<const ImageMap *> &referencedImgMaps) const { }
-	virtual void UpdateVolumeReferences(const Volume *oldVol, const Volume *newVol);
+	virtual void AddReferencedImageMaps(std::unordered_set<ImageMapConstPtr > &referencedImgMaps) const { }
+	virtual void UpdateVolumeReferences(VolumeConstPtr oldVol, VolumeConstPtr newVol);
 
 	static std::string LightSourceType2String(const LightSourceType type);
 
 	u_int lightSceneIndex;
-	const Volume *volume;
+	std::shared_ptr<const Volume> volume;
 };
 
 //------------------------------------------------------------------------------
@@ -125,12 +127,12 @@ public:
 class IntersectableLightSource : public LightSource {
 public:
 	IntersectableLightSource() : lightMaterial(NULL) { }
-	virtual ~IntersectableLightSource() { }
+	virtual ~IntersectableLightSource() { SDL_LOG("Removing intersectable light"); }
 
 	virtual bool IsIntersectable() const { return true; }
 
 	virtual float GetAvgPassThroughTransparency() const { return lightMaterial->GetAvgPassThroughTransparency(); }
-	virtual float GetPower(const Scene &scene) const = 0;
+	virtual float GetPower(SceneConstPtr scene) const = 0;
 	virtual u_int GetID() const { return lightMaterial->GetLightID(); }
 	virtual float GetImportance() const { return lightMaterial->GetEmittedImportance(); }
 
@@ -142,7 +144,7 @@ public:
 			float *directPdfA = NULL,
 			float *emissionPdfW = NULL) const = 0;
 
-	const Material *lightMaterial;
+	MaterialConstPtr lightMaterial;
 };
 
 //------------------------------------------------------------------------------
@@ -163,12 +165,12 @@ public:
 	virtual bool IsVisibleIndirectDiffuse() const { return false; }
 	virtual bool IsVisibleIndirectGlossy() const { return false; }
 	virtual bool IsVisibleIndirectSpecular() const { return false; }
-	
+
 	void SetID(const u_int lightID) { id = lightID; }
 	u_int GetID() const { return id; }
 	float GetImportance() const { return importance; }
 	void SetImportance(const float imp) { importance = imp; }
-	
+
 	const luxrays::Spectrum &GetTemperatureScale() const { return temperatureScale; }
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
@@ -208,7 +210,7 @@ public:
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	static float GetEnvRadius(const Scene &scene);
+	static float GetEnvRadius(SceneConstPtr scene);
 
 protected:
 	bool isVisibleIndirectDiffuse, isVisibleIndirectGlossy, isVisibleIndirectSpecular;
@@ -228,10 +230,10 @@ public:
 	virtual luxrays::UV GetEnvUV(const luxrays::Vector &dir) const {
 		throw std::runtime_error("Internal error: called EnvLightSource::GetEnvUV()");
 	}
-	virtual void UpdateVisibilityMap(const Scene *scene, const bool useRTMode) { }
+	virtual void UpdateVisibilityMap(SceneConstPtr scene, const bool useRTMode) { }
 
 	// Note: bsdf parameter can be NULL if it is a camera ray
-	virtual luxrays::Spectrum GetRadiance(const Scene &scene,
+	virtual luxrays::Spectrum GetRadiance(SceneConstPtr scene,
 			const BSDF *bsdf, const luxrays::Vector &dir,
 			float *directPdfA = NULL, float *emissionPdfW = NULL) const = 0;
 

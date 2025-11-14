@@ -19,6 +19,7 @@
 #ifndef _SLG_BIDIRCPU_H
 #define	_SLG_BIDIRCPU_H
 
+#include "luxrays/utils/thread.h"
 #include "slg/slg.h"
 #include "slg/engines/cpurenderengine.h"
 #include "slg/engines/caches/photongi/photongicache.h"
@@ -72,7 +73,13 @@ protected:
 		return a * a; // Power heuristic
 	}
 
-	virtual std::jthread *AllocRenderThread() { return new std::jthread(std::bind_front(&BiDirCPURenderThread::RenderFunc, this)); }
+	virtual JThreadPtr AllocRenderThread() {
+		auto t = std::make_shared<std::jthread>(
+			std::bind_front(&BiDirCPURenderThread::RenderFunc, this)
+		);
+		luxrays::SetThreadName(t, "LxBiDirCPU");
+		return t;
+	}
 
 	void AOVWarmUp(std::stop_token stop_token, luxrays::RandomGenerator *rndGen);
 	
@@ -85,7 +92,7 @@ protected:
 		const PathVertexVM &eyeVertex, SampleResult &eyeSampleResult) const;
 	void DirectHitLight(const bool finiteLightSource, const PathVertexVM &eyeVertex,
 		SampleResult &eyeSampleResult) const;
-	void DirectHitLight(const LightSource *light, const luxrays::Spectrum &lightRadiance,
+	void DirectHitLight(LightSourceConstPtr light, const luxrays::Spectrum &lightRadiance,
 		const float directPdfA, const float emissionPdfW,
 		const PathVertexVM &eyeVertex, luxrays::Spectrum *radiance) const;
 
@@ -97,7 +104,7 @@ protected:
 		const luxrays::Point &lensPoint, std::vector<SampleResult> &sampleResults) const;
 
 	bool TraceLightPath(const float time,
-		Sampler *sampler, Camera *camera,
+		Sampler *sampler, CameraPtr camera,
 		std::vector<PathVertexVM> &lightPathVertices,
 		std::vector<SampleResult> &sampleResults) const;
 	bool Bounce(const float time, Sampler *sampler, const u_int sampleOffset,
@@ -115,13 +122,13 @@ class SobolSamplerSharedData;
 
 class BiDirCPURenderEngine : public CPUNoTileRenderEngine {
 public:
-	BiDirCPURenderEngine(const RenderConfig *cfg);
+	BiDirCPURenderEngine(RenderConfigConstRef cfg);
 	virtual ~BiDirCPURenderEngine();
 
 	virtual RenderEngineType GetType() const { return GetObjectType(); }
 	virtual std::string GetTag() const { return GetObjectTag(); }
 
-	virtual RenderState *GetRenderState();
+	virtual RenderStatePtr GetRenderState();
 
 	//--------------------------------------------------------------------------
 	// Static methods used by RenderEngineRegistry
@@ -130,7 +137,7 @@ public:
 	static RenderEngineType GetObjectType() { return BIDIRCPU; }
 	static std::string GetObjectTag() { return "BIDIRCPU"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static RenderEngine *FromProperties(const RenderConfig *rcfg);
+	static RenderEngine *FromProperties(RenderConfigConstRef rcfg);
 
 	// Signed because of the delta parameter
 	u_int maxEyePathDepth, maxLightPathDepth;

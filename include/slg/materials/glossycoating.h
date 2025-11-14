@@ -20,6 +20,7 @@
 #define	_SLG_GLOSSYCOATTINGMAT_H
 
 #include "slg/materials/material.h"
+#include "slg/volumes/volume.h"
 
 namespace slg {
 
@@ -29,10 +30,10 @@ namespace slg {
 
 class GlossyCoatingMaterial : public Material {
 public:
-	GlossyCoatingMaterial(const Texture *frontTransp, const Texture *backTransp,
-			const Texture *emitted, const Texture *bump,
-			const Material *mB, const Texture *ks, const Texture *u, const Texture *v,
-			const Texture *ka, const Texture *d, const Texture *i, const bool mbounce);
+	GlossyCoatingMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+			TextureConstPtr emitted, TextureConstPtr bump,
+			MaterialConstPtr mB, TextureConstPtr ks, TextureConstPtr u, TextureConstPtr v,
+			TextureConstPtr ka, TextureConstPtr d, TextureConstPtr i, const bool mbounce);
 
 	virtual MaterialType GetType() const { return GLOSSYCOATING; }
 	virtual BSDFEvent GetEventTypes() const { return (GLOSSY | REFLECT | matBase->GetEventTypes()); };
@@ -48,9 +49,9 @@ public:
 		const luxrays::Vector &localFixedDir, const float passThroughEvent,
 		const bool backTracing) const;
 
-	virtual const Volume *GetInteriorVolume(const HitPoint &hitPoint,
+	virtual VolumeConstPtr GetInteriorVolume(const HitPoint &hitPoint,
 		const float passThroughEvent) const;
-	virtual const Volume *GetExteriorVolume(const HitPoint &hitPoint,
+	virtual VolumeConstPtr GetExteriorVolume(const HitPoint &hitPoint,
 		const float passThroughEvent) const;
 
 	virtual float GetEmittedRadianceY(const float oneOverPrimitiveArea) const;
@@ -70,34 +71,37 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void UpdateMaterialReferences(const Material *oldMat, const Material *newMat);
-	virtual bool IsReferencing(const Material *mat) const;
-	virtual void AddReferencedMaterials(std::unordered_set<const Material *> &referencedMats) const;
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void UpdateMaterialReferences(MaterialConstPtr oldMat, MaterialConstPtr newMat);
+	virtual bool IsReferencing(MaterialConstPtr mat) const;
+	virtual void AddReferencedMaterials(
+		std::unordered_set<MaterialConstPtr> &referencedMats,
+		MaterialConstPtr self
+	) const;
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	const Material *GetMaterialBase() const { return matBase; }
-	const Texture *GetKs() const { return Ks; }
-	const Texture *GetNu() const { return nu; }
-	const Texture *GetNv() const { return nv; }
-	const Texture *GetKa() const { return Ka; }
-	const Texture *GetDepth() const { return depth; }
-	const Texture *GetIndex() const { return index; }
+	MaterialConstPtr GetMaterialBase() const { return matBase; }
+	TextureConstPtr GetKs() const { return Ks; }
+	TextureConstPtr GetNu() const { return nu; }
+	TextureConstPtr GetNv() const { return nv; }
+	TextureConstPtr GetKa() const { return Ka; }
+	TextureConstPtr GetDepth() const { return depth; }
+	TextureConstPtr GetIndex() const { return index; }
 	const bool IsMultibounce() const { return multibounce; }
 
 protected:
 	virtual void UpdateAvgPassThroughTransparency();
 
 private:
-	const Material *matBase;
-	const Texture *Ks;
-	const Texture *nu;
-	const Texture *nv;
-	const Texture *Ka;
-	const Texture *depth;
-	const Texture *index;
+	MaterialConstPtr matBase;
+	TextureConstPtr Ks;
+	TextureConstPtr nu;
+	TextureConstPtr nv;
+	TextureConstPtr Ka;
+	TextureConstPtr depth;
+	TextureConstPtr index;
 	const bool multibounce;
 };
 

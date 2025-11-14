@@ -48,8 +48,7 @@ void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeig
 		}
 
 		// Rebuild the data set
-		delete dataSet;
-		dataSet = new DataSet(ctx);
+		dataSet = std::make_shared<DataSet>(ctx);
 
 		// Add all objects
 		for (u_int i = 0; i < objDefs.GetSize(); ++i)
@@ -78,7 +77,7 @@ void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeig
 		PreprocessCamera(filmWidth, filmHeight, filmSubRegion);
 
 	// Update auto-focus and auto-volume
-	camera->UpdateAuto(this);
+	camera->UpdateAuto(*this);
 
 	// At this point, both the data set and the camera are updated
 	const BBox sceneBBox = Union(dataSet->GetBBox(), camera->GetBBox());
@@ -95,18 +94,18 @@ void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeig
 			editActions.Has(LIGHTS_EDIT) ||
 			editActions.Has(LIGHT_TYPES_EDIT) ||
 			editActions.Has(IMAGEMAPS_EDIT)) {
-		lightDefs.Preprocess(this, useRTMode);
+		lightDefs.Preprocess(shared_from_this(), useRTMode);
 	}
 
 	// And for visibility maps
-	lightDefs.UpdateVisibilityMaps(this, useRTMode);
+	lightDefs.UpdateVisibilityMaps(shared_from_this(), useRTMode);
 
 	//--------------------------------------------------------------------------
 	// Preprocess image maps according resize policy
 	//--------------------------------------------------------------------------
 
-	imgMapCache.Preprocess(this, useRTMode);
-	
+	imgMapCache.Preprocess(shared_from_this(), useRTMode);
+
 	//--------------------------------------------------------------------------
 	// Reset the edit actions
 	//--------------------------------------------------------------------------

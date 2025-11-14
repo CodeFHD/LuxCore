@@ -44,7 +44,7 @@ class CompiledScene;
 
 class PathOCLBaseRenderEngine : public OCLRenderEngine {
 public:
-	PathOCLBaseRenderEngine(const RenderConfig *cfg, const bool supportsNativeThreads);
+	PathOCLBaseRenderEngine(RenderConfigConstRef cfg, const bool supportsNativeThreads);
 	virtual ~PathOCLBaseRenderEngine();
 
 	virtual bool HasDone() const;

@@ -26,6 +26,7 @@
 #include "slg/film/imagepipeline/imagepipeline.h"
 #include "slg/film/imagepipeline/radiancechannelscale.h"
 #include "luxrays/utils/oclerror.h"
+#include "luxrays/utils/thread.h"
 
 using namespace std;
 using namespace luxrays;
@@ -129,9 +130,9 @@ void Film::AsyncExecuteImagePipeline(const u_int index) {
 		throw runtime_error("AsyncExecuteImagePipeline() called while another AsyncExecuteImagePipeline() is still running");
 
 	isAsyncImagePipelineRunning = true;
-	
-	delete imagePipelineThread;
-	imagePipelineThread = new std::jthread(&Film::ExecuteImagePipelineThreadImpl, this, index);
+
+	imagePipelineThread = std::make_shared<std::jthread>(&Film::ExecuteImagePipelineThreadImpl, this, index);
+	SetThreadName(imagePipelineThread, "LxImagePipeline");
 }
 
 bool Film::HasDoneAsyncExecuteImagePipeline() {
@@ -146,7 +147,7 @@ void Film::WaitAsyncExecuteImagePipeline() {
 void Film::ExecuteImagePipeline(const u_int index) {
 	if (isAsyncImagePipelineRunning)
 		throw runtime_error("ExecuteImagePipeline() called while an AsyncExecuteImagePipeline() is still running");
-	
+
 	ExecuteImagePipelineImpl(index);
 }
 

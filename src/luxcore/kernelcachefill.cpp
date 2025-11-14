@@ -33,7 +33,7 @@ using namespace luxcore::detail;
 
 #if !defined(LUXRAYS_DISABLE_OPENCL)
 
-static void CreateBox(Scene *scene, const string &objName, const string &meshName,
+static void CreateBox(auto scene, const string &objName, const string &meshName,
 		const string &matName, const bool enableUV, const BBox &bbox) {
 	Point *p = (Point *)Scene::AllocVerticesBuffer(24);
 	// Bottom face
@@ -144,7 +144,7 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 	LC_LOG(scnSetUpProps);
 
 	// Build the scene to render
-	Scene *scene = Scene::Create();
+	auto scene = Scene::Create();
 
 	Properties scnProps = scnSetUpProps;
 
@@ -246,8 +246,8 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 			Property("film.outputs.1.type")("RGB_IMAGEPIPELINE") <<
 			Property("film.outputs.1.filename")("image.png");
 
-	RenderConfig *config = RenderConfig::Create(cfgProps, scene);
-	RenderSession *session = RenderSession::Create(config);
+	auto config = RenderConfig::Create(cfgProps, scene);
+	auto session = RenderSession::Create(config);
 
 	// Start the rendering
 	session->Start();
@@ -259,10 +259,6 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 	
 	// Stop the rendering
 	session->Stop();
-
-	delete session;
-	delete config;
-	delete scene;
 
 	LC_LOG("Done.");
 }

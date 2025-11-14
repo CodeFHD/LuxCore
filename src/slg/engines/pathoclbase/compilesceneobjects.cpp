@@ -35,14 +35,14 @@ void CompiledScene::CompileSceneObjects() {
 	sceneObjs.resize(objCount);
 	for (u_int i = 0; i < objCount; ++i) {
 		slg::ocl::SceneObject &oclScnObj = sceneObjs[i];
-		const SceneObject *scnObj = scene->objDefs.GetSceneObject(i);
+		auto scnObj = scene->objDefs.GetSceneObject(i);
 
 		oclScnObj.objectID = scnObj->GetID();
 
-		const Material *m = scnObj->GetMaterial();
+		auto m = scnObj->GetMaterial();
 		oclScnObj.materialIndex = scene->matDefs.GetMaterialIndex(m);
 
-		const ImageMap *bakeMap = scnObj->GetBakeMap();
+		auto bakeMap = scnObj->GetBakeMap();
 		if (bakeMap) {
 			oclScnObj.bakeMapIndex = scene->imgMapCache.GetImageMapIndex(bakeMap);
 			switch (scnObj->GetBakeMapType()) {

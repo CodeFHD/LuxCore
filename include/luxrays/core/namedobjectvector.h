@@ -31,32 +31,35 @@
 
 namespace luxrays {
 
+struct UndefinedNamedObjectError : public std::runtime_error {
+	UndefinedNamedObjectError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
 class NamedObjectVector {
 public:
 	NamedObjectVector();
-	virtual ~NamedObjectVector();
 
-	NamedObject *DefineObj(NamedObject *newObj);
+	NamedObjectPtr DefineObj(NamedObjectPtr newObj);
 	bool IsObjDefined(const std::string &name) const;
 
-	const NamedObject *GetObj(const std::string &name) const;
-	NamedObject *GetObj(const std::string &name);
-	const NamedObject *GetObj(const u_int index) const;
-	NamedObject *GetObj(const u_int index);
+	NamedObjectConstPtr GetObj(const std::string &name) const;
+	NamedObjectPtr GetObj(const std::string &name);
+	NamedObjectConstPtr GetObj(const u_int index) const;
+	NamedObjectPtr GetObj(const u_int index);
 
 	u_int GetIndex(const std::string &name) const;
-	u_int GetIndex(const NamedObject *o) const;
+	u_int GetIndex(NamedObjectConstPtr o) const;
 
 	const std::string &GetName(const u_int index) const;
-	const std::string &GetName(const NamedObject *o) const;
+	const std::string &GetName(NamedObjectConstPtr o) const;
 
 	u_int GetSize()const;
 	void GetNames(std::vector<std::string> &names) const;
-	std::vector<NamedObject *> &GetObjs();
+	std::vector<NamedObjectPtr>& GetObjs();
 
 	void DeleteObj(const std::string &name);
 	void DeleteObjs(const std::vector<std::string> &names);
-	
+
 	std::string ToString() const;
 
 private:
@@ -65,7 +68,7 @@ private:
 	typedef boost::bimap<boost::bimaps::unordered_set_of<u_int>,
 			boost::bimaps::unordered_set_of<const NamedObject *> > Index2ObjType;
 
-	std::vector<NamedObject *> objs;
+	std::vector<NamedObjectPtr> objs;
 
 	Name2IndexType name2index;
 	Index2ObjType index2obj;

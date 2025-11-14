@@ -67,18 +67,26 @@ struct BVHTreeNode {
 // Old classic BVH build
 extern BVHTreeNode *BuildBVH(u_int *nNodes, const BVHParams &params,
 	std::vector<BVHTreeNode *> &leafList);
-extern u_int BuildBVHArray(const std::deque<const Mesh *> *meshes, BVHTreeNode *node,
+extern u_int BuildBVHArray(const std::deque<MeshConstPtr > *meshes, BVHTreeNode *node,
 		u_int offset, luxrays::ocl::BVHArrayNode *bvhArrayTree);
 extern luxrays::ocl::BVHArrayNode *BuildBVH(const BVHParams &params,
-		u_int *nNodes, const std::deque<const Mesh *> *meshes,
+		u_int *nNodes, const std::deque<MeshConstPtr > *meshes,
 		std::vector<BVHTreeNode *> &leafList);
 
 // Embree BVH build
-extern luxrays::ocl::BVHArrayNode *BuildEmbreeBVHBinnedSAH(const BVHParams &params,
-		u_int *nNodes, const std::deque<const Mesh *> *meshes,
-		std::vector<BVHTreeNode *> &leafList);
+extern luxrays::ocl::BVHArrayNode *BuildEmbreeBVHBinnedSAH(
+	const BVHParams &params,
+	u_int *nNodes,
+	const std::deque<MeshConstPtr > *meshes,
+	std::vector<BVHTreeNode *> &leafList);
+extern luxrays::ocl::BVHArrayNode *BuildEmbreeBVHMorton(
+	const BVHParams &params,
+	u_int *nNodes,
+	const std::deque<MeshConstPtr > meshes,
+	std::vector<BVHTreeNode *> &leafList
+);
 extern luxrays::ocl::BVHArrayNode *BuildEmbreeBVHMorton(const BVHParams &params,
-		u_int *nNodes, const std::deque<const Mesh *> *meshes,
+		u_int *nNodes, const std::deque<MeshConstPtr > *meshes,
 		std::vector<BVHTreeNode *> &leafList);
 
 // Common functions

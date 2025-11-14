@@ -30,9 +30,9 @@ using namespace slg;
 // ImageMapResizeMinMemPolicy::ApplyResizePolicy()
 //------------------------------------------------------------------------------
 
-ImageMap *ImageMapResizeMinMemPolicy::ApplyResizePolicy(const std::string &fileName,
+ImageMapPtr ImageMapResizeMinMemPolicy::ApplyResizePolicy(const std::string &fileName,
 		const ImageMapConfig &imgCfg, bool &toApply) const {
-	ImageMap *im = new ImageMap(fileName, imgCfg);
+	ImageMapPtr im = std::make_shared<ImageMap>(fileName, imgCfg);
 
 	const u_int width = im->GetWidth();
 	const u_int height = im->GetHeight();
@@ -66,7 +66,7 @@ ImageMap *ImageMapResizeMinMemPolicy::ApplyResizePolicy(const std::string &fileN
 // ImageMapResizeMinMemPolicy::Preprocess()
 //------------------------------------------------------------------------------
 
-void ImageMapResizeMinMemPolicy::Preprocess(ImageMapCache &imc, const Scene *scene,
+void ImageMapResizeMinMemPolicy::Preprocess(ImageMapCache &imc, SceneConstPtr scene,
 		const bool useRTMode) const {
 	if (useRTMode)
 		return;

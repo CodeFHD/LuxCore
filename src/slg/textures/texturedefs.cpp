@@ -26,16 +26,13 @@ using namespace slg;
 // TextureDefinitions
 //------------------------------------------------------------------------------
 
-void TextureDefinitions::DefineTexture(Texture *newTex) {
-	const Texture *oldTex = static_cast<const Texture *>(texs.DefineObj(newTex));
+void TextureDefinitions::DefineTexture(TexturePtr newTex) {
+	auto oldTex = static_pointer_cast<const Texture>(texs.DefineObj(newTex));
 
 	if (oldTex) {
 		// Update all references
-		for(NamedObject *tex: texs.GetObjs())
-			static_cast<Texture *>(tex)->UpdateTextureReferences(oldTex, newTex);
-
-		// Delete the old texture definition
-		delete oldTex;
+		for(auto& tex: texs.GetObjs())
+			static_pointer_cast<Texture>(tex)->UpdateTextureReferences(oldTex, newTex);
 	}
 }
 
@@ -43,13 +40,13 @@ void TextureDefinitions::GetTextureSortedNames(vector<std::string> &names) const
 	std::unordered_set<string> doneNames;
 
 	for (u_int i = 0; i < GetSize(); ++i) {
-		const Texture *tex = GetTexture(i);
+		TextureConstPtr tex = GetTexture(i);
 		
 		GetTextureSortedNamesImpl(tex, names, doneNames);
 	}
 }
 
-void TextureDefinitions::GetTextureSortedNamesImpl(const Texture *tex,
+void TextureDefinitions::GetTextureSortedNamesImpl(TextureConstPtr tex,
 		vector<std::string> &names, std::unordered_set<string> &doneNames) const {
 	// Check it has not been already added
 	const string &texName = tex->GetName();
@@ -57,8 +54,8 @@ void TextureDefinitions::GetTextureSortedNamesImpl(const Texture *tex,
 		return;
 
 	// Get the list of reference textures by this one
-	std::unordered_set<const Texture *> referencedTexs;
-	tex->AddReferencedTextures(referencedTexs);
+	std::unordered_set<TextureConstPtr> referencedTexs;
+	tex->AddReferencedTextures(referencedTexs, tex);
 
 	// Add all referenced texture names
 	for (auto refTex : referencedTexs) {

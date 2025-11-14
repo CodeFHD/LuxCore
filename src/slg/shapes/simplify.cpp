@@ -193,7 +193,7 @@ public:
 	~Simplify() {
 	}
 	
-	ExtTriangleMesh *GetExtMesh() const {
+	ExtTriangleMeshPtr GetExtMesh() const {
 		const u_int vertCount = vertices.size();
 		const u_int triCount = triangles.size();
 
@@ -241,11 +241,11 @@ public:
 			newTris[i].v[2] = triangles[i].v[2];
 		}
 		
-		return new ExtTriangleMesh(vertCount, triCount, newVertices, newTris, newNorms,
+		return std::make_shared<ExtTriangleMesh>(vertCount, triCount, newVertices, newTris, newNorms,
 				newUVs, newCols, newAlphas);
 	}
 
-	void Decimate(const float targetTriangleCount, const Camera *scnCamera,
+	void Decimate(const float targetTriangleCount, CameraConstPtr scnCamera,
 			const float screenSize, const bool border) {
 		preserveBorder = border;
 		camera = scnCamera;
@@ -326,7 +326,7 @@ private:
 	vector<SimplifyVertex> vertices;
 	vector<SimplifyRef> refs;
 
-	const Camera *camera;
+	CameraConstPtr camera;
 	float edgeScreenSize;
 
 	u_int maxCandidateQueueSize;
@@ -880,7 +880,7 @@ private:
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-SimplifyShape::SimplifyShape(const Camera *camera, ExtTriangleMesh *srcMesh,
+SimplifyShape::SimplifyShape(CameraConstPtr camera, ExtTriangleMeshPtr srcMesh,
 		const float target, const float edgeScreenSize, const bool preserveBorder) {
 	SDL_LOG("Simplify shape " << srcMesh->GetName() << " with target " << target);
 
@@ -915,11 +915,9 @@ SimplifyShape::SimplifyShape(const Camera *camera, ExtTriangleMesh *srcMesh,
 }
 
 SimplifyShape::~SimplifyShape() {
-	if (!refined)
-		delete mesh;
 }
 
-ExtTriangleMesh *SimplifyShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr SimplifyShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

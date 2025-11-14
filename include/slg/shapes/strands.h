@@ -35,7 +35,7 @@ public:
 		TESSEL_SOLID, TESSEL_SOLID_ADAPTIVE
 	} TessellationType;
 
-	StrendsShape(const Scene *scene,
+	StrendsShape(SceneConstRef scene,
 			const luxrays::cyHairFile *hairFile, const TessellationType tesselType,
 			const u_int adaptiveMaxDepth, const float adaptiveError, 
 			const u_int solidSideCount, const bool solidCapBottom, const bool solidCapTop,
@@ -45,23 +45,23 @@ public:
 	virtual ShapeType GetType() const { return STRANDS; }
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 	
-	void TessellateRibbon(const Scene *scene,
+	void TessellateRibbon(SceneConstRef scene,
 		const std::vector<luxrays::Point> &hairPoints,
 		const std::vector<float> &hairSizes, const std::vector<luxrays::Spectrum> &hairCols,
 		const std::vector<luxrays::UV> &hairUVs, const std::vector<float> &hairTransps,
 		std::vector<luxrays::Point> &meshVerts, std::vector<luxrays::Normal> &meshNorms,
 		std::vector<luxrays::Triangle> &meshTris, std::vector<luxrays::UV> &meshUVs, std::vector<luxrays::Spectrum> &meshCols,
 		std::vector<float> &meshTransps) const;
-	void TessellateAdaptive(const Scene *scene,
+	void TessellateAdaptive(SceneConstRef scene,
 		const bool solid, const std::vector<luxrays::Point> &hairPoints,
 		const std::vector<float> &hairSizes, const std::vector<luxrays::Spectrum> &hairCols,
 		const std::vector<luxrays::UV> &hairUVs, const std::vector<float> &hairTransps,
 		std::vector<luxrays::Point> &meshVerts, std::vector<luxrays::Normal> &meshNorms,
 		std::vector<luxrays::Triangle> &meshTris, std::vector<luxrays::UV> &meshUVs, std::vector<luxrays::Spectrum> &meshCols,
 		std::vector<float> &meshTransps) const;
-	void TessellateSolid(const Scene *scene,
+	void TessellateSolid(SceneConstRef scene,
 		const std::vector<luxrays::Point> &hairPoints,
 		const std::vector<float> &hairSizes, const std::vector<luxrays::Spectrum> &hairCols,
 		const std::vector<luxrays::UV> &hairUVs, const std::vector<float> &hairTransps,
@@ -76,7 +76,7 @@ protected:
 	bool solidCapBottom, solidCapTop;
 	bool useCameraPosition;
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }

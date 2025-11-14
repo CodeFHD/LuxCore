@@ -52,7 +52,7 @@ PathOCLOpenCLRenderThread::~PathOCLOpenCLRenderThread() {
 void PathOCLOpenCLRenderThread::GetThreadFilmSize(u_int *filmWidth, u_int *filmHeight,
 		u_int *filmSubRegion) {
 	PathOCLRenderEngine *engine = (PathOCLRenderEngine *)renderEngine;
-	const Film *engineFilm = engine->film;
+	FilmConstPtr engineFilm = engine->film;
 
 	*filmWidth = engineFilm->GetWidth();
 	*filmHeight = engineFilm->GetHeight();

@@ -37,8 +37,8 @@ namespace slg {
 
 class SobolSamplerSharedData : public SamplerSharedData {
 public:
-	SobolSamplerSharedData(luxrays::RandomGenerator *rndGen, Film *engineFlm);
-	SobolSamplerSharedData(const u_int seed, Film *engineFlm);
+	SobolSamplerSharedData(luxrays::RandomGenerator *rndGen, FilmPtr engineFlm);
+	SobolSamplerSharedData(const u_int seed, FilmPtr engineFlm);
 	virtual ~SobolSamplerSharedData() { }
 
 	virtual void Reset();
@@ -49,9 +49,9 @@ public:
 	u_int GetPassCount(const u_int bucketCount) const;
 	
 	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, Film *film);
+			luxrays::RandomGenerator *rndGen, FilmPtr film);
 
-	Film *engineFilm;
+	FilmPtr engineFilm;
 	u_int seedBase;
 	u_int filmRegionPixelCount;
 
@@ -71,7 +71,7 @@ private:
 
 class SobolSampler : public Sampler {
 public:
-	SobolSampler(luxrays::RandomGenerator *rnd, Film *flm,
+	SobolSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 			const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 			const float adaptiveStr, const float adaptiveUserImpWeight,
 			const u_int bucketSize, const u_int tileSize, const u_int superSampling,
@@ -97,7 +97,7 @@ public:
 	static std::string GetObjectTag() { return "SOBOL"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		Film *film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 

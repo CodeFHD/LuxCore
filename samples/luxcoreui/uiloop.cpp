@@ -74,9 +74,9 @@ void LuxCoreApp::DrawBackgroundLogo() {
 }
 
 void LuxCoreApp::RefreshRenderingTexture() {
-  const unsigned int filmWidth = session->GetFilm().GetWidth();
-  const unsigned int filmHeight = session->GetFilm().GetHeight();
-  const float *pixels = session->GetFilm().GetChannel<float>(Film::CHANNEL_IMAGEPIPELINE, imagePipelineIndex);
+  const unsigned int filmWidth = session->GetFilm()->GetWidth();
+  const unsigned int filmHeight = session->GetFilm()->GetHeight();
+  const float *pixels = session->GetFilm()->GetChannel<float>(Film::CHANNEL_IMAGEPIPELINE, imagePipelineIndex);
 
   if ((currentTool == TOOL_OBJECT_SELECTION) || (currentTool == TOOL_USER_IMPORTANCE_PAINT)) {
     // Allocate the renderImageBuffer if needed
@@ -98,7 +98,7 @@ void LuxCoreApp::RefreshRenderingTexture() {
     const int mouseY = Floor2Int((frameBufferHeight - ImGui::GetIO().MousePos.y - 1) * imGuiScale.y);
 
     // Get the selected object ID
-    const unsigned int *objIDpixels = session->GetFilm().GetChannel<unsigned int>(Film::CHANNEL_OBJECT_ID);
+    const unsigned int *objIDpixels = session->GetFilm()->GetChannel<unsigned int>(Film::CHANNEL_OBJECT_ID);
     // 0xffffffffu is LuxRays NULL_INDEX
     unsigned int objID = 0xffffffffu;
     if ((mouseX >= 0) && (mouseX < (int)renderImageWidth) &&
@@ -177,8 +177,8 @@ void LuxCoreApp::DrawRendering() {
   } else {
     // Draw the rendering with padding to fill all the window area
 
-    const unsigned int filmWidth = session->GetFilm().GetWidth();
-    const unsigned int filmHeight = session->GetFilm().GetHeight();
+    const unsigned int filmWidth = session->GetFilm()->GetWidth();
+    const unsigned int filmHeight = session->GetFilm()->GetHeight();
 
     ImGui::SetNextWindowPos(ImVec2(0.f, menuBarHeight));
     ImGui::SetNextWindowContentSize(ImVec2(filmWidth, 0.f));
@@ -212,8 +212,8 @@ void LuxCoreApp::DrawTiles(const Property &propCoords, const Property &propPasse
   int frameBufferWidth, frameBufferHeight;
   glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
 
-  const unsigned int filmWidth = session->GetFilm().GetWidth();
-  const unsigned int filmHeight = session->GetFilm().GetHeight();
+  const unsigned int filmWidth = session->GetFilm()->GetWidth();
+  const unsigned int filmHeight = session->GetFilm()->GetHeight();
 
   const bool adjustFilmRatio = (currentTool != TOOL_IMAGE_VIEW);
   ImVec2 imGuiScale;
@@ -395,7 +395,10 @@ static void CenterWindow(GLFWwindow *window) {
 // UI loop
 //------------------------------------------------------------------------------
 
-void LuxCoreApp::RunApp(luxcore::RenderState *startState, luxcore::Film *startFilm) {
+void LuxCoreApp::RunApp(
+	std::shared_ptr<luxcore::RenderState> startState,
+	std::shared_ptr<luxcore::Film> startFilm
+) {
   //--------------------------------------------------------------------------
   // Initialize GLFW
   //--------------------------------------------------------------------------
@@ -725,8 +728,8 @@ void LuxCoreApp::RunApp(luxcore::RenderState *startState, luxcore::Film *startFi
   // Stop the rendering
   //--------------------------------------------------------------------------
 
-  delete session;
-  session = NULL;
+  session.reset();
+  session = nullptr;
 
   //--------------------------------------------------------------------------
   // Exit
@@ -739,3 +742,4 @@ void LuxCoreApp::RunApp(luxcore::RenderState *startState, luxcore::Film *startFi
   glfwDestroyWindow(window);
   glfwTerminate();
 }
+// vim: autoindent noexpandtab tabstop=4 shiftwidth=4

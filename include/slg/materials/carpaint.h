@@ -29,11 +29,11 @@ namespace slg {
 
 class CarPaintMaterial : public Material {
 public:
-	CarPaintMaterial(const Texture *frontTransp, const Texture *backTransp,
-			const Texture *emitted, const Texture *bump,
-			const Texture *kd, const Texture *ks1, const Texture *ks2, const Texture *ks3,
-			const Texture *m1, const Texture *m2, const Texture *m3,
-			const Texture *r1, const Texture *r2, const Texture *r3, const Texture *ka, const Texture *d);
+	CarPaintMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+			TextureConstPtr emitted, TextureConstPtr bump,
+			TextureConstPtr kd, TextureConstPtr ks1, TextureConstPtr ks2, TextureConstPtr ks3,
+			TextureConstPtr m1, TextureConstPtr m2, TextureConstPtr m3,
+			TextureConstPtr r1, TextureConstPtr r2, TextureConstPtr r3, TextureConstPtr ka, TextureConstPtr d);
 
 	virtual MaterialType GetType() const { return CARPAINT; }
 	virtual BSDFEvent GetEventTypes() const { return GLOSSY | REFLECT; };
@@ -51,8 +51,8 @@ public:
 		const luxrays::Vector &localLightDir, const luxrays::Vector &localEyeDir,
 		float *directPdfW, float *reversePdfW) const;
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
@@ -68,18 +68,18 @@ public:
 	static const struct CarPaintData data[8];
 	static int NbPresets() { return 8; }
 
-	const Texture *Kd;
-	const Texture *Ks1;
-	const Texture *Ks2;
-	const Texture *Ks3;
-	const Texture *M1;
-	const Texture *M2;
-	const Texture *M3;
-	const Texture *R1;
-	const Texture *R2;
-	const Texture *R3;
-	const Texture *Ka;
-	const Texture *depth;
+	TextureConstPtr Kd;
+	TextureConstPtr Ks1;
+	TextureConstPtr Ks2;
+	TextureConstPtr Ks3;
+	TextureConstPtr M1;
+	TextureConstPtr M2;
+	TextureConstPtr M3;
+	TextureConstPtr R1;
+	TextureConstPtr R2;
+	TextureConstPtr R3;
+	TextureConstPtr Ka;
+	TextureConstPtr depth;
 };
 
 }

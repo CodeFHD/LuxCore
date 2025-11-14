@@ -24,7 +24,7 @@ using namespace std;
 using namespace luxrays;
 using namespace slg;
 
-MeshShape::MeshShape(ExtTriangleMesh *m) {
+MeshShape::MeshShape(ExtTriangleMeshPtr m) {
 	mesh = m;
 }
 
@@ -33,8 +33,6 @@ MeshShape::MeshShape(const string &fileName) {
 }
 
 MeshShape::~MeshShape() {
-	if (!refined)
-		delete mesh;
 }
 
 void MeshShape::SetLocal2World(const luxrays::Transform &trans) {
@@ -45,7 +43,7 @@ void MeshShape::ApplyTransform(const Transform &trans) {
 	mesh->ApplyTransform(trans);
 }
 
-ExtTriangleMesh *MeshShape::RefineImpl(const Scene *scene) {
+ExtTriangleMeshPtr MeshShape::RefineImpl(SceneConstRef scene) {
 	return mesh;
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

@@ -29,9 +29,9 @@ using namespace slg;
 // HomogeneousVolume
 //------------------------------------------------------------------------------
 
-HomogeneousVolume::HomogeneousVolume(const Texture *iorTex, const Texture *emiTex,
-		const Texture *a, const Texture *s, const Texture *g, const bool multiScat) :
-		Volume(iorTex, emiTex), schlickScatter(this, g), multiScattering(multiScat) {
+HomogeneousVolume::HomogeneousVolume(TextureConstPtr iorTex, TextureConstPtr emiTex,
+		TextureConstPtr a, TextureConstPtr s, TextureConstPtr g, const bool multiScat) :
+		Volume(iorTex, emiTex), schlickScatter(*this, g), multiScattering(multiScat) {
 	sigmaA = a;
 	sigmaS = s;
 }
@@ -154,15 +154,15 @@ void HomogeneousVolume::Pdf(const HitPoint &hitPoint,
 	schlickScatter.Pdf(hitPoint, localLightDir, localEyeDir, directPdfW, reversePdfW);
 }
 
-void HomogeneousVolume::AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const {
-	Volume::AddReferencedTextures(referencedTexs);
+void HomogeneousVolume::AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexs, TextureConstPtr self) const {
+	Volume::AddReferencedTextures(referencedTexs, self);
 
-	sigmaA->AddReferencedTextures(referencedTexs);
-	sigmaS->AddReferencedTextures(referencedTexs);
-	schlickScatter.g->AddReferencedTextures(referencedTexs);
+	sigmaA->AddReferencedTextures(referencedTexs, sigmaA);
+	sigmaS->AddReferencedTextures(referencedTexs, sigmaS);
+	schlickScatter.g->AddReferencedTextures(referencedTexs, schlickScatter.g);
 }
 
-void HomogeneousVolume::UpdateTextureReferences(const Texture *oldTex, const Texture *newTex) {
+void HomogeneousVolume::UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex) {
 	Volume::UpdateTextureReferences(oldTex, newTex);
 
 	if (sigmaA == oldTex)

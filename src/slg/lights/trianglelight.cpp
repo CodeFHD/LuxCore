@@ -54,7 +54,7 @@ bool TriangleLight::IsDirectLightSamplingEnabled() const {
 	}
 }
 
-float TriangleLight::GetPower(const Scene &scene) const {
+float TriangleLight::GetPower(SceneConstPtr scene) const {
 	const float emittedRadianceY = lightMaterial->GetEmittedRadianceY(invMeshArea);
 
 	if (lightMaterial->GetEmittedTheta() == 0.f)
@@ -66,7 +66,7 @@ float TriangleLight::GetPower(const Scene &scene) const {
 }
 
 void TriangleLight::Preprocess() {
-	const ExtMesh *mesh = sceneObject->GetExtMesh();
+	auto mesh = sceneObject->GetExtMesh();
 
 	Transform localToWorld;
 	mesh->GetLocal2World(0.f, localToWorld);
@@ -78,7 +78,7 @@ void TriangleLight::Preprocess() {
 	invMeshArea = 1.f / meshArea;
 }
 
-Spectrum TriangleLight::Emit(const Scene &scene,
+Spectrum TriangleLight::Emit(SceneConstPtr scene,
 		const float time, const float u0, const float u1,
 		const float u2, const float u3, const float passThroughEvent,
 		Ray &ray, float &emissionPdfW,
@@ -112,7 +112,7 @@ Spectrum TriangleLight::Emit(const Scene &scene,
 		return Spectrum();
 	emissionPdfW *= invTriangleArea;
 
-	const ExtMesh *mesh = sceneObject->GetExtMesh();
+	auto mesh = sceneObject->GetExtMesh();
 
 	// Build a temporary HitPoint
 	HitPoint tmpHitPoint;
@@ -154,7 +154,7 @@ Spectrum TriangleLight::Emit(const Scene &scene,
 	return lightMaterial->GetEmittedRadiance(tmpHitPoint, invMeshArea) * emissionColor * fabsf(localDirOut.z);
 }
 
-Spectrum TriangleLight::Illuminate(const Scene &scene, const BSDF &bsdf,
+Spectrum TriangleLight::Illuminate(SceneConstPtr scene, const BSDF &bsdf,
 		const float time, const float u0, const float u1, const float passThroughEvent,
         Ray &shadowRay, float &directPdfW,
 		float *emissionPdfW, float *cosThetaAtLight) const {
@@ -166,7 +166,7 @@ Spectrum TriangleLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 	// Compute the sample point and direction
 	//--------------------------------------------------------------------------
 
-	const ExtMesh *mesh = sceneObject->GetExtMesh();
+	auto mesh = sceneObject->GetExtMesh();
 
 	HitPoint tmpHitPoint;
 	mesh->GetLocal2World(time, tmpHitPoint.localToWorld);
@@ -254,9 +254,9 @@ Spectrum TriangleLight::Illuminate(const Scene &scene, const BSDF &bsdf,
 	return lightMaterial->GetEmittedRadiance(tmpHitPoint, invMeshArea) * emissionColor;
 }
 
-bool TriangleLight::IsAlwaysInShadow(const Scene &scene,
+bool TriangleLight::IsAlwaysInShadow(SceneConstPtr scene,
 			const luxrays::Point &p, const luxrays::Normal &n) const {
-	const ExtMesh *mesh = sceneObject->GetExtMesh();
+	auto mesh = sceneObject->GetExtMesh();
 
 	// This would be the correct code but BlendLuxCore is currently always
 	// exporting the normals so I resort to the following trick

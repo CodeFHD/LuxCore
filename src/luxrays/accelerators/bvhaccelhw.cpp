@@ -61,7 +61,7 @@ public:
 
 			// Allocate the temporary vertex buffer
 			Point *tmpVerts = new Point[Min<size_t>(totalVertCount, maxVertCount)];
-			deque<const Mesh *>::const_iterator mesh = bvh.meshes.begin();
+			deque<MeshConstPtr >::const_iterator mesh = bvh.meshes.begin();
 
 			u_int vertsCopied = 0;
 			u_int meshVertIndex = 0;
@@ -244,7 +244,7 @@ public:
 			device.FreeBuffer(&nodeBuffs[i]);
 	}
 
-	virtual void Update(const DataSet *newDataSet) { assert(false); }
+	virtual void Update(DataSetConstPtr newDataSet) override { assert(false); }
 	virtual void EnqueueTraceRayBuffer(HardwareDeviceBuffer *rayBuff,
 			HardwareDeviceBuffer *rayHitBuff, const unsigned int rayCount);
 

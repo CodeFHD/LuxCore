@@ -52,7 +52,6 @@ PathOCLNativeRenderThread::PathOCLNativeRenderThread(const u_int index,
 }
 
 PathOCLNativeRenderThread::~PathOCLNativeRenderThread() {
-	delete threadFilm; 
 }
 
 void PathOCLNativeRenderThread::Start() {
@@ -65,9 +64,7 @@ void PathOCLNativeRenderThread::Start() {
 		const u_int filmHeight = engine->film->GetHeight();
 		const u_int *filmSubRegion = engine->film->GetSubRegion();
 
-		delete threadFilm;
-
-		threadFilm = new Film(filmWidth, filmHeight, filmSubRegion);
+		threadFilm = Film::Create(filmWidth, filmHeight, filmSubRegion);
 		threadFilm->CopyDynamicSettings(*(engine->film));
 		// I'm not removing the pipeline and disabling the film denoiser
 		// in order to support BCD denoiser.
@@ -104,14 +101,14 @@ void PathOCLNativeRenderThread::RenderThreadImpl(std::stop_token stop_token) {
 	RandomGenerator *rndGen = new RandomGenerator(engine->seedBase + 1 + threadIndex);
 
 	// All threads use the film allocated by the first thread
-	Film *film = ((PathOCLNativeRenderThread *)(engine->renderNativeThreads[0]))->threadFilm;
+	FilmPtr film = ((PathOCLNativeRenderThread *)(engine->renderNativeThreads[0]))->threadFilm;
 	
 	// Setup the sampler(s)
 
 	Sampler *eyeSampler = nullptr;
 	Sampler *lightSampler = nullptr;
 
-	eyeSampler = engine->renderConfig->AllocSampler(rndGen, film,
+	eyeSampler = engine->renderConfig.AllocSampler(rndGen, film,
 			nullptr, engine->eyeSamplerSharedData, Properties());
 	eyeSampler->SetThreadIndex(threadIndex);
 	eyeSampler->RequestSamples(PIXEL_NORMALIZED_ONLY, pathTracer.eyeSampleSize);
@@ -136,7 +133,7 @@ void PathOCLNativeRenderThread::RenderThreadImpl(std::stop_token stop_token) {
 	// Setup PathTracer thread state
 	PathTracerThreadState pathTracerThreadState(intersectionDevice,
 			eyeSampler, lightSampler,
-			engine->renderConfig->scene, film,
+			engine->renderConfig.scene, film,
 			&varianceClamping);
 
 	//--------------------------------------------------------------------------

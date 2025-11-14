@@ -39,7 +39,7 @@ CUDAIntersectionDevice::CUDAIntersectionDevice(
 CUDAIntersectionDevice::~CUDAIntersectionDevice() {
 }
 
-void CUDAIntersectionDevice::SetDataSet(DataSet *newDataSet) {
+void CUDAIntersectionDevice::SetDataSet(DataSetPtr newDataSet) {
 	IntersectionDevice::SetDataSet(newDataSet);
 
 	if (dataSet) {

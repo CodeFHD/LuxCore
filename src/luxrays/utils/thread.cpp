@@ -16,6 +16,7 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
+#include <cassert>
 #include "luxrays/utils/thread.h"
 
 using namespace std;
@@ -54,7 +55,7 @@ void luxrays::SetThreadGroupAffinity(const size_t threadIndex) {
 #endif
 }
 
-bool luxrays::SetThreadRRPriority(std::jthread *thread, int pri) {
+bool luxrays::SetThreadRRPriority(JThreadPtr thread, int pri) {
 #if defined (__linux__) || defined (__APPLE__) || defined(__CYGWIN__) || defined(__OpenBSD__) || defined(__FreeBSD__)
 	{
 		const pthread_t tid = (pthread_t)thread->native_handle();
@@ -78,6 +79,25 @@ bool luxrays::SetThreadRRPriority(std::jthread *thread, int pri) {
 			return false;
 		else
 			return true;*/
+	}
+#endif
+}
+
+
+void luxrays::SetThreadName(JThreadPtr thread, const std::string name) {
+#if defined (__GNUC__) || defined (__APPLE__) || defined(__CYGWIN__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+	{
+		auto handle = thread->native_handle();
+		assert(name.size() < 16);
+		int rc = pthread_setname_np(handle, name.c_str());
+		assert(!rc);
+	}
+#elif defined (WIN32)
+	{
+		auto handle = thread->native_handle();
+		std::wstring stemp = std::wstring(name.begin(), name.end());
+		LPCWSTR sw = stemp.c_str();
+		HRESULT hr = SetThreadDescription(handle, sw);
 	}
 #endif
 }

@@ -21,17 +21,16 @@
 
 #include <string>
 
+#include "slg/usings.h"
 #include "slg/shapes/shape.h"
 
 namespace slg {
 
-class Camera;
-
 class SubdivShape : public Shape {
 public:
 	SubdivShape(
-		const Camera *camera,
-		luxrays::ExtTriangleMesh *srcMesh,
+		CameraConstPtr camera,
+		luxrays::ExtTriangleMeshPtr srcMesh,
 		const u_int maxLevel,
 		const float maxEdgeScreenSize,
 		const bool enhanced
@@ -40,17 +39,17 @@ public:
 
 	virtual ShapeType GetType() const { return SUBDIV; }
 
-	static float MaxEdgeScreenSize(const Camera *camera, luxrays::ExtTriangleMesh *srcMesh);
-	static luxrays::ExtTriangleMesh *ApplySubdiv(
-		luxrays::ExtTriangleMesh *srcMesh,
+	static float MaxEdgeScreenSize(CameraConstPtr camera, luxrays::ExtTriangleMeshPtr srcMesh);
+	static luxrays::ExtTriangleMeshPtr ApplySubdiv(
+		luxrays::ExtTriangleMeshPtr srcMesh,
 		const u_int maxLevel,
 		const bool enhanced
 	);
 
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh = nullptr;
+	luxrays::ExtTriangleMeshPtr mesh = nullptr;
 };
 
 }

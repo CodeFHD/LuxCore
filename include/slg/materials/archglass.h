@@ -29,11 +29,11 @@ namespace slg {
 
 class ArchGlassMaterial : public Material {
 public:
-	ArchGlassMaterial(const Texture *frontTransp, const Texture *backTransp,
-			const Texture *emitted, const Texture *bump,
-			const Texture *refl, const Texture *trans,
-			const Texture *exteriorIorFact, const Texture *interiorIorFact,
-			const Texture *filmThickness, const Texture *filmIor);
+	ArchGlassMaterial(TextureConstPtr frontTransp, TextureConstPtr backTransp,
+			TextureConstPtr emitted, TextureConstPtr bump,
+			TextureConstPtr refl, TextureConstPtr trans,
+			TextureConstPtr exteriorIorFact, TextureConstPtr interiorIorFact,
+			TextureConstPtr filmThickness, TextureConstPtr filmIor);
 
 	virtual MaterialType GetType() const { return ARCHGLASS; }
 	virtual BSDFEvent GetEventTypes() const { return SPECULAR | REFLECT | TRANSMIT; };
@@ -59,17 +59,17 @@ public:
 			*reversePdfW = 0.f;
 	}
 
-	virtual void AddReferencedTextures(std::unordered_set<const Texture *> &referencedTexs) const;
-	virtual void UpdateTextureReferences(const Texture *oldTex, const Texture *newTex);
+	virtual void AddReferencedTextures(std::unordered_set<TextureConstPtr>  &referencedTexsreferencedTexs) const;
+	virtual void UpdateTextureReferences(TextureConstPtr oldTex, TextureConstPtr newTex);
 
 	virtual luxrays::Properties ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	const Texture *GetKr() const { return Kr; }
-	const Texture *GetKt() const { return Kt; }
-	const Texture *GetExteriorIOR() const { return exteriorIor; }
-	const Texture *GetInteriorIOR() const { return interiorIor; }
-	const Texture *GetFilmThickness() const { return filmThickness; }
-	const Texture *GetFilmIOR() const { return filmIor; }
+	TextureConstPtr GetKr() const { return Kr; }
+	TextureConstPtr GetKt() const { return Kt; }
+	TextureConstPtr GetExteriorIOR() const { return exteriorIor; }
+	TextureConstPtr GetInteriorIOR() const { return interiorIor; }
+	TextureConstPtr GetFilmThickness() const { return filmThickness; }
+	TextureConstPtr GetFilmIOR() const { return filmIor; }
 
 	static luxrays::Spectrum EvalSpecularReflection(const HitPoint &hitPoint,
 			const luxrays::Vector &localFixedDir,
@@ -81,12 +81,12 @@ public:
 			 const float nc, const float nt, luxrays::Vector *localSampledDir);
 
 private:
-	const Texture *Kr;
-	const Texture *Kt;
-	const Texture *exteriorIor;
-	const Texture *interiorIor;
-	const Texture *filmThickness;
-	const Texture *filmIor;
+	TextureConstPtr Kr;
+	TextureConstPtr Kt;
+	TextureConstPtr exteriorIor;
+	TextureConstPtr interiorIor;
+	TextureConstPtr filmThickness;
+	TextureConstPtr filmIor;
 };
 
 }

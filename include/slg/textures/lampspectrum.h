@@ -29,7 +29,7 @@ namespace slg {
 // Lamp spectrum texture
 //------------------------------------------------------------------------------
 
-extern Texture *AllocLampSpectrumTex(const luxrays::Properties &props, const std::string &propName);
+extern TexturePtr AllocLampSpectrumTex(const luxrays::Properties &props, const std::string &propName);
 
 }
 

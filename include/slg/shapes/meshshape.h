@@ -27,7 +27,7 @@ namespace slg {
 
 class MeshShape : public Shape {
 public:
-	MeshShape(luxrays::ExtTriangleMesh *mesh);
+	MeshShape(luxrays::ExtTriangleMeshPtr mesh);
 	MeshShape(const std::string &fileName);
 	virtual ~MeshShape();
 
@@ -37,9 +37,9 @@ public:
 	void ApplyTransform(const luxrays::Transform &trans);
 	
 protected:
-	virtual luxrays::ExtTriangleMesh *RefineImpl(const Scene *scene);
+	virtual luxrays::ExtTriangleMeshPtr RefineImpl(SceneConstRef scene);
 
-	luxrays::ExtTriangleMesh *mesh;
+	luxrays::ExtTriangleMeshPtr mesh;
 };
 
 }
