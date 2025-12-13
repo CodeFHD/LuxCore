@@ -29,7 +29,7 @@
 
 namespace luxrays {
 
-EmbreeAccel::EmbreeAccel(const Context *context) : ctx(context),
+EmbreeAccel::EmbreeAccel(const Context & context) : ctx(context),
 		uniqueRTCSceneByMesh(MeshPtrCompare), uniqueGeomByMesh(MeshPtrCompare),
 		uniqueInstMatrixByMesh(MeshPtrCompare) {
 	embreeDevice = rtcNewDevice(NULL);

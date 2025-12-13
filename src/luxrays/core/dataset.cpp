@@ -38,12 +38,11 @@ using namespace std;
 static u_int DataSetID = 0;
 static std::mutex DataSetIDMutex;
 
-DataSet::DataSet(const Context *luxRaysContext) {
+DataSet::DataSet(const Context& luxRaysContext): context(luxRaysContext) {
 	{
 		std::unique_lock<std::mutex> lock(DataSetIDMutex);
 		dataSetID = DataSetID++;
 	}
-	context = luxRaysContext;
 
 	totalVertexCount = 0;
 	totalTriangleCount = 0;
@@ -53,7 +52,7 @@ DataSet::DataSet(const Context *luxRaysContext) {
 	hasMotionBlur = false;
 
 	// Configure
-	const Properties &cfg = luxRaysContext->GetConfig();
+	const Properties &cfg = luxRaysContext.GetConfig();
 	accelType = Accelerator::String2AcceleratorType(cfg.Get(Property("accelerator.type")("AUTO")).Get<string>());
 	enableInstanceSupport = cfg.Get(Property("accelerator.instances.enable")(true)).Get<bool>();
 	enableMotionBlurSupport = cfg.Get(Property("accelerator.motionblur.enable")(true)).Get<bool>();

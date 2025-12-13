@@ -28,7 +28,7 @@ namespace luxrays {
 
 class EmbreeAccel : public Accelerator {
 public:
-	EmbreeAccel(const Context *context);
+	EmbreeAccel(const Context & context);
 	virtual ~EmbreeAccel();
 
 	virtual AcceleratorType GetType() const { return ACCEL_EMBREE; }
@@ -63,7 +63,7 @@ private:
 	// Used to count the number of existing EmbreeAccel instances
 	static u_int initCount;
 
-	const Context *ctx;
+	const Context & ctx;
 
 	RTCDevice embreeDevice;
 	RTCScene embreeScene;

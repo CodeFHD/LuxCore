@@ -104,7 +104,7 @@ void OpenCLDeviceDescription::AddDeviceDescs(const cl_platform_id oclPlatform,
 //------------------------------------------------------------------------------
 
 OpenCLDevice::OpenCLDevice(
-		const Context *context,
+		const Context & context,
 		OpenCLDeviceDescription *desc,
 		const size_t devIndex) :
 		Device(context, devIndex),

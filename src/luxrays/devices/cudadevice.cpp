@@ -139,13 +139,13 @@ void CUDADeviceDescription::AddDeviceDescs(vector<DeviceDescription *> &descript
 //------------------------------------------------------------------------------
 
 static void OptixLogCB(u_int level, const char* tag, const char *message, void *cbdata) {
-	const Context *context = (Context *)cbdata;
+	const Context & context = *static_cast<Context *>(cbdata);
 	
 	LR_LOG(context, "[Optix][" << level << "][" << tag << "] " << message);
 }
 
 CUDADevice::CUDADevice(
-		const Context *context,
+		const Context & context,
 		CUDADeviceDescription *desc,
 		const size_t devIndex) :
 		Device(context, devIndex),
@@ -163,7 +163,7 @@ CUDADevice::CUDADevice(
 	if (isOptixAvilable && desc->useOptix) {
 		OptixDeviceContextOptions optixOptions = {};
 		optixOptions.logCallbackFunction = &OptixLogCB;
-		optixOptions.logCallbackData = (void *)deviceContext;
+		optixOptions.logCallbackData = (void *)&deviceContext;
 		// For normal usage
 		//optixOptions.logCallbackLevel = 1;
 		// For debugging

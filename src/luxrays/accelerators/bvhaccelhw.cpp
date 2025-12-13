@@ -47,7 +47,7 @@ public:
 			// Check the max. number of vertices I can store in a single page
 			size_t maxMemAlloc = device.GetDeviceDesc()->GetMaxMemoryAllocSize();
 
-			const BufferType memTypeFlags = device.GetContext()->GetUseOutOfCoreBuffers() ?
+			const BufferType memTypeFlags = device.GetContext().GetUseOutOfCoreBuffers() ?
 				((BufferType)(BUFFER_TYPE_READ_ONLY | BUFFER_TYPE_OUT_OF_CORE)) :
 				BUFFER_TYPE_READ_ONLY;
 			

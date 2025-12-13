@@ -28,7 +28,7 @@ namespace luxrays {
 
 // OptixAccel Method Definitions
 
-OptixAccel::OptixAccel(const Context *context) : ctx(context) {
+OptixAccel::OptixAccel(const Context & context) : ctx(context) {
 	initialized = false;
 }
 

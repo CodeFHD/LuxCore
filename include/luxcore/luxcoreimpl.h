@@ -560,8 +560,6 @@ public:
 	virtual slg::RenderSessionRef GetSLGRenderSession() const { return *renderSession; }
 
 	virtual ~RenderSessionImpl() override {
-		// Stop the machinery before destructing
-		renderSession->Stop();
 	}
 
 	friend class FilmImpl;

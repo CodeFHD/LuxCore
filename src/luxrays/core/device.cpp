@@ -92,7 +92,7 @@ string DeviceDescription::GetDeviceType(const DeviceType type) {
 // Device
 //------------------------------------------------------------------------------
 
-Device::Device(const Context *context, const size_t index) :
+Device::Device(const Context & context, const size_t index) :
 	deviceContext(context) {
 	deviceIndex = index;
 	started = false;

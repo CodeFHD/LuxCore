@@ -34,7 +34,7 @@ namespace luxrays {
 
 class OpenCLIntersectionDevice : public OpenCLDevice, public HardwareIntersectionDevice {
 public:
-	OpenCLIntersectionDevice(const Context *context,
+	OpenCLIntersectionDevice(const Context & context,
 		OpenCLDeviceDescription *desc, const size_t devIndex);
 	virtual ~OpenCLIntersectionDevice();
 

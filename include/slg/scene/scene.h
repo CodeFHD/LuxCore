@@ -92,7 +92,7 @@ public:
 		SampleResult *sampleResult = nullptr, const bool backTracing = false) const;
 
 	void PreprocessCamera(const u_int filmWidth, const u_int filmHeight, const u_int *filmSubRegion);
-	void Preprocess(luxrays::Context *ctx,
+	void Preprocess(luxrays::Context & ctx,
 		const u_int filmWidth, const u_int filmHeight, const u_int *filmSubRegion,
 		const bool useRTMode);
 

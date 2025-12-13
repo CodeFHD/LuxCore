@@ -29,7 +29,7 @@ namespace luxrays {
 //------------------------------------------------------------------------------
 
 OpenCLIntersectionDevice::OpenCLIntersectionDevice(
-		const Context *context,
+		const Context & context,
 		OpenCLDeviceDescription *desc,
 		const size_t devIndex) :
 		Device(context, devIndex), OpenCLDevice(context, desc, devIndex),

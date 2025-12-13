@@ -35,8 +35,8 @@ namespace luxrays {
 
 // BVHAccel Method Definitions
 
-BVHAccel::BVHAccel(const Context *context) : ctx(context) {
-	params = ToBVHParams(ctx->GetConfig());
+BVHAccel::BVHAccel(const Context & context) : ctx(context) {
+	params = ToBVHParams(ctx.GetConfig());
 
 	initialized = false;
 }
@@ -141,7 +141,7 @@ void BVHAccel::Init(const deque<MeshConstPtr > &ms, const u_longlong totVert,
 
 	const double t1 = WallClockTime();
 
-	const string builderType = ctx->GetConfig().Get(Property("accelerator.bvh.builder.type")(
+	const string builderType = ctx.GetConfig().Get(Property("accelerator.bvh.builder.type")(
 		"EMBREE_BINNED_SAH"
 		)).Get<string>();
 

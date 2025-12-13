@@ -36,8 +36,8 @@ namespace luxrays {
 
 // MBVHAccel Method Definitions
 
-MBVHAccel::MBVHAccel(const Context *context) : ctx(context) {
-	params = BVHAccel::ToBVHParams(ctx->GetConfig());
+MBVHAccel::MBVHAccel(const Context & context) : ctx(context) {
+	params = BVHAccel::ToBVHParams(ctx.GetConfig());
 
 	initialized = false;
 }
@@ -217,7 +217,7 @@ void MBVHAccel::UpdateRootBVH() {
 	delete bvhRootTree;
 	bvhRootTree = NULL;
 
-	const string builderType = ctx->GetConfig().Get(Property("accelerator.bvh.builder.type")(
+	const string builderType = ctx.GetConfig().Get(Property("accelerator.bvh.builder.type")(
 		"EMBREE_BINNED_SAH"
 		)).Get<string>();
 

@@ -28,7 +28,7 @@ namespace luxrays {
 
 class OptixAccel : public Accelerator {
 public:
-	OptixAccel(const Context *context);
+	OptixAccel(const Context & context);
 	virtual ~OptixAccel();
 
 	virtual AcceleratorType GetType() const { return ACCEL_OPTIX; }
@@ -47,7 +47,7 @@ public:
 	friend class OptixKernel;
 
 private:
-	const Context *ctx;
+	const Context & ctx;
 	std::deque<MeshConstPtr > meshes;
 	u_longlong totalVertexCount, totalTriangleCount;
 

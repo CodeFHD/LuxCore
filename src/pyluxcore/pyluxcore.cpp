@@ -2521,7 +2521,7 @@ PYBIND11_MODULE(pyluxcore, m) {
     //.def("__init__", make_constructor(RenderConfig_LoadFile))
     //.def(py::init(&RenderConfig_LoadFile)) TODO
     .def("GetProperties", &luxcore::detail::RenderConfigImpl::GetProperties, py::return_value_policy::reference_internal)
-    .def("GetProperty", &luxcore::detail::RenderConfigImpl::GetProperty)
+    .def("GetProperty", &luxcore::detail::RenderConfigImpl::GetProperty, py::return_value_policy::reference_internal)
     .def("GetScene", &RenderConfig_GetScene, py::return_value_policy::reference_internal)
     .def("HasCachedKernels", &luxcore::detail::RenderConfigImpl::HasCachedKernels)
     .def("Parse", &luxcore::detail::RenderConfigImpl::Parse)
@@ -2550,14 +2550,43 @@ PYBIND11_MODULE(pyluxcore, m) {
     //.def(py::init<RenderConfigImplPtr, std::string, std::string>(), py::keep_alive<1, 2>())
     //.def(py::init<RenderConfigImplPtr, RenderStateImplPtr, FilmImplPtr>(), py::keep_alive<1, 2>())
 	.def(
-		py::init([](RenderConfigImplPtr config){
-			return luxcore::detail::RenderSessionImpl::Create(config);} ))
+		py::init(
+			[](RenderConfigImplPtr config){
+				return luxcore::detail::RenderSessionImpl::Create(config);
+			}
+		),
+		py::return_value_policy::copy
+	)
+
 	.def(
-		py::init([](RenderConfigImplPtr config, std::string& startState, std::string& startFilm){
-			return luxcore::detail::RenderSessionImpl::Create(config, startState, startFilm);} ))
+		py::init(
+			[](
+				RenderConfigImplPtr config,
+				std::string& startState,
+				std::string& startFilm
+			) {
+				return luxcore::detail::RenderSessionImpl::Create(
+					config, startState, startFilm
+				);
+			}
+		),
+		py::return_value_policy::copy
+	)
+
 	.def(
-		py::init([](RenderConfigImplPtr config, RenderStateImplPtr& startState, FilmImplStandalonePtr& startFilm){
-			return luxcore::detail::RenderSessionImpl::Create(config, startState, startFilm);} ))
+		py::init(
+			[](
+				RenderConfigImplPtr config,
+				RenderStateImplPtr& startState,
+				FilmImplStandalonePtr& startFilm
+			){
+				return luxcore::detail::RenderSessionImpl::Create(
+					config, startState, startFilm
+				);
+			}
+		),
+		py::return_value_policy::copy
+	)
 	//.def(py::init<RenderConfigImpl, RenderStateImplPtr, FilmImplPtr>(), py::keep_alive<1, 2>())
     .def("GetRenderConfig", &RenderSession_GetRenderConfig, py::return_value_policy::reference_internal)
     .def("Start", &luxcore::detail::RenderSessionImpl::Start)
@@ -2576,7 +2605,7 @@ PYBIND11_MODULE(pyluxcore, m) {
     .def("WaitForDone", &luxcore::detail::RenderSessionImpl::WaitForDone)
     .def("HasDone", &luxcore::detail::RenderSessionImpl::HasDone)
     .def("Parse", &luxcore::detail::RenderSessionImpl::Parse)
-    .def("GetRenderState", &RenderSession_GetRenderState, py::return_value_policy::take_ownership)
+    .def("GetRenderState", &RenderSession_GetRenderState, py::return_value_policy::reference_internal)
     .def("SaveResumeFile", &luxcore::detail::RenderSessionImpl::SaveResumeFile)
   ;
 

@@ -23,6 +23,8 @@
 #include <boost/heap/priority_queue.hpp>
 
 #include "luxrays/utils/utils.h"
+#include "luxrays/core/context.h"
+#include "luxrays/usings.h"
 
 #include "slg/slg.h"
 #include "slg/renderconfig.h"
@@ -170,8 +172,8 @@ protected:
 	virtual void UpdateFilmLockLess() = 0;
 	virtual void UpdateCounters() = 0;
 
-	std::mutex engineMutex;
-	luxrays::Context *ctx;
+	std::recursive_mutex engineMutex;
+	luxrays::ContextUPtr ctx;
 	std::vector<luxrays::DeviceDescription *> selectedDeviceDescs;
 	std::vector<luxrays::IntersectionDevice *> intersectionDevices;
 

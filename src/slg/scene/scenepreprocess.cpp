@@ -33,7 +33,7 @@ void Scene::PreprocessCamera(const u_int filmWidth, const u_int filmHeight, cons
 	camera->Update(filmWidth, filmHeight, filmSubRegion);
 }
 
-void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeight,
+void Scene::Preprocess(Context& ctx, const u_int filmWidth, const u_int filmHeight,
 		const u_int *filmSubRegion, const bool useRTMode) {
 	//--------------------------------------------------------------------------
 	// Check if I have to update geometry
@@ -42,9 +42,9 @@ void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeig
 	if (!dataSet || editActions.Has(GEOMETRY_EDIT) ||
 			(editActions.Has(GEOMETRY_TRANS_EDIT) &&
 				!dataSet->DoesAllAcceleratorsSupportUpdate())) {
-		if (ctx->IsRunning()) {
+		if (ctx.IsRunning()) {
 			// Stop all intersection devices
-			ctx->Stop();
+			ctx.Stop();
 		}
 
 		// Rebuild the data set
@@ -57,14 +57,14 @@ void Scene::Preprocess(Context *ctx, const u_int filmWidth, const u_int filmHeig
 		dataSet->Preprocess();
 
 		// Set the LuxRays DataSet
-		ctx->SetDataSet(dataSet);
+		ctx.SetDataSet(dataSet);
 
 		// Restart all intersection devices
-		ctx->Start();
+		ctx.Start();
 	} else if(editActions.Has(GEOMETRY_TRANS_EDIT)) {
 		// I have only to update the DataSet bounding boxes
 		dataSet->UpdateBBoxes();
-		ctx->UpdateDataSet();
+		ctx.UpdateDataSet();
 	}
 	
 	// Only at this point I can safely trace rays

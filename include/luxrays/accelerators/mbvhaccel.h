@@ -34,7 +34,7 @@ class HardwareIntersectionDevice;
 class MBVHAccel : public Accelerator {
 public:
 	// MBVHAccel Public Methods
-	MBVHAccel(const Context *context);
+	MBVHAccel(const Context & context);
 	virtual ~MBVHAccel();
 
 	virtual AcceleratorType GetType() const { return ACCEL_MBVH; }
@@ -73,7 +73,7 @@ private:
 	std::vector<const Transform *> uniqueLeafsTransform;
 	std::vector<const MotionSystem *> uniqueLeafsMotionSystem;
 	
-	const Context *ctx;
+	const Context & ctx;
 	std::deque<MeshConstPtr > meshes;
 
 	bool initialized;

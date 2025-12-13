@@ -46,7 +46,7 @@ public:
 		//const Context *deviceContext = device.GetContext();
 		//const std::string &deviceName(device.GetName());
 
-		const BufferType memTypeFlags = device.GetContext()->GetUseOutOfCoreBuffers() ?
+		const BufferType memTypeFlags = device.GetContext().GetUseOutOfCoreBuffers() ?
 			((BufferType)(BUFFER_TYPE_READ_ONLY | BUFFER_TYPE_OUT_OF_CORE)) :
 			BUFFER_TYPE_READ_ONLY;
 
@@ -447,7 +447,7 @@ void MBVHKernel::Update(DataSetConstPtr newDataSet) {
 	// I have to update kernel arguments changed inside UpdateBVHNodes()
 	SetIntersectionKernelArgs();
 
-	const Context *deviceContext = device.GetContext();
+	const Context & deviceContext = device.GetContext();
 	const std::string &deviceName = device.GetName();
 	LR_LOG(deviceContext, "[HardwareIntersectionDevice::" << deviceName << "] Updating DataSet transformations");
 

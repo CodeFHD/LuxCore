@@ -32,7 +32,7 @@ namespace luxrays {
 
 class DataSet {
 public:
-	DataSet(const Context *luxRaysContext);
+	DataSet(const Context& luxRaysContext);
 	~DataSet();
 
 	AcceleratorType GetAcceleratorType() const { return accelType; }
@@ -71,7 +71,7 @@ public:
 private:
 	u_int dataSetID;
 
-	const Context *context;
+	const Context& context;
 
 	u_longlong totalVertexCount;
 	u_longlong totalTriangleCount;

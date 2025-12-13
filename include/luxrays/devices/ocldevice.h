@@ -274,7 +274,7 @@ protected:
 
 class OpenCLDevice : virtual public HardwareDevice {
 public:
-	OpenCLDevice(const Context *context,
+	OpenCLDevice(const Context & context,
 		OpenCLDeviceDescription *desc, const size_t devIndex);
 	virtual ~OpenCLDevice();
 

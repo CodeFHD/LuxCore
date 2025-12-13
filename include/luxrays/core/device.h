@@ -105,7 +105,7 @@ protected:
 class Device {
 public:
 	const std::string &GetName() const { return deviceName; }
-	const Context *GetContext() const { return deviceContext; }
+	const Context & GetContext() const { return deviceContext; }
 	virtual const DeviceDescription *GetDeviceDesc() const = 0;
 	const size_t GetDeviceIndex() const { return deviceIndex; }
 
@@ -119,15 +119,15 @@ public:
 	friend class OpenCLIntersectionDevice;
 
 protected:
-	Device() { }
-	Device(const Context *context, const size_t index);
+	//Device() { }
+	Device(const Context & context, const size_t index);
 	virtual ~Device();
 
 	virtual void Start();
 	virtual void Interrupt();
 	virtual void Stop();
 
-	const Context *deviceContext;
+	const Context & deviceContext;
 	size_t deviceIndex;
 
 	std::string deviceName;

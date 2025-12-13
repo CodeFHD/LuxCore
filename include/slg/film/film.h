@@ -454,7 +454,7 @@ public:
 	bool hwEnable;
 	int hwDeviceIndex;
 
-	luxrays::Context *ctx;
+	luxrays::ContextUPtr ctx;
 	luxrays::DataSetPtr dataSet;
 	luxrays::HardwareDevice *hardwareDevice;
 

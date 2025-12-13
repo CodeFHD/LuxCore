@@ -39,7 +39,6 @@ void Film::SetUpHW() {
 
 	hwDeviceIndex = -1;
 
-	ctx = nullptr;
 	dataSet = nullptr;
 	hardwareDevice = nullptr;
 
@@ -60,9 +59,11 @@ void Film::CreateHWContext() {
 	SLG_LOG("Film hardware image pipeline");
 
 	// Create LuxRays context
-	ctx = new Context(LuxRays_DebugHandler ? LuxRays_DebugHandler : NullDebugHandler,
-			Properties() <<
-			Property("context.verbose")(false));
+	ctx = std::make_unique<Context>(
+		LuxRays_DebugHandler ? LuxRays_DebugHandler : NullDebugHandler,
+		Properties() <<
+			Property("context.verbose")(false)
+	);
 
 	// Select OpenCL device
 	vector<DeviceDescription *> descs = ctx->GetAvailableDeviceDescriptions();
@@ -145,11 +146,11 @@ void Film::CreateHWContext() {
 		}
 
 		// Just an empty data set
-		dataSet = std::make_shared<DataSet>(ctx);
+		dataSet = std::make_shared<DataSet>(*ctx);
 		dataSet->Preprocess();
 		ctx->SetDataSet(dataSet);
 		ctx->Start();
-		
+
 		hardwareDevice->PopThreadCurrentDevice();
 	}
 }
@@ -178,8 +179,7 @@ void Film::DeleteHWContext() {
 		hardwareDevice = nullptr;
 	}
 
-	delete ctx;
-	ctx = nullptr;
+	ctx.reset();
 	dataSet.reset();
 }
 

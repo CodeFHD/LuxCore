@@ -29,7 +29,7 @@ namespace luxrays {
 //------------------------------------------------------------------------------
 
 CUDAIntersectionDevice::CUDAIntersectionDevice(
-		const Context *context,
+		const Context & context,
 		CUDADeviceDescription *desc,
 		const size_t devIndex) :
 		Device(context, devIndex), CUDADevice(context, desc, devIndex),

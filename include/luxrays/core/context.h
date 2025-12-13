@@ -48,7 +48,7 @@ namespace luxrays {
 
 typedef void (*LuxRaysDebugHandler)(const char *msg);
 
-#define LR_LOG(c, a) { if (c->HasDebugHandler() && c->IsVerbose()) { std::stringstream _LR_LOG_LOCAL_SS; _LR_LOG_LOCAL_SS << a; c->PrintDebugMsg(_LR_LOG_LOCAL_SS.str().c_str()); } }
+#define LR_LOG(c, a) { if (c.HasDebugHandler() && c.IsVerbose()) { std::stringstream _LR_LOG_LOCAL_SS; _LR_LOG_LOCAL_SS << a; c.PrintDebugMsg(_LR_LOG_LOCAL_SS.str().c_str()); } }
 
 /*!
  * \brief Interface to all main LuxRays functions.

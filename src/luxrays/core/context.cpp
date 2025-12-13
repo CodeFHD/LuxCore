@@ -61,14 +61,14 @@ Context::Context(LuxRaysDebugHandler handler, const Properties &config) : cfg(co
 	// Add all OpenCL devices
 	//--------------------------------------------------------------------------
 
-	LR_LOG(this, "OpenCL support: enabled");
+	LR_LOG((*this), "OpenCL support: enabled");
 
 	if (isOpenCLAvilable) {
 		vector<cl_platform_id> platforms;
 		OpenCLDeviceDescription::GetPlatformsList(platforms);
 
 		for (size_t i = 0; i < platforms.size(); ++i)
-			LR_LOG(this, "OpenCL Platform " << i << ": " << OpenCLDeviceDescription::GetOCLPlatformName(platforms[i]));
+			LR_LOG((*this), "OpenCL Platform " << i << ": " << OpenCLDeviceDescription::GetOCLPlatformName(platforms[i]));
 
 		const int openclPlatformIndex = cfg.Get(Property("context.opencl.platform.index")(-1)).Get<int>();
 		if (openclPlatformIndex < 0) {
@@ -79,7 +79,7 @@ Context::Context(LuxRaysDebugHandler handler, const Properties &config) : cfg(co
 						platforms[i], DEVICE_TYPE_OPENCL_ALL,
 						deviceDescriptions);
 			} else
-				LR_LOG(this, "No OpenCL platform available");
+				LR_LOG((*this), "No OpenCL platform available");
 		} else {
 			if ((platforms.size() == 0) || (openclPlatformIndex >= (int)platforms.size()))
 				throw runtime_error("Unable to find an appropriate OpenCL platform");
@@ -91,7 +91,7 @@ Context::Context(LuxRaysDebugHandler handler, const Properties &config) : cfg(co
 		}
 	}
 #else
-	LR_LOG(this, "OpenCL support: disabled");
+	LR_LOG((*this), "OpenCL support: disabled");
 #endif
 
 #if !defined(LUXRAYS_DISABLE_CUDA)
@@ -99,60 +99,60 @@ Context::Context(LuxRaysDebugHandler handler, const Properties &config) : cfg(co
 	// Add all CUDA devices
 	//--------------------------------------------------------------------------
 	
-	LR_LOG(this, "CUDA support: enabled");
+	LR_LOG((*this), "CUDA support: enabled");
 
 	if (isCudaAvilable) {
-		LR_LOG(this, "CUDA support: available");
+		LR_LOG((*this), "CUDA support: available");
 
 		int driverVersion;
 		CHECK_CUDA_ERROR(cuDriverGetVersion(&driverVersion));
-		LR_LOG(this, "CUDA driver version: " << (driverVersion / 1000) << "." << (driverVersion % 1000));
+		LR_LOG((*this), "CUDA driver version: " << (driverVersion / 1000) << "." << (driverVersion % 1000));
 
 		int devCount;
 		CHECK_CUDA_ERROR(cuDeviceGetCount(&devCount));
-		LR_LOG(this, "CUDA device count: " << devCount);
+		LR_LOG((*this), "CUDA device count: " << devCount);
 
 		if (isOptixAvilable) {
-			LR_LOG(this, "Optix support: available");
+			LR_LOG((*this), "Optix support: available");
 		} else {
-			LR_LOG(this, "Optix support: not available");
+			LR_LOG((*this), "Optix support: not available");
 		}
 
 		CUDADeviceDescription::AddDeviceDescs(deviceDescriptions);
 	}
 #else
-	LR_LOG(this, "CUDA support: disabled");
+	LR_LOG((*this), "CUDA support: disabled");
 #endif
 
 	// Print device info
 	for (size_t i = 0; i < deviceDescriptions.size(); ++i) {
 		DeviceDescription *desc = deviceDescriptions[i];
-		LR_LOG(this, "Device " << i << " name: " <<
+		LR_LOG((*this), "Device " << i << " name: " <<
 			desc->GetName());
 
-		LR_LOG(this, "Device " << i << " type: " <<
+		LR_LOG((*this), "Device " << i << " type: " <<
 			DeviceDescription::GetDeviceType(desc->GetType()));
 
-		LR_LOG(this, "Device " << i << " compute units: " <<
+		LR_LOG((*this), "Device " << i << " compute units: " <<
 			desc->GetComputeUnits());
 
-		LR_LOG(this, "Device " << i << " preferred float vector width: " <<
+		LR_LOG((*this), "Device " << i << " preferred float vector width: " <<
 			desc->GetNativeVectorWidthFloat());
 
-		LR_LOG(this, "Device " << i << " max allocable memory: " <<
+		LR_LOG((*this), "Device " << i << " max allocable memory: " <<
 			desc->GetMaxMemory() / (1024 * 1024) << "MBytes");
 
-		LR_LOG(this, "Device " << i << " max allocable memory block size: " <<
+		LR_LOG((*this), "Device " << i << " max allocable memory block size: " <<
 			desc->GetMaxMemoryAllocSize() / (1024 * 1024) << "MBytes");
 
-		LR_LOG(this, "Device " << i << " has out of core memory support: " <<
+		LR_LOG((*this), "Device " << i << " has out of core memory support: " <<
 			desc->HasOutOfCoreMemorySupport());
 
 #if !defined(LUXRAYS_DISABLE_CUDA)
 		if (desc->GetType() & DEVICE_TYPE_CUDA_ALL) {
 			const CUDADeviceDescription *cudaDesc = (CUDADeviceDescription *)desc;
 
-			LR_LOG(this, "Device " << i << " CUDA compute capability: " <<
+			LR_LOG((*this), "Device " << i << " CUDA compute capability: " <<
 					cudaDesc->GetCUDAComputeCapabilityMajor() << "." << cudaDesc->GetCUDAComputeCapabilityMinor());
 		}
 #endif
@@ -251,11 +251,11 @@ vector<IntersectionDevice *> Context::CreateIntersectionDevices(
 	vector<DeviceDescription *> &deviceDesc, const size_t indexOffset) {
 	assert (!started);
 
-	LR_LOG(this, "Creating " << deviceDesc.size() << " intersection device(s)");
+	LR_LOG((*this), "Creating " << deviceDesc.size() << " intersection device(s)");
 
 	vector<IntersectionDevice *> newDevices;
 	for (size_t i = 0; i < deviceDesc.size(); ++i) {
-		LR_LOG(this, "Allocating intersection device " << i << ": " << deviceDesc[i]->GetName() <<
+		LR_LOG((*this), "Allocating intersection device " << i << ": " << deviceDesc[i]->GetName() <<
 				" (Type = " << DeviceDescription::GetDeviceType(deviceDesc[i]->GetType()) << ")");
 
 		const DeviceType deviceType = deviceDesc[i]->GetType();
@@ -263,14 +263,14 @@ vector<IntersectionDevice *> Context::CreateIntersectionDevices(
 		if (deviceType == DEVICE_TYPE_NATIVE) {
 			// Nathive thread devices
 			NativeIntersectionDeviceDescription *nativeDeviceDesc = (NativeIntersectionDeviceDescription *)deviceDesc[i];
-			device = new NativeIntersectionDevice(this, nativeDeviceDesc, indexOffset + i);
+			device = new NativeIntersectionDevice((*this), nativeDeviceDesc, indexOffset + i);
 		}
 #if !defined(LUXRAYS_DISABLE_OPENCL)
 		else if (deviceType & DEVICE_TYPE_OPENCL_ALL) {
 			// OpenCL devices
 			OpenCLDeviceDescription *oclDeviceDesc = (OpenCLDeviceDescription *)deviceDesc[i];
 
-			device = new OpenCLIntersectionDevice(this, oclDeviceDesc, indexOffset + i);
+			device = new OpenCLIntersectionDevice((*this), oclDeviceDesc, indexOffset + i);
 		}
 #endif
 #if !defined(LUXRAYS_DISABLE_CUDA)
@@ -278,7 +278,7 @@ vector<IntersectionDevice *> Context::CreateIntersectionDevices(
 			// CUDA devices
 			CUDADeviceDescription *cudaDeviceDesc = (CUDADeviceDescription *)deviceDesc[i];
 
-			device = new CUDAIntersectionDevice(this, cudaDeviceDesc, indexOffset + i);
+			device = new CUDAIntersectionDevice((*this), cudaDeviceDesc, indexOffset + i);
 		}
 #endif
 		else
@@ -306,11 +306,11 @@ vector<HardwareDevice *> Context::CreateHardwareDevices(
 	vector<DeviceDescription *> &deviceDesc, const size_t indexOffset) {
 	assert (!started);
 
-	LR_LOG(this, "Creating " << deviceDesc.size() << " hardware device(s)");
+	LR_LOG((*this), "Creating " << deviceDesc.size() << " hardware device(s)");
 
 	vector<HardwareDevice *> newDevices;
 	for (size_t i = 0; i < deviceDesc.size(); ++i) {
-		LR_LOG(this, "Allocating hardware device " << i << ": " << deviceDesc[i]->GetName() <<
+		LR_LOG((*this), "Allocating hardware device " << i << ": " << deviceDesc[i]->GetName() <<
 				" (Type = " << DeviceDescription::GetDeviceType(deviceDesc[i]->GetType()) << ")");
 
 		const DeviceType deviceType = deviceDesc[i]->GetType();
@@ -323,7 +323,7 @@ vector<HardwareDevice *> Context::CreateHardwareDevices(
 			// OpenCL devices
 			OpenCLDeviceDescription *oclDeviceDesc = (OpenCLDeviceDescription *)deviceDesc[i];
 
-			device = new OpenCLDevice(this, oclDeviceDesc, indexOffset + i);
+			device = new OpenCLDevice((*this), oclDeviceDesc, indexOffset + i);
 		}
 #endif
 #if !defined(LUXRAYS_DISABLE_CUDA)
@@ -331,7 +331,7 @@ vector<HardwareDevice *> Context::CreateHardwareDevices(
 			// CUDA devices
 			CUDADeviceDescription *cudaDeviceDesc = (CUDADeviceDescription *)deviceDesc[i];
 
-			device = new CUDADevice(this, cudaDeviceDesc, indexOffset + i);
+			device = new CUDADevice((*this), cudaDeviceDesc, indexOffset + i);
 		}
 #endif
 		else

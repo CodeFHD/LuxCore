@@ -52,7 +52,7 @@ protected:
 
 class NativeIntersectionDevice : public IntersectionDevice {
 public:
-	NativeIntersectionDevice(const Context *context,
+	NativeIntersectionDevice(const Context & context,
 			NativeIntersectionDeviceDescription *deviceDesc,
 			const size_t devIndex);
 	virtual ~NativeIntersectionDevice();

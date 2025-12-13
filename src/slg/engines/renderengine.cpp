@@ -65,11 +65,13 @@ RenderEngine::RenderEngine(RenderConfigConstRef cfg) :
 
 	// Create LuxRays context
 	const Properties cfgProps = renderConfig.ToProperties();
-	ctx = new Context(LuxRays_DebugHandler ? LuxRays_DebugHandler : NullDebugHandler,
-			Properties() <<
+	ctx = std::make_unique<Context>(
+		LuxRays_DebugHandler ? LuxRays_DebugHandler : NullDebugHandler,
+		Properties() <<
 			cfgProps.Get("opencl.platform.index") <<
 			cfgProps.GetAllProperties("accelerator.") <<
-			cfgProps.GetAllProperties("context."));
+			cfgProps.GetAllProperties("context.")
+	);
 
 	startRenderState = nullptr;
 	startFilm = nullptr;
@@ -81,8 +83,6 @@ RenderEngine::~RenderEngine() {
 	if (started)
 		Stop();
 
-	delete ctx;
-
 	delete pixelFilter;
 }
 
@@ -92,7 +92,7 @@ void RenderEngine::SetRenderState(RenderStatePtr state, FilmPtr oldFilm) {
 }
 
 void RenderEngine::Start(FilmPtr flm, std::mutex *flmMutex) {
-	std::unique_lock<std::mutex> lock(engineMutex);
+	std::lock_guard<std::recursive_mutex> lock(engineMutex);
 
 	assert (!started);
 	started = true;
@@ -112,7 +112,7 @@ void RenderEngine::Start(FilmPtr flm, std::mutex *flmMutex) {
 	// Force a complete preprocessing
 	ScenePtr scene = renderConfig.scene;
 	scene->editActions.AddAllAction();
-	scene->Preprocess(ctx, film->GetWidth(), film->GetHeight(), film->GetSubRegion(),
+	scene->Preprocess(*ctx, film->GetWidth(), film->GetHeight(), film->GetSubRegion(),
 			IsRTMode());
 
 	// InitFilm() has to be called after scene preprocessing
@@ -132,24 +132,27 @@ void RenderEngine::Start(FilmPtr flm, std::mutex *flmMutex) {
 }
 
 void RenderEngine::Stop() {
-	std::unique_lock<std::mutex> lock(engineMutex);
+	{
+		std::lock_guard<std::recursive_mutex> lock(engineMutex);
 
-	StopLockLess();
+		StopLockLess();
 
-	assert (started);
-	started = false;
+		assert (started);
+		started = false;
 
-	if (ctx->IsRunning())
-		ctx->Stop();
+		if (ctx->IsRunning())
+			ctx->Stop();
 
-	UpdateFilmLockLess();
-	
+		UpdateFilmLockLess();
+	}
+
 	delete pixelFilter;
 	pixelFilter = NULL;
 }
 
 void RenderEngine::BeginSceneEdit() {
-	std::unique_lock<std::mutex> lock(engineMutex);
+	std::lock_guard<std::recursive_mutex> lock(engineMutex);
+
 
 	assert (started);
 	assert (!editMode);
@@ -159,13 +162,13 @@ void RenderEngine::BeginSceneEdit() {
 }
 
 void RenderEngine::EndSceneEdit(const EditActionList &editActions) {
-	std::unique_lock<std::mutex> lock(engineMutex);
+	std::lock_guard<std::recursive_mutex> lock(engineMutex);
 
 	assert (started);
 	assert (editMode);
 
 	// Pre-process scene data
-	renderConfig.scene->Preprocess(ctx, film->GetWidth(), film->GetHeight(), film->GetSubRegion(),
+	renderConfig.scene->Preprocess(*ctx, film->GetWidth(), film->GetHeight(), film->GetSubRegion(),
 			IsRTMode());
 
 	// Reset halt conditions
@@ -177,7 +180,7 @@ void RenderEngine::EndSceneEdit(const EditActionList &editActions) {
 }
 
 void RenderEngine::Pause() {
-	assert (!pauseMode);	
+	assert (!pauseMode);
 	pauseMode = true;
 }
 
@@ -209,7 +212,7 @@ void RenderEngine::GenerateNewSeedBase() {
 }
 
 void RenderEngine::UpdateFilm() {
-	std::unique_lock<std::mutex> lock(engineMutex);
+	std::lock_guard<std::recursive_mutex> lock(engineMutex);
 
 	if (started) {
 		UpdateFilmLockLess();
