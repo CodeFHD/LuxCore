@@ -81,7 +81,7 @@ public:
 	static std::shared_ptr<FilmImpl> Create(slg::FilmPtr film);
 	static std::shared_ptr<FilmImpl> Create(const std::string &fileName);
 	static std::shared_ptr<FilmImpl> Create(
-		const luxrays::Properties &props,
+		luxrays::PropertiesConstPtr props,
 		const bool hasPixelNormalizedChannel,
 		const bool hasScreenNormalizedChannel
 	);
@@ -107,7 +107,7 @@ public:
 	void SaveOutput(
 		const std::string &fileName,
 		const FilmOutputType type,
-		const luxrays::Properties &props
+		luxrays::PropertiesConstPtr props
 	) const;
 	virtual void SaveFilm(const std::string &fileName) const = 0;
 
@@ -139,8 +139,7 @@ public:
 	virtual unsigned int *UpdateChannelUInt(const FilmChannelType type,
 			const unsigned int index, const bool executeImagePipeline);
 
-	// TODO
-	virtual void Parse(const luxrays::Properties &props) = 0;
+	virtual void Parse(luxrays::PropertiesConstPtr props) = 0;
 
 	virtual void DeleteAllImagePipelines() = 0;
 
@@ -167,7 +166,7 @@ public:
 	FilmImplStandalone(slg::FilmPtr film);
 	FilmImplStandalone(const std::string &fileName);
 	FilmImplStandalone(
-		const luxrays::Properties &props,
+		luxrays::PropertiesConstPtr props,
 		const bool hasPixelNormalizedChannel,
 		const bool hasScreenNormalizedChannel
 	);
@@ -191,7 +190,7 @@ public:
 		const unsigned int index, const bool executeImagePipeline) override;
 
 
-	virtual void Parse(const luxrays::Properties &props) override;
+	virtual void Parse(luxrays::PropertiesConstPtr props) override;
 
 	virtual void DeleteAllImagePipelines() override;
 
@@ -234,7 +233,7 @@ public:
 		const unsigned int index, const bool executeImagePipeline) override;
 
 
-	virtual void Parse(const luxrays::Properties &props) override;
+	virtual void Parse(luxrays::PropertiesConstPtr props) override;
 
 	virtual void DeleteAllImagePipelines() override;
 
@@ -290,14 +289,14 @@ private:
 class SceneImpl : public luxcore::Scene {
 public:
 	SceneImpl(slg::ScenePtr scn);
-	SceneImpl(const luxrays::Properties *resizePolicyProps = nullptr);
+	SceneImpl(luxrays::PropertiesConstPtr resizePolicyProps = nullptr);
 	SceneImpl(
-		const luxrays::Properties &props,
-		const luxrays::Properties *resizePolicyProps = nullptr
+		luxrays::PropertiesConstPtr props,
+		luxrays::PropertiesConstPtr resizePolicyProps
 	);
 	SceneImpl(
 		const std::string &fileName,
-		const luxrays::Properties *resizePolicyProps = nullptr
+		luxrays::PropertiesConstPtr resizePolicyProps = nullptr
 	);
 
 	void GetBBox(float min[3], float max[3]) const;
@@ -344,7 +343,7 @@ public:
 	const unsigned int GetLightCount() const;
 	const unsigned int GetObjectCount() const;
 
-	void Parse(const luxrays::Properties &props);
+	void Parse(luxrays::PropertiesConstPtr props);
 
 	void DuplicateObject(
 		const std::string &srcObjName, const std::string &dstObjName,
@@ -427,7 +426,7 @@ private:
 class RenderConfigImpl : public luxcore::RenderConfig {
 public:
 	RenderConfigImpl(
-		const luxrays::Properties &props,
+		luxrays::PropertiesConstPtr props,
 		SceneImplPtr scene = nullptr
 	);
 	RenderConfigImpl(const std::string &fileName);
@@ -445,7 +444,7 @@ public:
 
 	bool HasCachedKernels() const;
 
-	void Parse(const luxrays::Properties &props);
+	void Parse(luxrays::PropertiesConstPtr props);
 
 	void Delete(const std::string &prefix);
 
@@ -553,7 +552,7 @@ public:
 	void UpdateStats() override;
 	const luxrays::Properties &GetStats() const override;
 
-	void Parse(const luxrays::Properties &props) override;
+	void Parse(luxrays::PropertiesConstPtr props) override;
 
 	void SaveResumeFile(const std::string &fileName) override;
 

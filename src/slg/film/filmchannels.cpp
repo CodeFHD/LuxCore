@@ -86,7 +86,7 @@ void Film::FreeChannels() {
 	delete channel_USER_IMPORTANCE;
 }
 
-void Film::AddChannel(const FilmChannelType type, const Properties *prop) {
+void Film::AddChannel(const FilmChannelType type, PropertiesConstPtr prop) {
 	if (initialized)
 		throw runtime_error("It is only possible to add a channel to a Film before initialization");
 

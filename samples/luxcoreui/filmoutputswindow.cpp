@@ -273,7 +273,7 @@ void FilmOutputsWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void FilmOutputsWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(GetFilmOutputsProperties(props));
+	app->RenderConfigParse(std::make_shared<Properties>(GetFilmOutputsProperties(props)));
 }
 
 void FilmOutputsWindow::Close() {

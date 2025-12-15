@@ -30,15 +30,15 @@ BiDirVMCPURenderEngine::BiDirVMCPURenderEngine(RenderConfigConstRef rcfg) :
 }
 
 void BiDirVMCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	const auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Rendering parameters
 	//--------------------------------------------------------------------------
 
-	lightPathsCount = Max(1024u, cfg.Get(GetDefaultProps().Get("bidirvm.lightpath.count")).Get<u_int>());
-	baseRadius = cfg.Get(GetDefaultProps().Get("bidirvm.startradius.scale")).Get<double>() * renderConfig.scene->dataSet->GetBSphere().rad;
-	radiusAlpha = cfg.Get(GetDefaultProps().Get("bidirvm.alpha")).Get<double>();
+	lightPathsCount = Max(1024u, cfg->Get(GetDefaultProps().Get("bidirvm.lightpath.count")).Get<u_int>());
+	baseRadius = cfg->Get(GetDefaultProps().Get("bidirvm.startradius.scale")).Get<double>() * renderConfig.scene->dataSet->GetBSphere().rad;
+	radiusAlpha = cfg->Get(GetDefaultProps().Get("bidirvm.alpha")).Get<double>();
 
 	BiDirCPURenderEngine::StartLockLess();
 }

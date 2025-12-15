@@ -50,7 +50,7 @@ void SamplerWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void SamplerWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(props.GetAllProperties("sampler"));
+	app->RenderConfigParse(std::make_shared<Properties>(props.GetAllProperties("sampler")));
 }
 
 bool SamplerWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {

@@ -52,16 +52,16 @@ void FileSaverRenderEngine::InitFilm() {
 }
 
 void FileSaverRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Rendering parameters
 	//--------------------------------------------------------------------------
 
-	renderEngineType = cfg.Get(GetDefaultProps().Get("filesaver.renderengine.type")).Get<string>();
-	exportFormat = cfg.Get(GetDefaultProps().Get("filesaver.format")).Get<string>();
-	directoryName = cfg.Get(GetDefaultProps().Get("filesaver.directory")).Get<string>();
-	fileName = cfg.Get(GetDefaultProps().Get("filesaver.filename")).Get<string>();
+	renderEngineType = cfg->Get(GetDefaultProps().Get("filesaver.renderengine.type")).Get<string>();
+	exportFormat = cfg->Get(GetDefaultProps().Get("filesaver.format")).Get<string>();
+	directoryName = cfg->Get(GetDefaultProps().Get("filesaver.directory")).Get<string>();
+	fileName = cfg->Get(GetDefaultProps().Get("filesaver.filename")).Get<string>();
 	
 	SaveScene();
 }
@@ -435,16 +435,16 @@ void FileSaverRenderEngine::ExportScene(RenderConfigConstRef renderConfig,
 		const std::string cfgFileName = (dirPath / "render.cfg").generic_string();
 		SLG_LOG("[FileSaverRenderEngine] Config file name: " << cfgFileName);
 
-		Properties cfg = renderConfig.cfg;
+		auto cfg = renderConfig.cfg;
 
 		// Overwrite the scene file name
-		cfg.Set(Property("scene.file")("scene.scn"));
+		cfg->Set(Property("scene.file")("scene.scn"));
 		// Set render engine type
-		cfg.Set(Property("renderengine.type")(renderEngineType));
+		cfg->Set(Property("renderengine.type")(renderEngineType));
 		// Remove FileSaver Option
-		cfg.Delete("filesaver.directory");
+		cfg->Delete("filesaver.directory");
 
-		cfg.Save(cfgFileName);
+		cfg->Save(cfgFileName);
 	}
 
 	//--------------------------------------------------------------------------

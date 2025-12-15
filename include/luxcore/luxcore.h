@@ -138,10 +138,15 @@ CPP_EXPORT CPP_API void SetEnableLogSubSystem(const LogSubSystemType type, const
  * \brief Parses a scene described using LuxRender SDL (Scene Description Language).
  *
  * \param fileName is the name of the file to parse.
- * \param renderConfig is where the rendering configuration properties are returned.
- * \param scene is where the scene properties are returned.
+ * \param renderConfigProps is where the rendering configuration properties are
+ * returned.
+ * \param sceneProps is where the scene properties are returned.
  */
-CPP_EXPORT CPP_API void ParseLXS(const std::string &fileName, luxrays::Properties &renderConfig, luxrays::Properties &scene);
+CPP_EXPORT CPP_API void ParseLXS(
+	const std::string &fileName,
+	std::shared_ptr<luxrays::Properties> renderConfigProps,
+	std::shared_ptr<luxrays::Properties> sceneProps
+);
 
 /*!
  * \brief File the OpenCL kernel cache with entries
@@ -353,7 +358,7 @@ public:
 	 *
 	 */
 	static std::shared_ptr<Film> Create(
-			const luxrays::Properties &props,
+			std::shared_ptr<const luxrays::Properties> props,
 			const bool hasPixelNormalizedChannel,
 			const bool hasScreenNormalizedChannel);
 
@@ -433,7 +438,11 @@ public:
 	 * "id" for the ID of OBJECT_ID_MASK,
 	 * "id" for the ID of BY_OBJECT_ID.
 	 */
-	virtual void SaveOutput(const std::string &fileName, const FilmOutputType type, const luxrays::Properties &props) const = 0;
+	virtual void SaveOutput(
+		const std::string &fileName,
+		const FilmOutputType type,
+		std::shared_ptr<const luxrays::Properties> props
+	) const = 0;
 
 	/*!
 	 * \brief Serializes a Film in a file.
@@ -571,7 +580,7 @@ public:
 	 *
 	 * \param props are the Properties to set.
 	 */
-	virtual void Parse(const luxrays::Properties &props) = 0;
+	virtual void Parse(std::shared_ptr<const luxrays::Properties> props) = 0;
 	/*!
 	 * \brief Delete all image pipelines and goes the default image
 	 * pipeline (AutoLinearToneMap + GammaCorrectionPlugin). This method can
@@ -787,14 +796,19 @@ public:
 	 *
 	 * \param resizePolicyProps defines texture image maps resize policy.
 	 */
-	static std::shared_ptr<Scene> Create(const luxrays::Properties *resizePolicyProps = nullptr);
+	static std::shared_ptr<Scene> Create(
+			std::shared_ptr<const luxrays::Properties> resizePolicyProps = nullptr
+	);
 	/*!
 	 * \brief Creates a new Scene as defined by props.
 	 *
 	 * \param props are the Properties used to build the new Scene.
 	 * \param resizePolicyProps defines texture image maps resize policy.
 	 */
-	static std::shared_ptr<Scene> Create(const luxrays::Properties &props, const luxrays::Properties *resizePolicyProps = nullptr);
+	static std::shared_ptr<Scene> Create(
+		std::shared_ptr<const luxrays::Properties> props,
+		std::shared_ptr<const luxrays::Properties> resizePolicyProps = nullptr
+	);
 	/*!
 	 * \brief Creates a new Scene as defined in fileName file.
 	 *
@@ -805,7 +819,10 @@ public:
 	 * This parameter has no effect when loading binary serialized binary
 	 * file.
 	 */
-	static std::shared_ptr<Scene> Create(const std::string &fileName, const luxrays::Properties *resizePolicyProps = nullptr);
+	static std::shared_ptr<Scene> Create(
+		const std::string &fileName,
+		std::shared_ptr<const luxrays::Properties> resizePolicyProps = nullptr
+	);
 
 	virtual ~Scene();
 
@@ -1019,7 +1036,7 @@ public:
 	 * \param props are the Properties with the definition of camera, textures,
 	 * materials and/or objects.
 	 */
-	virtual void Parse(const luxrays::Properties &props) = 0;
+	virtual void Parse(std::shared_ptr<const luxrays::Properties> props) = 0;
 
 	/*!
 	 * \brief Duplicate an object in an instance using the passed transformation.
@@ -1210,7 +1227,9 @@ public:
 	 * read from the file specified in the "scene.file" Property and deleted by
 	 * the destructor.
 	 */
-	static std::shared_ptr<RenderConfig> Create(const luxrays::Properties &props, ScenePtr scene = NULL);
+	static std::shared_ptr<RenderConfig> Create(
+		std::shared_ptr<const luxrays::Properties> props,
+		ScenePtr scene = NULL);
 	/*!
 	 * \brief Create a new RenderConfig using the provided binary file.
 	 *
@@ -1267,7 +1286,7 @@ public:
 	 *
 	 * \param props are the Properties to set.
 	 */
-	virtual void Parse(const luxrays::Properties &props) = 0;
+	virtual void Parse(std::shared_ptr<const luxrays::Properties> props) = 0;
 	/*!
 	 * \brief Deletes any configuration Property starting with the given prefix.
 	 * This method can be used only when the RenderConfig is not in use by a
@@ -1500,7 +1519,7 @@ public:
 	 * \param props are the Properties with the definition of: film.imagepipeline(s).*
 	 * (including radiance channel scales), film.outputs.*, film.width or film.height.
 	 */
-	virtual void Parse(const luxrays::Properties &props) = 0;
+	virtual void Parse(std::shared_ptr<const luxrays::Properties> props) = 0;
 
 	/*!
 	 * \brief Save all the rendering related information (the LuxCore RenderConfig,

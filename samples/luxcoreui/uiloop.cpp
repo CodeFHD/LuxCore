@@ -434,9 +434,9 @@ void LuxCoreApp::RunApp(
 
       targetFilmWidth = windowWidth / 2;
       targetFilmHeight = windowHeight / 2;
-      config->Parse(Properties() <<
+      config->Parse(std::make_shared<Properties>(Properties() <<
           Property("film.width")(targetFilmWidth) <<
-          Property("film.height")(targetFilmHeight));
+          Property("film.height")(targetFilmHeight)));
     } else {
       config->GetFilmSize(&windowWidth, &windowHeight, NULL);
       targetFilmWidth = windowWidth;
@@ -570,9 +570,11 @@ void LuxCoreApp::RunApp(
             unsigned int filmHeight = targetFilmHeight;
             AdjustFilmResolutionToWindowSize(&filmWidth, &filmHeight);
 
-            RenderSessionParse(Properties() <<
+			auto props = std::make_shared<Properties>();
+			*props <<
                 Property("film.width")(filmWidth) <<
-                Property("film.height")(filmHeight));
+                Property("film.height")(filmHeight);
+            RenderSessionParse(props);
           }
 
           lastFrameBufferWidth = currentFrameBufferWidth;

@@ -45,13 +45,13 @@ void FilmOutputs::Reset() {
 }
 
 void FilmOutputs::Add(const FilmOutputType type, const string &fileName,
-		const Properties *p) {
+		luxrays::PropertiesConstPtr p) {
 	types.push_back(type);
 	fileNames.push_back(fileName);
 	if (p)
-		outputProps.push_back(*p);
+		outputProps.push_back(p);
 	else
-		outputProps.push_back(Properties());
+		outputProps.push_back(std::make_shared<Properties>());
 }
 
 Properties FilmOutputs::ToProperties(const Properties &cfg) {

@@ -124,6 +124,7 @@ using VolumeConstPtr = std::shared_ptr<const Volume>;
 using VolumeRef = Volume&;
 using VolumeConstRef = const Volume&;
 
+
 }  // namespace slg
 
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

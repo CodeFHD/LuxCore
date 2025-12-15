@@ -55,7 +55,7 @@ std::shared_ptr<FilmImpl> FilmImpl::Create(const std::string &fileName) {
 	return std::make_shared<FilmImplStandalone>(fileName);
 }
 std::shared_ptr<FilmImpl> FilmImpl::Create(
-	const luxrays::Properties &props,
+	luxrays::PropertiesConstPtr props,
 	const bool hasPixelNormalizedChannel,
 	const bool hasScreenNormalizedChannel
 ) {
@@ -177,13 +177,14 @@ void FilmImpl::AddFilm(std::shared_ptr<const Film> film,
 void FilmImpl::SaveOutput(
 	const std::string &fileName,
 	const FilmOutputType type,
-	const Properties &props
+	const PropertiesConstPtr props
 ) const {
-	API_BEGIN("{}, {}, {}", ToArgString(fileName),ToArgString(type), ToArgString(props));
+	API_BEGIN("{}, {}, {}", ToArgString(fileName),ToArgString(type), ToArgString(*props));
 
 	GetSLGFilm()->Output(
-		fileName, static_cast<slg::FilmOutputs::FilmOutputType>(type),
-		&props
+		fileName,
+		static_cast<slg::FilmOutputs::FilmOutputType>(type),
+		props
 	);
 
 	API_END();
@@ -392,7 +393,7 @@ float * FilmImplSession::UpdateChannelFloat(const FilmChannelType type,
 	return result;
 }
 
-void FilmImplSession::Parse(const luxrays::Properties &props) {
+void FilmImplSession::Parse(PropertiesConstPtr props) {
 	API_BEGIN("{}", ToArgString(props));
 
 	throw runtime_error("Film::Parse() can be used only with a stand alone Film");
@@ -487,7 +488,7 @@ FilmImplStandalone::FilmImplStandalone(const std::string &fileName) {
 }
 
 FilmImplStandalone::FilmImplStandalone(
-	const luxrays::Properties &props,
+	luxrays::PropertiesConstPtr props,
 	const bool hasPixelNormalizedChannel,
 	const bool hasScreenNormalizedChannel
 ) {
@@ -615,7 +616,7 @@ float *FilmImplStandalone::UpdateChannelFloat(const FilmChannelType type,
 	return result;
 }
 
-void FilmImplStandalone::Parse(const luxrays::Properties &props) {
+void FilmImplStandalone::Parse(PropertiesConstPtr props) {
 	API_BEGIN("{}", ToArgString(props));
 
 	standAloneFilm->Parse(props);
@@ -785,19 +786,22 @@ void CameraImpl::RotateDown(const float angle) const {
 // SceneImpl
 //------------------------------------------------------------------------------
 
-SceneImpl::SceneImpl(const luxrays::Properties *resizePolicyProps) {
+SceneImpl::SceneImpl(luxrays::PropertiesConstPtr resizePolicyProps) {
 	camera = std::make_unique<CameraImpl>(*this);
 	scene = std::make_shared<slg::Scene>(resizePolicyProps);
 	allocatedScene = true;
 }
 
-SceneImpl::SceneImpl(const luxrays::Properties &props, const luxrays::Properties *resizePolicyProps) {
+SceneImpl::SceneImpl(
+	luxrays::PropertiesConstPtr props,
+	luxrays::PropertiesConstPtr resizePolicyProps
+) {
 	camera = std::make_unique<CameraImpl>(*this);
 	scene = std::make_shared<slg::Scene>(props, resizePolicyProps);
 	allocatedScene = true;
 }
 
-SceneImpl::SceneImpl(const string &fileName, const luxrays::Properties *resizePolicyProps) {
+SceneImpl::SceneImpl(const string &fileName, luxrays::PropertiesConstPtr resizePolicyProps) {
 	camera = std::make_unique<CameraImpl>(*this);
 
 	const string ext = luxrays::GetFileNameExt(fileName);
@@ -806,7 +810,9 @@ SceneImpl::SceneImpl(const string &fileName, const luxrays::Properties *resizePo
 		scene = slg::Scene::LoadSerialized(fileName);
 	} else if (ext == ".scn") {
 		// The file is in a text format
-		scene = std::make_shared<slg::Scene>(Properties(fileName), resizePolicyProps);
+		scene = std::make_shared<slg::Scene>(
+			std::make_shared<Properties>(fileName), resizePolicyProps
+		);
 	} else
 		throw runtime_error("Unknown scene file extension: " + fileName);
 
@@ -1049,7 +1055,7 @@ const unsigned int  SceneImpl::GetObjectCount() const {
 	return result;
 }
 
-void SceneImpl::Parse(const Properties &props) {
+void SceneImpl::Parse(PropertiesConstPtr props) {
 	API_BEGIN("{}", ToArgString(props));
 
 	// Invalidate the scene properties cache
@@ -1419,7 +1425,7 @@ auto result = TriangleMesh::AllocTrianglesBuffer(meshTriCount);
 //------------------------------------------------------------------------------
 
 RenderConfigImpl::RenderConfigImpl(
-	const Properties &props,
+	PropertiesConstPtr props,
 	std::shared_ptr<SceneImpl> scn
 ) {
 	if (scn) {
@@ -1468,7 +1474,7 @@ RenderConfigImpl::RenderConfigImpl(
 const Properties &RenderConfigImpl::GetProperties() const {
 	API_BEGIN_NOARGS();
 
-	const Properties &result = renderConfig->cfg;
+	const Properties &result = *renderConfig->cfg;
 
 	//API_RETURN("{}", ToArgString(result));
 	API_END();
@@ -1517,10 +1523,10 @@ bool RenderConfigImpl::HasCachedKernels() const {
 	return result;
 }
 
-void RenderConfigImpl::Parse(const Properties &props) {
+void RenderConfigImpl::Parse(PropertiesConstPtr props) {
 	API_BEGIN("{}", ToArgString(props));
 
-	renderConfig->Parse(props);
+	renderConfig->Parse(*props);
 
 	API_END();
 }
@@ -1537,7 +1543,7 @@ bool RenderConfigImpl::GetFilmSize(unsigned int *filmFullWidth, unsigned int *fi
 		unsigned int *filmSubRegion) const {
 	API_BEGIN("{}, {}, {}", (void *)filmFullWidth, (void *)filmFullHeight, (void *)filmSubRegion);
 
-	const bool result = slg::Film::GetFilmSize(renderConfig->cfg, filmFullWidth, filmFullHeight, filmSubRegion);
+	const bool result = slg::Film::GetFilmSize(*renderConfig->cfg, filmFullWidth, filmFullHeight, filmSubRegion);
 	
 	API_RETURN("{}", result);
 
@@ -2019,7 +2025,7 @@ const Properties &RenderSessionImpl::GetStats() const {
 	return result;
 }
 
-void RenderSessionImpl::Parse(const Properties &props) {
+void RenderSessionImpl::Parse(PropertiesConstPtr props) {
 	API_BEGIN("{}", ToArgString(props));
 
 	renderSession->Parse(props);

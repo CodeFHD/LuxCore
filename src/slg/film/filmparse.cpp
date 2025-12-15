@@ -124,20 +124,20 @@ void Film::ParseOutputs(const Properties &props) {
 			}
 			case FilmOutputs::RGB_IMAGEPIPELINE: {
 				const u_int imagePipelineIndex = props.Get(Property("film.outputs." + outputName + ".index")(0)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("index")(imagePipelineIndex));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("index")(imagePipelineIndex));
 
-				filmOutputs.Add(FilmOutputs::RGB_IMAGEPIPELINE, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::RGB_IMAGEPIPELINE, fileName, prop);
 				break;
 			}
 			case FilmOutputs::RGBA_IMAGEPIPELINE: {
 				const u_int imagePipelineIndex = props.Get(Property("film.outputs." + outputName + ".index")(0)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("index")(imagePipelineIndex));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("index")(imagePipelineIndex));
 
 				if (!initialized)
 					AddChannel(Film::ALPHA);
-				filmOutputs.Add(FilmOutputs::RGBA_IMAGEPIPELINE, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::RGBA_IMAGEPIPELINE, fileName, prop);
 				break;
 			}
 			case FilmOutputs::ALPHA: {
@@ -345,14 +345,14 @@ void Film::ParseOutputs(const Properties &props) {
 			}
 			case FilmOutputs::MATERIAL_ID_MASK: {
 				const u_int materialID = props.Get(Property("film.outputs." + outputName + ".id")(255)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("id")(materialID));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("id")(materialID));
 
 				if (!initialized) {
 					AddChannel(Film::MATERIAL_ID);
-					AddChannel(Film::MATERIAL_ID_MASK, &prop);
+					AddChannel(Film::MATERIAL_ID_MASK, prop);
 				}
-				filmOutputs.Add(FilmOutputs::MATERIAL_ID_MASK, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::MATERIAL_ID_MASK, fileName, prop);
 				break;
 			}
 			case FilmOutputs::DIRECT_SHADOW_MASK: {
@@ -369,10 +369,10 @@ void Film::ParseOutputs(const Properties &props) {
 			}
 			case FilmOutputs::RADIANCE_GROUP: {
 				const u_int lightID = props.Get(Property("film.outputs." + outputName + ".id")(0)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("id")(lightID));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("id")(lightID));
 
-				filmOutputs.Add(FilmOutputs::RADIANCE_GROUP, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::RADIANCE_GROUP, fileName, prop);
 				break;
 			}
 			case FilmOutputs::UV: {
@@ -391,14 +391,14 @@ void Film::ParseOutputs(const Properties &props) {
 			}
 			case FilmOutputs::BY_MATERIAL_ID: {
 				const u_int materialID = props.Get(Property("film.outputs." + outputName + ".id")(255)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("id")(materialID));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("id")(materialID));
 
 				if (!initialized) {
 					AddChannel(Film::MATERIAL_ID);
-					AddChannel(Film::BY_MATERIAL_ID, &prop);
+					AddChannel(Film::BY_MATERIAL_ID, prop);
 				}
-				filmOutputs.Add(FilmOutputs::BY_MATERIAL_ID, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::BY_MATERIAL_ID, fileName, prop);
 				break;
 			}
 			case FilmOutputs::IRRADIANCE: {
@@ -420,26 +420,26 @@ void Film::ParseOutputs(const Properties &props) {
 			}
 			case FilmOutputs::OBJECT_ID_MASK: {
 				const u_int materialID = props.Get(Property("film.outputs." + outputName + ".id")(255)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("id")(materialID));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("id")(materialID));
 
 				if (!initialized) {
 					AddChannel(Film::OBJECT_ID);
-					AddChannel(Film::OBJECT_ID_MASK, &prop);
+					AddChannel(Film::OBJECT_ID_MASK, prop);
 				}
-				filmOutputs.Add(FilmOutputs::OBJECT_ID_MASK, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::OBJECT_ID_MASK, fileName, prop);
 				break;
 			}
 			case FilmOutputs::BY_OBJECT_ID: {
 				const u_int materialID = props.Get(Property("film.outputs." + outputName + ".id")(255)).Get<u_int>();
-				Properties prop;
-				prop.Set(Property("id")(materialID));
+				auto prop = std::make_shared<Properties>();
+				prop->Set(Property("id")(materialID));
 
 				if (!initialized) {
 					AddChannel(Film::OBJECT_ID);
-					AddChannel(Film::BY_OBJECT_ID, &prop);
+					AddChannel(Film::BY_OBJECT_ID, prop);
 				}
-				filmOutputs.Add(FilmOutputs::BY_OBJECT_ID, fileName, &prop);
+				filmOutputs.Add(FilmOutputs::BY_OBJECT_ID, fileName, prop);
 				break;
 			}
 			case FilmOutputs::SAMPLECOUNT: {
@@ -485,7 +485,7 @@ void Film::ParseOutputs(const Properties &props) {
 			case FilmOutputs::USER_IMPORTANCE: {
 				if (!initialized)
 					AddChannel(Film::USER_IMPORTANCE);
-				filmOutputs.Add(FilmOutputs::USER_IMPORTANCE, fileName);				
+				filmOutputs.Add(FilmOutputs::USER_IMPORTANCE, fileName);
 				break;
 			}
 			case FilmOutputs::CAUSTIC: {
@@ -507,7 +507,7 @@ void Film::ParseOutputs(const Properties &props) {
 				props.Get(Property("image.filename")("image.png")).Get<string>());
 	}
 }
-		
+
 //------------------------------------------------------------------------------
 // ParseRadianceGroupsScale(s)
 //------------------------------------------------------------------------------
@@ -846,61 +846,61 @@ void Film::ParseImagePipelines(const Properties &props) {
 // Film parser
 //------------------------------------------------------------------------------
 
-void Film::Parse(const Properties &props) {
+void Film::Parse(PropertiesConstPtr props) {
 	//--------------------------------------------------------------------------
 	// Check if there is a new image pipeline definition
 	//--------------------------------------------------------------------------
 
-	if (props.HaveNamesRE("film\\.imagepipeline\\.[0-9]+\\.type") ||
-			props.HaveNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\.type"))
-		ParseImagePipelines(props);
+	if (props->HaveNamesRE("film\\.imagepipeline\\.[0-9]+\\.type") ||
+			props->HaveNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\.type"))
+		ParseImagePipelines(*props);
 
 	//--------------------------------------------------------------------------
 	// Check if there are new radiance group scales
 	//--------------------------------------------------------------------------
 
-	if (props.HaveNames("film.imagepipeline.radiancescales.") ||
-			props.HaveNamesRE("film\\.imagepipelines\\.[0-9]+\\.radiancescales\\..*"))
-		ParseRadianceGroupsScales(props);
+	if (props->HaveNames("film.imagepipeline.radiancescales.") ||
+			props->HaveNamesRE("film\\.imagepipelines\\.[0-9]+\\.radiancescales\\..*"))
+		ParseRadianceGroupsScales(*props);
 
 	//--------------------------------------------------------------------------
 	// Check if there are new output definitions
 	//--------------------------------------------------------------------------
 
-	if (props.HaveNames("film.outputs."))
-		ParseOutputs(props);
+	if (props->HaveNames("film.outputs."))
+		ParseOutputs(*props);
 
 	//--------------------------------------------------------------------------
 	// Check if there is a new halt test
 	//--------------------------------------------------------------------------
 
-	if (props.IsDefined("batch.haltnoisethreshold") || 
-		props.IsDefined("batch.haltthreshold")) {
+	if (props->IsDefined("batch.haltnoisethreshold") || 
+		props->IsDefined("batch.haltthreshold")) {
 		delete convTest;
 		convTest = NULL;
 
-		haltNoiseThreshold = props.Get(Property("batch.haltnoisethreshold")(
-				props.Get(Property("batch.haltthreshold")(-1.0)).Get<double>()
+		haltNoiseThreshold = props->Get(Property("batch.haltnoisethreshold")(
+				props->Get(Property("batch.haltthreshold")(-1.0)).Get<double>()
 				)).Get<double>();
 
 		if (haltNoiseThreshold > 0.f) {
-			haltNoiseThresholdWarmUp = props.Get(Property("batch.haltnoisethreshold.warmup")(
-						props.Get(Property("batch.haltthreshold.warmup")(64)).Get<u_int>()
+			haltNoiseThresholdWarmUp = props->Get(Property("batch.haltnoisethreshold.warmup")(
+						props->Get(Property("batch.haltthreshold.warmup")(64)).Get<u_int>()
 					)).Get<u_int>();
 
-			haltNoiseThresholdTestStep = props.Get(Property("batch.haltnoisethreshold.step")(
-						props.Get(Property("batch.haltthreshold.step")(64)).Get<u_int>()
+			haltNoiseThresholdTestStep = props->Get(Property("batch.haltnoisethreshold.step")(
+						props->Get(Property("batch.haltthreshold.step")(64)).Get<u_int>()
 					)).Get<u_int>();
 
-			haltNoiseThresholdUseFilter = props.Get(Property("batch.haltnoisethreshold.filter.enable")(
-						props.Get(Property("batch.haltthreshold.filter.enable")(true)).Get<bool>()
+			haltNoiseThresholdUseFilter = props->Get(Property("batch.haltnoisethreshold.filter.enable")(
+						props->Get(Property("batch.haltthreshold.filter.enable")(true)).Get<bool>()
 					)).Get<bool>();
 
-			haltNoiseThresholdStopRendering = props.Get(Property("batch.haltnoisethreshold.stoprendering.enable")(
-						props.Get(Property("batch.haltthreshold.stoprendering.enable")(true)).Get<bool>()
+			haltNoiseThresholdStopRendering = props->Get(Property("batch.haltnoisethreshold.stoprendering.enable")(
+						props->Get(Property("batch.haltthreshold.stoprendering.enable")(true)).Get<bool>()
 					)).Get<bool>();
 
-			haltNoiseThresholdImagePipelineIndex = props.Get(Property("batch.haltnoisethreshold.index")(0)).Get<u_int>();
+			haltNoiseThresholdImagePipelineIndex = props->Get(Property("batch.haltnoisethreshold.index")(0)).Get<u_int>();
 
 			if (haltNoiseThresholdImagePipelineIndex >= GetImagePipelineCount()) {
 				SLG_LOG("WARNING: Halt thereshold image pipeline index not available. Reverting to first image pipeline");
@@ -914,12 +914,12 @@ void Film::Parse(const Properties &props) {
 		}
 	}
 
-	if (props.IsDefined("batch.halttime"))
-		haltTime = Max(0.0, props.Get(Property("batch.halttime")(0.0)).Get<double>());
+	if (props->IsDefined("batch.halttime"))
+		haltTime = Max(0.0, props->Get(Property("batch.halttime")(0.0)).Get<double>());
 
-	if (props.IsDefined("batch.haltspp")) {
+	if (props->IsDefined("batch.haltspp")) {
 		const Property haltDefaultProp = Property("batch.haltspp")(0u);
-		const Property &haltProp = props.Get(haltDefaultProp);
+		const Property &haltProp = props->Get(haltDefaultProp);
 		switch (haltProp.GetSize()) {
 			case 1:
 				haltSPP = haltProp.Get<u_int>();
@@ -941,15 +941,15 @@ void Film::Parse(const Properties &props) {
 	// Check if there is adaptive sampling
 	//--------------------------------------------------------------------------
 
-	if (props.HaveNamesRE("film.noiseestimation\\..+")) {
+	if (props->HaveNamesRE("film.noiseestimation\\..+")) {
 		delete noiseEstimation;
 		noiseEstimation = NULL;
 
-		noiseEstimationWarmUp = props.Get(Property("film.noiseestimation.warmup")(32)).Get<u_int>();
-		noiseEstimationTestStep = props.Get(Property("film.noiseestimation.step")(32)).Get<u_int>();
-		noiseEstimationFilterScale = props.Get(Property("film.noiseestimation.filter.scale")(4)).Get<u_int>();
+		noiseEstimationWarmUp = props->Get(Property("film.noiseestimation.warmup")(32)).Get<u_int>();
+		noiseEstimationTestStep = props->Get(Property("film.noiseestimation.step")(32)).Get<u_int>();
+		noiseEstimationFilterScale = props->Get(Property("film.noiseestimation.filter.scale")(4)).Get<u_int>();
 
-		noiseEstimationImagePipelineIndex = props.Get(Property("film.noiseestimation.index")(0)).Get<u_int>();
+		noiseEstimationImagePipelineIndex = props->Get(Property("film.noiseestimation.index")(0)).Get<u_int>();
 		if (noiseEstimationImagePipelineIndex >= GetImagePipelineCount()) {
 			SLG_LOG("WARNING: Noise estimation image pipeline index not available. Reverting to first image pipeline");
 			noiseEstimationImagePipelineIndex = 0;

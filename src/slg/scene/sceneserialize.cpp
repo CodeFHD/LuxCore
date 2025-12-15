@@ -67,7 +67,7 @@ template<class Archive> void Scene::load(Archive &ar, const u_int version) {
 	ar & imgMapCache;
 
 	// Load camera, material, texture, etc. definitions
-	luxrays::Properties sceneProps;
+	auto sceneProps = std::make_shared<luxrays::Properties>();
 	ar & sceneProps;
 
 	// Load flags

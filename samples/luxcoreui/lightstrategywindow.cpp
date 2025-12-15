@@ -50,7 +50,8 @@ void LightStrategyWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void LightStrategyWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(props.GetAllProperties("lightstrategy"));
+    auto subprops = std::make_shared<Properties>(props.GetAllProperties("lightstrategy"));
+	app->RenderConfigParse(subprops);
 }
 
 bool LightStrategyWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {

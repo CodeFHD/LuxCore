@@ -53,7 +53,7 @@ void PixelFilterWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void PixelFilterWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(props.GetAllProperties("film.filter"));
+	app->RenderConfigParse(std::make_shared<Properties>(props.GetAllProperties("film.filter")));
 }
 
 bool PixelFilterWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {

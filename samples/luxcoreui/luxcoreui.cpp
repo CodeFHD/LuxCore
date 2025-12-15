@@ -168,7 +168,8 @@ int main(int argc, char *argv[]) {
     } else if (configFileNameExt == ".lxs") {
       // It is a LuxRender SDL file
       LA_LOG("Parsing LuxRender SDL file...");
-      Properties renderConfigProps, sceneProps;
+      auto renderConfigProps = std::make_shared<Properties>();
+      auto sceneProps = std::make_shared<Properties>();
       luxcore::ParseLXS(configFileName, renderConfigProps, sceneProps);
 
       // For debugging
@@ -177,21 +178,26 @@ int main(int argc, char *argv[]) {
 
       auto scene = Scene::Create();
       scene->Parse(sceneProps);
-      config = RenderConfig::Create(renderConfigProps.Set(cmdLineProp), scene);
+      renderConfigProps->Set(cmdLineProp);
+      config = RenderConfig::Create(renderConfigProps, scene);
       config->DeleteSceneOnExit();
     } else if (configFileNameExt == ".cfg") {
       // It is a LuxCore SDL file
-      config = RenderConfig::Create(Properties(configFileName).Set(cmdLineProp));
+      auto props = std::make_shared<Properties>(configFileName);
+      props->Set(cmdLineProp);
+      config = RenderConfig::Create(props);
     } else if (configFileNameExt == ".bcf") {
       // It is a LuxCore RenderConfig binary archive
+      auto props = std::make_shared<Properties>(cmdLineProp);
       config = RenderConfig::Create(configFileName);
-      config->Parse(cmdLineProp);
+      config->Parse(props);
     } else if (configFileNameExt == ".rsm") {
       // It is a rendering resume file
+      auto props = std::make_shared<Properties>(cmdLineProp);
       startRenderState.reset();
       startFilm.reset();
       config = RenderConfig::Create(configFileName, startRenderState, startFilm);
-      config->Parse(cmdLineProp);
+      config->Parse(props);
     } else
       throw runtime_error("Unknown file extension: " + configFileName);
 

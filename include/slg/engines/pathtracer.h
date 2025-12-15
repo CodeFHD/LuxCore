@@ -88,7 +88,10 @@ public:
 	void SetPhotonGICache(const PhotonGICache *cache) { photonGICache = cache; }
 	const PhotonGICache *GetPhotonGICache() const { return photonGICache; }
 
-	void ParseOptions(const luxrays::Properties &cfg, const luxrays::Properties &defaultProps);
+	void ParseOptions(
+		luxrays::PropertiesConstPtr cfg,
+		const luxrays::Properties &defaultProps
+	);
 
 	DirectLightResult DirectLightSampling(
 		luxrays::IntersectionDevice *device, SceneConstPtr scene,

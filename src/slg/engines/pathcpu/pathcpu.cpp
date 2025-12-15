@@ -45,7 +45,7 @@ void PathCPURenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_PIXEL_NORMALIZED);
 
 	// pathTracer has not yet been initialized
-	const bool hybridBackForwardEnable = renderConfig.cfg.Get(PathTracer::GetDefaultProps().
+	const bool hybridBackForwardEnable = renderConfig.cfg->Get(PathTracer::GetDefaultProps().
 			Get("path.hybridbackforward.enable")).Get<bool>();
 	if (hybridBackForwardEnable)
 		film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
@@ -60,24 +60,24 @@ RenderStatePtr PathCPURenderEngine::GetRenderState() {
 }
 
 void PathCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
 	//--------------------------------------------------------------------------
 
 	if (GetType() == RTPATHCPU) {
-		const string samplerType = cfg.Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
+		const string samplerType = cfg->Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
 		if (samplerType != "RTPATHCPUSAMPLER")
 			throw runtime_error("RTPATHCPU render engine can use only RTPATHCPUSAMPLER");
 	} else
-		CheckSamplersForNoTile(RenderEngineType2String(GetType()), cfg);
+		CheckSamplersForNoTile(RenderEngineType2String(GetType()), *cfg);
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
 	//--------------------------------------------------------------------------
 
-	const string samplerType = cfg.Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
+	const string samplerType = cfg->Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
 	if (GetType() == RTPATHCPU) {
 		if (samplerType != "RTPATHCPUSAMPLER")
 			throw runtime_error("RTPATHCPU render engine can use only RTPATHCPUSAMPLER");
@@ -119,7 +119,7 @@ void PathCPURenderEngine::StartLockLess() {
 
 	// note: photonGICache could have been restored from the render state
 	if ((GetType() != RTPATHCPU) && !photonGICache) {
-		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, *cfg);
 
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)

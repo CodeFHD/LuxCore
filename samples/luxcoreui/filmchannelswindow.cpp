@@ -326,12 +326,15 @@ void FilmChannelsWindow::DrawChannelInfo(const string &label, const Film::FilmCh
 						if (ImGui::InputInt("Scales", &ival))
 							props << Property(denoiserPrefix + ".scales")(ival);
 						LuxCoreApp::HelpMarker((denoiserPrefix + ".scales").c_str());
-						
+
 						if (ImGui::Button("Apply")) {
 							const Properties &cfgProps = app->config->ToProperties();
-							const Properties newImagePipelineProps =
-								cfgProps.GetAllProperties(Property::PopPrefix(denoiserPrefix)) <<
-								props;
+							auto newImagePipelineProps = std::make_shared<const Properties>
+							(
+								cfgProps.GetAllProperties(
+									Property::PopPrefix(denoiserPrefix)
+								) << props
+							);
 							app->session->Parse(newImagePipelineProps);
 
 							// Check if I have to refresh the channel window

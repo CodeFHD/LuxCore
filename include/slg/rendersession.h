@@ -59,7 +59,7 @@ public:
 
 	RenderStatePtr GetRenderState();
 
-	void Parse(const luxrays::Properties &props);
+	void Parse(luxrays::PropertiesConstPtr props);
 
 	RenderConfigRef renderConfig;
 	RenderEngineUPtr renderEngine;

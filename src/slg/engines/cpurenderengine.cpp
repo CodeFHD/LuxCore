@@ -102,7 +102,7 @@ void CPURenderThread::WaitForDone() const {
 
 CPURenderEngine::CPURenderEngine(RenderConfigConstRef cfg) : RenderEngine(cfg) {
 	// I have to use u_int because Property::Get<size_t>() is not defined
-	const size_t renderThreadCount =  Max<u_int>(1u, cfg.cfg.Get(GetDefaultProps().Get("native.threads.count")).Get<u_int>());
+	const size_t renderThreadCount =  Max<u_int>(1u, cfg.cfg->Get(GetDefaultProps().Get("native.threads.count")).Get<u_int>());
 
 	//--------------------------------------------------------------------------
 	// Allocate devices

@@ -69,12 +69,12 @@ void RTPathOCLRenderEngine::StartLockLess() {
 	// Disable denoiser statistics collection
 	film->GetDenoiser().SetEnabled(false);
 
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
-	previewResolutionReduction = RoundUpPow2(Min(Max(1, cfg.Get(GetDefaultProps().Get("rtpath.resolutionreduction.preview")).Get<int>()), 64));
-	previewResolutionReductionStep = Min(Max(1, cfg.Get(GetDefaultProps().Get("rtpath.resolutionreduction.preview.step")).Get<int>()), 64);
+	previewResolutionReduction = RoundUpPow2(Min(Max(1, cfg->Get(GetDefaultProps().Get("rtpath.resolutionreduction.preview")).Get<int>()), 64));
+	previewResolutionReductionStep = Min(Max(1, cfg->Get(GetDefaultProps().Get("rtpath.resolutionreduction.preview.step")).Get<int>()), 64);
 
-	resolutionReduction = RoundUpPow2(Min(Max(1, cfg.Get(GetDefaultProps().Get("rtpath.resolutionreduction")).Get<int>()), 64));
+	resolutionReduction = RoundUpPow2(Min(Max(1, cfg->Get(GetDefaultProps().Get("rtpath.resolutionreduction")).Get<int>()), 64));
 
 	TilePathOCLRenderEngine::StartLockLess();
 

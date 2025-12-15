@@ -206,29 +206,35 @@ int main(int argc, char *argv[]) {
 		if (configFileNameExt == ".lxs") {
 			// It is a LuxRender SDL file
 			LC_LOG("Parsing LuxRender SDL file...");
-			Properties renderConfigProps, sceneProps;
+			auto renderConfigProps = std::make_shared<Properties>();
+			auto sceneProps = std::make_shared<Properties>();
 			luxcore::ParseLXS(configFileName, renderConfigProps, sceneProps);
 
 			// For debugging
 			//LC_LOG("RenderConfig: \n" << renderConfigProps);
 			//LC_LOG("Scene: \n" << sceneProps);
 
-			renderConfigProps.Set(cmdLineProp);
+			renderConfigProps->Set(cmdLineProp);
 
 			scene = Scene::Create();
 			scene->Parse(sceneProps);
-			config = RenderConfig::Create(renderConfigProps.Set(cmdLineProp), scene);
+			renderConfigProps->Set(cmdLineProp);
+			config = RenderConfig::Create(renderConfigProps, scene);
 		} else if (configFileNameExt == ".cfg") {
 			// It is a LuxCore SDL file
-			config = RenderConfig::Create(Properties(configFileName).Set(cmdLineProp));
+			auto props = std::make_shared<Properties>(configFileName);
+			props->Set(cmdLineProp);
+			config = RenderConfig::Create(props);
 		} else if (configFileNameExt == ".bcf") {
 			// It is a LuxCore RenderConfig binary archive
 			config = RenderConfig::Create(configFileName);
-			config->Parse(cmdLineProp);
+			auto props = std::make_shared<Properties>(cmdLineProp);
+			config->Parse(props);
 		} else if (configFileNameExt == ".rsm") {
 			// It is a rendering resume file
 			config = RenderConfig::Create(configFileName, startRenderState, startFilm);
-			config->Parse(cmdLineProp);
+			auto props = std::make_shared<Properties>(cmdLineProp);
+			config->Parse(props);
 		} else
 			throw runtime_error("Unknown file extension: " + configFileName);
 
@@ -243,7 +249,9 @@ int main(int argc, char *argv[]) {
 		const bool fileSaverRenderEngine = (config->GetProperty("renderengine.type").Get<string>() == "FILESAVER");
 		if (!fileSaverRenderEngine) {
 			// Force the film update at 2.5secs (mostly used by PathOCL)
-			config->Parse(Properties().Set(Property("screen.refresh.interval")(2500)));
+			auto props = std::make_shared<Properties>();
+			props->Set(Property("screen.refresh.interval")(2500));
+			config->Parse(props);
 		}
 		
 		BatchRendering(config, startRenderState, startFilm, showDevicesStats);

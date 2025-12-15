@@ -33,7 +33,9 @@ public:
 	virtual ~EpsilonWindow() { }
 
 private:
-	luxrays::Properties GetEpsilonProperties(const luxrays::Properties &cfgProps) const;
+        std::shared_ptr<luxrays::Properties> GetEpsilonProperties(
+            const luxrays::Properties &cfgProps
+          ) const;
 
 	virtual void RefreshObjectProperties(luxrays::Properties &props);
 	virtual void ParseObjectProperties(const luxrays::Properties &props);

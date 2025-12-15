@@ -25,6 +25,7 @@
 #include "luxrays/utils/properties.h"
 #include "luxrays/utils/proputils.h"
 #include "luxrays/utils/serializationutils.h"
+#include "luxrays/usings.h"
 
 namespace slg {
 
@@ -64,14 +65,14 @@ public:
 	bool HasType(const FilmOutputType type) const { return (std::count(types.begin(), types.end(), type) > 0); }
 	FilmOutputType GetType(const u_int index) const { return types[index]; }
 	const std::string &GetFileName(const u_int index) const { return fileNames[index]; }
-	const luxrays::Properties &GetProperties(const u_int index) const { return outputProps[index]; }
+	const luxrays::PropertiesConstPtr GetProperties(const u_int index) const { return outputProps[index]; }
 
 	void Add(const FilmOutputType type, const std::string &fileName,
-		const luxrays::Properties *prop = NULL);
+		luxrays::PropertiesConstPtr prop = NULL);
 
 	bool UseSafeSave() const { return safeSave; }
 	void SetSafeSave(const bool v) { safeSave = v; }
-	
+
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	static FilmOutputType String2FilmOutputType(const std::string &type);
 	static const std::string FilmOutputType2String(const FilmOutputType type);
@@ -88,7 +89,7 @@ private:
 
 	std::vector<FilmOutputType> types;
 	std::vector<std::string> fileNames;
-	std::vector<luxrays::Properties> outputProps;
+	std::vector<luxrays::PropertiesConstPtr> outputProps;
 
 	bool safeSave;
 };

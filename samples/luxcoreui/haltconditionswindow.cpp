@@ -45,7 +45,7 @@ void HaltConditionsWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void HaltConditionsWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(props.GetAllProperties("batch.halt"));
+	app->RenderConfigParse(std::make_shared<luxrays::Properties>(props.GetAllProperties("batch.halt")));
 }
 
 bool HaltConditionsWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {

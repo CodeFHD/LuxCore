@@ -47,15 +47,15 @@ using namespace std;
 //------------------------------------------------------------------------------
 
 Blob::Blob(const Blob &blob) {
-	data = new char[blob.size];
+	data = std::make_unique<char[]>(blob.size);
 	size = blob.size;
 
-	copy(blob.data, blob.data + blob.size, data);
+	std::copy(blob.data.get(), blob.data.get() + blob.size, data.get());
 }
 
 Blob::Blob(const char *d, const size_t s) {
-	data = new char[s];
-	copy(d, d + s, data);
+	data = std::make_unique<char[]>(s);
+	copy(d, d + s, data.get());
 
 	size = s;
 }
@@ -73,21 +73,16 @@ Blob::Blob(const string &base64Data) {
 	string decoded(binary_t(base64Data.begin() + 2), binary_t(base64Data.end() - 2));
 
 	size = decoded.length();
-	data = new char[size];	
-	copy(decoded.begin(), decoded.end(), data);
-}
-
-Blob::~Blob() {
-	delete[] data;
+	data = std::make_unique<char[]>(size);
+	std::copy(decoded.begin(), decoded.end(), data.get());
 }
 
 Blob &Blob::operator=(const Blob &blob) {
-	delete[] data;
 
-	data = new char[blob.size];
+	data.reset(new char[blob.size]);
 	size = blob.size;
 
-	copy(blob.data, blob.data + blob.size, data);
+	copy(blob.data.get(), blob.data.get() + blob.size, data.get());
 
 	return *this;
 }
@@ -167,6 +162,7 @@ PropertyValue::PropertyValue(const Blob &val) : dataType(BLOB_VAL) {
 PropertyValue::~PropertyValue() noexcept(false) {
 	switch (dataType) {
 		case NONE_VAL:
+			std::cerr << "Warning: None type in PropertyValue::~PropertyValue";
 		case BOOL_VAL:
 		case INT_VAL:
 		case UINT_VAL:

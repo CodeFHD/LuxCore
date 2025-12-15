@@ -50,17 +50,20 @@ using namespace slg;
 // Scene
 //------------------------------------------------------------------------------
 
-Scene::Scene(const luxrays::Properties *resizePolicyProps) {
+Scene::Scene(luxrays::PropertiesConstPtr resizePolicyProps) {
 	Init(resizePolicyProps);
 }
 
-Scene::Scene(const Properties &scnProps, const luxrays::Properties *resizePolicyProps) {
+Scene::Scene(
+	PropertiesConstPtr scnProps,
+	PropertiesConstPtr resizePolicyProps
+) {
 	Init(resizePolicyProps);
 
 	Parse(scnProps);
 }
 
-void Scene::Init(const luxrays::Properties *resizePolicyProps) {
+void Scene::Init(luxrays::PropertiesConstPtr resizePolicyProps) {
 	defaultWorldVolume = NULL;
 	// Just in case there is an unexpected exception during the scene loading
     camera = NULL;
@@ -301,10 +304,10 @@ bool Scene::IsMeshDefined(const string &meshName) const {
 	return extMeshCache.IsExtMeshDefined(meshName);
 }
 
-void Scene::Parse(const Properties &props) {
+void Scene::Parse(PropertiesConstPtr props) {
 	if (enableParsePrint) {
-		SDL_LOG("========================Scene::Parse()=========================" << endl <<
-				props);
+		SDL_LOG("========================Scene::Parse()========================="
+		<< endl << *props);
 		SDL_LOG("===============================================================");
 	}
 
@@ -312,19 +315,19 @@ void Scene::Parse(const Properties &props) {
 	// Read all textures
 	//--------------------------------------------------------------------------
 
-	ParseTextures(props);
+	ParseTextures(*props);
 
 	//--------------------------------------------------------------------------
 	// Read all volumes
 	//--------------------------------------------------------------------------
 
-	ParseVolumes(props);
+	ParseVolumes(*props);
 
 	//--------------------------------------------------------------------------
 	// Read all materials
 	//--------------------------------------------------------------------------
 
-	ParseMaterials(props);
+	ParseMaterials(*props);
 
 	//--------------------------------------------------------------------------
 	// Read camera position and target
@@ -332,25 +335,25 @@ void Scene::Parse(const Properties &props) {
 	// note: doing the parsing after volumes because it may reference a volume
 	//--------------------------------------------------------------------------
 
-	ParseCamera(props);
+	ParseCamera(*props);
 
 	//--------------------------------------------------------------------------
 	// Read all shapes
 	//--------------------------------------------------------------------------
 
-	ParseShapes(props);
+	ParseShapes(*props);
 
 	//--------------------------------------------------------------------------
 	// Read all objects
 	//--------------------------------------------------------------------------
 
-	ParseObjects(props);
+	ParseObjects(*props);
 
 	//--------------------------------------------------------------------------
 	// Read all env. lights
 	//--------------------------------------------------------------------------
 
-	ParseLights(props);
+	ParseLights(*props);
 }
 
 void Scene::RemoveUnusedImageMaps() {

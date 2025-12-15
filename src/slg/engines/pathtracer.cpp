@@ -996,20 +996,23 @@ void PathTracer::RenderSample(PathTracerThreadState &state) const {
 // ParseOptions
 //------------------------------------------------------------------------------
 
-void PathTracer::ParseOptions(const luxrays::Properties &cfg, const luxrays::Properties &defaultProps) {
+void PathTracer::ParseOptions(
+	luxrays::PropertiesConstPtr cfg,
+	const luxrays::Properties &defaultProps
+) {
 	// Path depth settings
-	maxPathDepth.depth = Max(0, cfg.Get(defaultProps.Get("path.pathdepth.total")).Get<int>());
-	maxPathDepth.diffuseDepth = Max(0, cfg.Get(defaultProps.Get("path.pathdepth.diffuse")).Get<int>());
-	maxPathDepth.glossyDepth = Max(0, cfg.Get(defaultProps.Get("path.pathdepth.glossy")).Get<int>());
-	maxPathDepth.specularDepth = Max(0, cfg.Get(defaultProps.Get("path.pathdepth.specular")).Get<int>());
+	maxPathDepth.depth = Max(0, cfg->Get(defaultProps.Get("path.pathdepth.total")).Get<int>());
+	maxPathDepth.diffuseDepth = Max(0, cfg->Get(defaultProps.Get("path.pathdepth.diffuse")).Get<int>());
+	maxPathDepth.glossyDepth = Max(0, cfg->Get(defaultProps.Get("path.pathdepth.glossy")).Get<int>());
+	maxPathDepth.specularDepth = Max(0, cfg->Get(defaultProps.Get("path.pathdepth.specular")).Get<int>());
 
 	// For compatibility with the past
-	if (cfg.IsDefined("path.maxdepth") &&
-			!cfg.IsDefined("path.pathdepth.total") &&
-			!cfg.IsDefined("path.pathdepth.diffuse") &&
-			!cfg.IsDefined("path.pathdepth.glossy") &&
-			!cfg.IsDefined("path.pathdepth.specular")) {
-		const u_int maxDepth = Max(0, cfg.Get("path.maxdepth").Get<int>());
+	if (cfg->IsDefined("path.maxdepth") &&
+			!cfg->IsDefined("path.pathdepth.total") &&
+			!cfg->IsDefined("path.pathdepth.diffuse") &&
+			!cfg->IsDefined("path.pathdepth.glossy") &&
+			!cfg->IsDefined("path.pathdepth.specular")) {
+		const u_int maxDepth = Max(0, cfg->Get("path.maxdepth").Get<int>());
 		maxPathDepth.depth = maxDepth;
 		maxPathDepth.diffuseDepth = maxDepth;
 		maxPathDepth.glossyDepth = maxDepth;
@@ -1017,30 +1020,30 @@ void PathTracer::ParseOptions(const luxrays::Properties &cfg, const luxrays::Pro
 	}
 
 	// Russian Roulette settings
-	rrDepth = (u_int)Max(1, cfg.Get(defaultProps.Get("path.russianroulette.depth")).Get<int>());
-	rrImportanceCap = Clamp(cfg.Get(defaultProps.Get("path.russianroulette.cap")).Get<double>(), 0.0, 1.0);
+	rrDepth = (u_int)Max(1, cfg->Get(defaultProps.Get("path.russianroulette.depth")).Get<int>());
+	rrImportanceCap = Clamp(cfg->Get(defaultProps.Get("path.russianroulette.cap")).Get<double>(), 0.0, 1.0);
 
 	// Clamping settings
 	// clamping.radiance.maxvalue is the old radiance clamping, now converted in variance clamping
-	sqrtVarianceClampMaxValue = cfg.Get(Property("path.clamping.radiance.maxvalue")(0.0)).Get<double>();
-	if (cfg.IsDefined("path.clamping.variance.maxvalue"))
-		sqrtVarianceClampMaxValue = cfg.Get(defaultProps.Get("path.clamping.variance.maxvalue")).Get<double>();
+	sqrtVarianceClampMaxValue = cfg->Get(Property("path.clamping.radiance.maxvalue")(0.0)).Get<double>();
+	if (cfg->IsDefined("path.clamping.variance.maxvalue"))
+		sqrtVarianceClampMaxValue = cfg->Get(defaultProps.Get("path.clamping.variance.maxvalue")).Get<double>();
 	sqrtVarianceClampMaxValue = Max(0.f, sqrtVarianceClampMaxValue);
 
-	forceBlackBackground = cfg.Get(defaultProps.Get("path.forceblackbackground.enable")).Get<bool>();
+	forceBlackBackground = cfg->Get(defaultProps.Get("path.forceblackbackground.enable")).Get<bool>();
 	
-	hybridBackForwardEnable = cfg.Get(defaultProps.Get("path.hybridbackforward.enable")).Get<bool>();
+	hybridBackForwardEnable = cfg->Get(defaultProps.Get("path.hybridbackforward.enable")).Get<bool>();
 	// hybridBackForwardGlossinessThreshold is used by LIGHTCPU when PSR is enabled
 	// so I have always to set the value
 	hybridBackForwardGlossinessThreshold = .05f;
 	if (hybridBackForwardEnable) {
-		hybridBackForwardPartition = Clamp(cfg.Get(defaultProps.Get("path.hybridbackforward.partition")).Get<double>(), 0.0, 1.0);
-		hybridBackForwardGlossinessThreshold = Clamp(cfg.Get(defaultProps.Get("path.hybridbackforward.glossinessthreshold")).Get<double>(), 0.0, 1.0);
+		hybridBackForwardPartition = Clamp(cfg->Get(defaultProps.Get("path.hybridbackforward.partition")).Get<double>(), 0.0, 1.0);
+		hybridBackForwardGlossinessThreshold = Clamp(cfg->Get(defaultProps.Get("path.hybridbackforward.glossinessthreshold")).Get<double>(), 0.0, 1.0);
 	}
 
 	// Albedo AOV settings
-	albedoSpecularSetting = String2AlbedoSpecularSetting(cfg.Get(defaultProps.Get("path.albedospecular.type")).Get<string>());
-	albedoSpecularGlossinessThreshold = Max(cfg.Get(defaultProps.Get("path.albedospecular.glossinessthreshold")).Get<double>(), 0.0);
+	albedoSpecularSetting = String2AlbedoSpecularSetting(cfg->Get(defaultProps.Get("path.albedospecular.type")).Get<string>());
+	albedoSpecularGlossinessThreshold = Max(cfg->Get(defaultProps.Get("path.albedospecular.glossinessthreshold")).Get<double>(), 0.0);
 
 	// Update eye sample size
 	eyeSampleBootSize = 5;

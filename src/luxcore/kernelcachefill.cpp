@@ -129,8 +129,8 @@ static void CreateBox(auto scene, const string &objName, const string &meshName,
 	}
 
 	// Add the object to the scene
-	Properties props;
-	props.SetFromString(
+	PropertiesPtr props = std::make_shared<Properties>();;
+	props->SetFromString(
 		"scene.objects." + objName + ".shape = " + meshName + "\n"
 		"scene.objects." + objName + ".material = " + matName + "\n"
 		);
@@ -146,9 +146,9 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 	// Build the scene to render
 	auto scene = Scene::Create();
 
-	Properties scnProps = scnSetUpProps;
+	auto scnProps = std::make_shared<Properties>(scnSetUpProps);
 
-	scnProps <<
+	*scnProps <<
 			Property("scene.camera.lookat.orig")(1.f , 6.f , 3.f) <<
 			Property("scene.camera.lookat.target")(0.f , 0.f , .5f) <<
 			Property("scene.camera.fieldofview")(60.f);
@@ -183,9 +183,9 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 			continue;
 		}
 
-		scnProps << Property("scene.lights." + lightType + "_light.type")(lightType);
+		*scnProps << Property("scene.lights." + lightType + "_light.type")(lightType);
 		if (lightType == "mappoint")
-			scnProps << Property("scene.lights." + lightType + "_light.mapfile")("image.png");
+			*scnProps << Property("scene.lights." + lightType + "_light.mapfile")("image.png");
 	}
 
 	// Parse the scene definition properties
@@ -195,13 +195,22 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 	if (geometrySetUp == "test") {
 		// Define materials and meshes
 		if (hasTriangleLight) {
-			Properties props;
-			props <<
+			PropertiesPtr props = std::make_shared<Properties>();
+			*props <<
 				Property("scene.materials.triangle_light.type")("matte") <<
-				Property("scene.materials.triangle_light.emission")(1000000.f, 1000000.f, 1000000.f);
+				Property("scene.materials.triangle_light.emission")(
+					1000000.f, 1000000.f, 1000000.f
+				);
 			scene->Parse(props);
 
-			CreateBox(scene, "box_triangle_light", "mesh_box_triangle_light", "triangle_light", false, BBox(Point(-1.75f, 1.5f, .75f), Point(-1.5f, 1.75f, .5f)));
+			CreateBox(
+				scene,
+				"box_triangle_light",
+				"mesh_box_triangle_light",
+				"triangle_light",
+				false,
+				BBox(Point(-1.75f, 1.5f, .75f), Point(-1.5f, 1.75f, .5f))
+			);
 		}
 
 		// One box for each material
@@ -209,8 +218,8 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 		for (u_int i = 0; i < materialSetUpProp.GetSize(); ++i) {
 			const string materialType = materialSetUpProp.Get<string>(i);
 
-			Properties props;
-			props << Property("scene.materials." + materialType + "_mat.type")(materialType);
+			auto props = std::make_shared<Properties>();
+			*props << Property("scene.materials." + materialType + "_mat.type")(materialType);
 			scene->Parse(props);
 
 			CreateBox(scene, "mbox_" + materialType, "mesh_mbox_" + materialType, materialType + "_mat", false, BBox(Point(-1.75f, 1.5f, .75f + i), Point(-1.5f, 1.75f, .5f + i)));
@@ -221,8 +230,8 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 		for (u_int i = 0; i < textureSetUpProp.GetSize(); ++i) {
 			const string textureType = textureSetUpProp.Get<string>(i);
 
-			Properties props;
-			props <<
+			auto props = std::make_shared<Properties>();
+			*props <<
 					Property("scene.textures." + textureType + "_tex.type")(textureType) <<
 					Property("scene.materials." + textureType + "_tmat.type")("matte") <<
 					Property("scene.materials." + textureType + "_tmat.kd")(textureType + "_tex");
@@ -238,11 +247,11 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 
 		scene->Parse(scnProps);
 	}
-	
+
 	// Do the render
 
-	Properties cfgProps = cfgSetUpProps;
-	cfgProps <<
+	auto cfgProps = std::make_shared<Properties>(cfgSetUpProps);
+	*cfgProps <<
 			Property("film.outputs.1.type")("RGB_IMAGEPIPELINE") <<
 			Property("film.outputs.1.filename")("image.png");
 
@@ -256,7 +265,7 @@ static void RenderTestScene(const Properties &cfgSetUpProps, const Properties &s
 
 	// Save the rendered image
 	//session->GetFilm().SaveOutputs();
-	
+
 	// Stop the rendering
 	session->Stop();
 

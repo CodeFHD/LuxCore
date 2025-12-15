@@ -85,9 +85,9 @@ void TilePathOCLRenderEngine::InitTileRepository() {
 		delete tileRepository;
 	tileRepository = NULL;
 
-	// Work on a copy of configuration properties so I can edit tile.size if
+	// Make a copy of configuration properties so I can edit tile.size if
 	// required
-	Properties cfgProps = renderConfig.cfg;
+	Properties cfgProps(*renderConfig.cfg);
 	if (GetType() == RTPATHOCL) {
 		cfgProps.Delete("tile.size");
 
@@ -128,14 +128,14 @@ RenderStatePtr TilePathOCLRenderEngine::GetRenderState() {
 }
 
 void TilePathOCLRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
 	//--------------------------------------------------------------------------
 
 	// Sobol is the default sampler (but it can not work with TILEPATH)
-	CheckSamplersForTile(RenderEngineType2String(GetType()), cfg);
+	CheckSamplersForTile(RenderEngineType2String(GetType()), *cfg);
 
 	//--------------------------------------------------------------------------
 	// Initialize rendering parameters
@@ -147,10 +147,10 @@ void TilePathOCLRenderEngine::StartLockLess() {
 
 	// TilePath specific settings
 	aaSamples = (GetType() == TILEPATHOCL) ?
-		Max(1, cfg.Get(defaultProps.Get("tilepath.sampling.aa.size")).Get<int>()) :
+		Max(1, cfg->Get(defaultProps.Get("tilepath.sampling.aa.size")).Get<int>()) :
 		1;
 
-	maxTilePerDevice = cfg.Get(Property("tilepathocl.devices.maxtiles")(16)).Get<u_int>();
+	maxTilePerDevice = cfg->Get(Property("tilepathocl.devices.maxtiles")(16)).Get<u_int>();
 	// pathTracer must be configured here because it is then used
 	// to set tileRepository->varianceClamping, etc.
 	pathTracer.ParseOptions(cfg, defaultProps);

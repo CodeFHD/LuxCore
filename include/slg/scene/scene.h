@@ -81,9 +81,11 @@ class SampleResult;
 class Scene : public std::enable_shared_from_this<Scene> {
 public:
 	// Constructor used to create a scene by calling methods
-	Scene(const luxrays::Properties *resizePolicyProps = nullptr);
+	Scene(luxrays::PropertiesConstPtr resizePolicyProps = nullptr);
 	// Constructor used to create a scene from properties
-	Scene(const luxrays::Properties &scnProps, const luxrays::Properties *resizePolicyProps = nullptr);
+	Scene(
+		luxrays::PropertiesConstPtr scnProps,
+		luxrays::PropertiesConstPtr resizePolicyProps);
 	~Scene();
 
 	bool Intersect(luxrays::IntersectionDevice *device, const SceneRayType rayType, PathVolumeInfo *volInfo,
@@ -143,7 +145,7 @@ public:
 	bool IsMaterialDefined(const std::string &matName) const;
 	bool IsMeshDefined(const std::string &meshName) const;
 
-	void Parse(const luxrays::Properties &props);
+	void Parse(luxrays::PropertiesConstPtr props);
 	void DeleteObject(const std::string &objName);
 	void DeleteObjects(std::vector<std::string> &objNames);
 	void DeleteLight(const std::string &lightName);
@@ -194,7 +196,7 @@ public:
 private:
 	ColorSpaceConverters colorSpaceConv;
 
-	void Init(const luxrays::Properties *resizePolicyProps);
+	void Init(luxrays::PropertiesConstPtr resizePolicyProps);
 
 	void ParseCamera(const luxrays::Properties &props);
 	void ParseTextures(const luxrays::Properties &props);

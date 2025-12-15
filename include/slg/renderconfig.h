@@ -35,11 +35,11 @@ class RenderConfig {
 public:
 
 	static RenderConfigUPtr Create(
-		const luxrays::Properties &props,
+		luxrays::PropertiesConstPtr props,
 		ScenePtr scene = nullptr
 	);
 
-	RenderConfig(Private, const luxrays::Properties &props, ScenePtr scene = nullptr);
+	RenderConfig(Private, luxrays::PropertiesConstPtr props, ScenePtr scene = nullptr);
 
 	bool HasCachedKernels();
 
@@ -82,7 +82,7 @@ public:
 		const luxrays::Properties &additionalCfg
 	);
 
-	luxrays::Properties cfg;
+	luxrays::PropertiesPtr cfg;
 	ScenePtr scene;
 
 	friend class boost::serialization::access;

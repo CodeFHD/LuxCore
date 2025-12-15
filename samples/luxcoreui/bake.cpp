@@ -135,5 +135,5 @@ void LuxCoreApp::BakeAllSceneObjects() {
 	completeBakedCfgProps.Save("render-bakedallobjects.cfg");
 	
 	// Start the backing rendering
-	RenderConfigParse(completeBakeCfgProps);
+	RenderConfigParse(std::make_shared<Properties>(completeBakeCfgProps));
 }

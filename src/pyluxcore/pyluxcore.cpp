@@ -607,7 +607,7 @@ static luxrays::Property *Property_InitWithList(const py::str &name, const py::l
 // Glue for Properties class
 //------------------------------------------------------------------------------
 
-static py::list Properties_GetAllNamesRE(luxrays::Properties *props, const std::string &pattern) {
+static py::list Properties_GetAllNamesRE(luxrays::PropertiesConstPtr props, const std::string &pattern) {
   py::list l;
   const std::vector<std::string> &keys = props->GetAllNamesRE(pattern);
   for(const std::string &key: keys) {
@@ -617,7 +617,7 @@ static py::list Properties_GetAllNamesRE(luxrays::Properties *props, const std::
   return l;
 }
 
-static py::list Properties_GetAllNames1(luxrays::Properties *props) {
+static py::list Properties_GetAllNames1(luxrays::PropertiesPtr props) {
   py::list l;
   const std::vector<std::string> &keys = props->GetAllNames();
   for(const std::string &key: keys) {
@@ -627,7 +627,7 @@ static py::list Properties_GetAllNames1(luxrays::Properties *props) {
   return l;
 }
 
-static py::list Properties_GetAllNames2(luxrays::Properties *props, const std::string &prefix) {
+static py::list Properties_GetAllNames2(luxrays::PropertiesPtr props, const std::string &prefix) {
   py::list l;
   const std::vector<std::string> keys = props->GetAllNames(prefix);
   for(const std::string &key: keys) {
@@ -637,7 +637,7 @@ static py::list Properties_GetAllNames2(luxrays::Properties *props, const std::s
   return l;
 }
 
-static py::list Properties_GetAllUniqueSubNames(luxrays::Properties *props, const std::string &prefix) {
+static py::list Properties_GetAllUniqueSubNames(luxrays::PropertiesPtr props, const std::string &prefix) {
   py::list l;
   const std::vector<std::string> keys = props->GetAllUniqueSubNames(prefix);
   for(const std::string &key: keys) {
@@ -647,7 +647,7 @@ static py::list Properties_GetAllUniqueSubNames(luxrays::Properties *props, cons
   return l;
 }
 
-static luxrays::Property Properties_GetWithDefaultValues(luxrays::Properties *props,
+static luxrays::Property Properties_GetWithDefaultValues(luxrays::PropertiesPtr props,
     const std::string &name, const py::list &l) {
   luxrays::PropertyValues values;
 
@@ -674,7 +674,7 @@ static luxrays::Property Properties_GetWithDefaultValues(luxrays::Properties *pr
   return props->Get(luxrays::Property(name, values));
 }
 
-void Properties_DeleteAll(luxrays::Properties *props, const py::list &l) {
+void Properties_DeleteAll(luxrays::PropertiesPtr props, const py::list &l) {
   const py::ssize_t size = len(l);
   for (py::ssize_t i = 0; i < size; ++i) {
     const std::string objType = py::cast<std::string>((l[i].attr("__class__")).attr("__name__"));
@@ -2224,7 +2224,7 @@ PYBIND11_MODULE(pyluxcore, m) {
   // Property class
   //--------------------------------------------------------------------------
 
-  py::class_<luxrays::Property>(m, "Property")
+  py::class_<luxrays::Property, py::smart_holder>(m, "Property")
     .def(py::init<std::string>())
     .def(py::init<std::string, bool>())
     .def(py::init<std::string, long long>())
@@ -2289,7 +2289,7 @@ PYBIND11_MODULE(pyluxcore, m) {
   // Properties class
   //--------------------------------------------------------------------------
 
-  py::class_<luxrays::Properties>(m, "Properties")
+  py::class_<luxrays::Properties, py::smart_holder>(m, "Properties")
     .def(py::init<>())
     .def(py::init<std::string>())
     .def(py::init<luxrays::Properties>())
@@ -2387,10 +2387,11 @@ PYBIND11_MODULE(pyluxcore, m) {
     })
   ;
 
-  py::class_<luxcore::detail::FilmImpl, std::shared_ptr<luxcore::detail::FilmImpl>>(m, "Film")
+  //py::class_<luxcore::detail::FilmImpl, std::shared_ptr<luxcore::detail::FilmImpl>>(m, "Film")
+  py::class_<luxcore::detail::FilmImpl, py::smart_holder>(m, "Film")
     .def(py::init([](std::string s){ return luxcore::detail::FilmImpl::Create(s); }))
     .def(py::init([](
-		luxrays::Properties & props,
+		luxrays::PropertiesPtr props,
 		bool hasPixelNormalizedChannel,
 		bool hasScreenNormalizedChannel
 	) { return luxcore::detail::FilmImpl::Create(props, hasPixelNormalizedChannel, hasScreenNormalizedChannel); }))
@@ -2437,7 +2438,7 @@ PYBIND11_MODULE(pyluxcore, m) {
   // Camera class
   //--------------------------------------------------------------------------
 
-  py::class_<luxcore::detail::CameraImpl>(m, "Camera")
+  py::class_<luxcore::detail::CameraImpl, py::smart_holder>(m, "Camera")
     .def("Translate", &Camera_Translate)
     .def("TranslateLeft", &luxcore::detail::CameraImpl::TranslateLeft)
     .def("TranslateRight", &luxcore::detail::CameraImpl::TranslateRight)
@@ -2454,10 +2455,11 @@ PYBIND11_MODULE(pyluxcore, m) {
   // Scene class
   //--------------------------------------------------------------------------
 
-  py::class_<luxcore::detail::SceneImpl, std::shared_ptr<luxcore::detail::SceneImpl>>(m, "Scene")
-    .def(py::init<>())
-    .def(py::init<luxrays::Properties, luxrays::Properties *>())
-    .def(py::init<luxrays::Properties>())
+  //py::class_<luxcore::detail::SceneImpl, std::shared_ptr<luxcore::detail::SceneImpl>>(m, "Scene")
+  py::class_<luxcore::detail::SceneImpl, py::smart_holder>(m, "Scene")
+	.def(py::init<>())
+    .def(py::init<luxrays::PropertiesConstPtr, luxrays::PropertiesConstPtr>())
+    .def(py::init<luxrays::PropertiesConstPtr>())
     .def(py::init<std::string>())
     .def("ToProperties", &luxcore::detail::SceneImpl::ToProperties, py::return_value_policy::reference_internal)
     .def("GetCamera", &Scene_GetCamera, py::return_value_policy::reference_internal)
@@ -2514,10 +2516,11 @@ PYBIND11_MODULE(pyluxcore, m) {
   // RenderConfig class
   //--------------------------------------------------------------------------
 
-  py::class_<luxcore::detail::RenderConfigImpl, RenderConfigImplPtr>(m, "RenderConfig")
-    .def(py::init<luxrays::Properties>())
+  //py::class_<luxcore::detail::RenderConfigImpl, RenderConfigImplPtr>(m, "RenderConfig")
+  py::class_<luxcore::detail::RenderConfigImpl, py::smart_holder>(m, "RenderConfig")
+    .def(py::init<luxrays::PropertiesPtr>())
     //.def(py::init<luxrays::Properties, luxcore::detail::SceneImpl *>()[with_custodian_and_ward<1, 3>()])
-    .def(py::init<luxrays::Properties, std::shared_ptr<luxcore::detail::SceneImpl> >(), py::keep_alive<1, 3>())
+    .def(py::init<luxrays::PropertiesPtr, std::shared_ptr<luxcore::detail::SceneImpl> >(), py::keep_alive<1, 3>())
     //.def("__init__", make_constructor(RenderConfig_LoadFile))
     //.def(py::init(&RenderConfig_LoadFile)) TODO
     .def("GetProperties", &luxcore::detail::RenderConfigImpl::GetProperties, py::return_value_policy::reference_internal)
@@ -2537,7 +2540,7 @@ PYBIND11_MODULE(pyluxcore, m) {
   // RenderState class
   //--------------------------------------------------------------------------
 
-  py::class_<luxcore::detail::RenderStateImpl>(m, "RenderState")
+  py::class_<luxcore::detail::RenderStateImpl, py::smart_holder>(m, "RenderState")
     .def("Save", &RenderState::Save)
   ;
 

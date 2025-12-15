@@ -262,17 +262,21 @@ void LuxCoreApp::MenuEngine() {
 void LuxCoreApp::MenuSampler() {
   const string currentSamplerType = config->ToProperties().Get("sampler.type").Get<string>();
 
-  if (ImGui::MenuItem("RANDOM", NULL, (currentSamplerType == "RANDOM"))) {
+  auto set_sampler = [&](const string name) {
     samplerWindow.Close();
-    RenderConfigParse(Properties() << Property("sampler.type")("RANDOM"));
+    auto props = std::make_shared<Properties>();
+    *props << Property("sampler.type")(name);
+    RenderConfigParse(props);
+  };
+
+  if (ImGui::MenuItem("RANDOM", NULL, (currentSamplerType == "RANDOM"))) {
+    set_sampler("RANDOM");
   }
   if (ImGui::MenuItem("SOBOL", NULL, (currentSamplerType == "SOBOL"))) {
-    samplerWindow.Close();
-    RenderConfigParse(Properties() << Property("sampler.type")("SOBOL"));
+    set_sampler("SOBOL");
   }
   if (ImGui::MenuItem("METROPOLIS", NULL, (currentSamplerType == "METROPOLIS"))) {
-    samplerWindow.Close();
-    RenderConfigParse(Properties() << Property("sampler.type")("METROPOLIS"));
+    set_sampler("METROPOLIS");
   }
 }
 
@@ -293,27 +297,28 @@ void LuxCoreApp::MenuCamera() {
 //------------------------------------------------------------------------------
 
 void LuxCoreApp::MenuTiles() {
-  bool showPending = config->GetProperties().Get(Property("screen.tiles.pending.show")(true)).Get<bool>();
-  if (ImGui::MenuItem("Show pending", NULL, showPending))
-    RenderConfigParse(Properties() << Property("screen.tiles.pending.show")(!showPending));
 
-  bool showConverged = config->GetProperties().Get(Property("screen.tiles.converged.show")(false)).Get<bool>();
-  if (ImGui::MenuItem("Show converged", NULL, showConverged))
-    RenderConfigParse(Properties() << Property("screen.tiles.converged.show")(!showConverged));
-  
-  bool showNotConverged = config->GetProperties().Get(Property("screen.tiles.notconverged.show")(false)).Get<bool>();
-  if (ImGui::MenuItem("Show not converged", NULL, showNotConverged))
-    RenderConfigParse(Properties() << Property("screen.tiles.notconverged.show")(!showNotConverged));
+  // Helper
+  auto tiles_show = [&](const string elem, const string desc) {
+    const string name = string("screen.tiles.") + elem + ".show";
+    bool state = config->GetProperties().Get(Property(name)(false)).Get<bool>();
+    auto msg = string("Show ") + desc;
+    if (ImGui::MenuItem(msg.c_str(), NULL, state)) {
+      auto props = std::make_shared<Properties>();
+      *props << Property(name)(!state);
+      RenderConfigParse(props);
+    }
+  };
+
+  tiles_show("pending", "pending");
+  tiles_show("converged", "converged");
+  tiles_show("notconverged", "not converged");
 
   ImGui::Separator();
 
-  bool showPassCount = config->GetProperties().Get(Property("screen.tiles.passcount.show")(false)).Get<bool>();
-  if (ImGui::MenuItem("Show pass count", NULL, showPassCount))
-    RenderConfigParse(Properties() << Property("screen.tiles.passcount.show")(!showPassCount));
+  tiles_show("passcount", "pass count");
+  tiles_show("error", "error");
 
-  bool showError = config->GetProperties().Get(Property("screen.tiles.error.show")(false)).Get<bool>();
-  if (ImGui::MenuItem("Show error", NULL, showError))
-    RenderConfigParse(Properties() << Property("screen.tiles.error.show")(!showError));
 }
 
 //------------------------------------------------------------------------------
@@ -402,23 +407,17 @@ void LuxCoreApp::MenuScreen() {
 
     ImGui::EndMenu();
   }
+
   if (ImGui::BeginMenu("Refresh interval")) {
-    if (ImGui::MenuItem("5ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(5)));
-    if (ImGui::MenuItem("10ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(10)));
-    if (ImGui::MenuItem("20ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(20)));
-    if (ImGui::MenuItem("50ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(50)));
-    if (ImGui::MenuItem("100ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(100)));
-    if (ImGui::MenuItem("500ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(500)));
-    if (ImGui::MenuItem("1000ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(1000)));
-    if (ImGui::MenuItem("2000ms"))
-      config->Parse(Properties().Set(Property("screen.refresh.interval")(2000)));
+    if (ImGui::MenuItem("5ms")) SetRefreshInterval(5);
+    if (ImGui::MenuItem("10ms")) SetRefreshInterval(10);
+    if (ImGui::MenuItem("20ms")) SetRefreshInterval(20);
+    if (ImGui::MenuItem("50ms")) SetRefreshInterval(50);
+    if (ImGui::MenuItem("100ms")) SetRefreshInterval(100);
+    if (ImGui::MenuItem("500ms")) SetRefreshInterval(500);
+    if (ImGui::MenuItem("1000ms")) SetRefreshInterval(1000);
+    if (ImGui::MenuItem("2000ms")) SetRefreshInterval(2000);
+
 
     ImGui::EndMenu();
   }
@@ -449,9 +448,12 @@ void LuxCoreApp::MenuScreen() {
 //------------------------------------------------------------------------------
 
 void LuxCoreApp::MenuTool() {
+
   if (ImGui::MenuItem("Camera edit", NULL, (currentTool == TOOL_CAMERA_EDIT))) {
     currentTool = TOOL_CAMERA_EDIT;
-    RenderConfigParse(Properties() << Property("screen.tool.type")("CAMERA_EDIT"));
+    auto props = Properties() << Property("screen.tool.type")("CAMERA_EDIT");
+    auto pprops = std::make_shared<Properties>(props);
+    RenderConfigParse(pprops);
   }
   if (ImGui::MenuItem("Object selection", NULL, (currentTool == TOOL_OBJECT_SELECTION))) {
     currentTool = TOOL_OBJECT_SELECTION;
@@ -467,11 +469,14 @@ void LuxCoreApp::MenuTool() {
           Property("film.outputs.LUXCOREUI_OBJECTSELECTION_AOV.filename")("dummy.png");
     }
 
-    RenderConfigParse(props);
+    auto pprops = std::make_shared<Properties>(props);
+    RenderConfigParse(pprops);
   }
   if (ImGui::MenuItem("Image view", NULL, (currentTool == TOOL_IMAGE_VIEW))) {
     currentTool = TOOL_IMAGE_VIEW;
-    RenderConfigParse(Properties() << Property("screen.tool.type")("IMAGE_VIEW"));
+    auto props = Properties() << Property("screen.tool.type")("IMAGE_VIEW");
+    auto pprops = std::make_shared<Properties>(props);
+    RenderConfigParse(pprops);
   }
   if (ImGui::MenuItem("User importance painting", NULL, (currentTool == TOOL_USER_IMPORTANCE_PAINT))) {
     currentTool = TOOL_USER_IMPORTANCE_PAINT;
@@ -487,7 +492,8 @@ void LuxCoreApp::MenuTool() {
           Property("film.outputs.LUXCOREUI_USER_IMPORTANCE_AOV.filename")("dummy.png");
     }
 
-    RenderConfigParse(props);
+    auto pprops = std::make_shared<Properties>(props);
+    RenderConfigParse(pprops);
   }
 }
 
@@ -597,15 +603,18 @@ void LuxCoreApp::MainMenuBar() {
         const string renderEngine = config->GetProperty("renderengine.type").Get<string>();
 
         // Set the render engine to FILESAVER
-        RenderConfigParse(Properties() <<
+        auto props1 = Properties() <<
           Property("renderengine.type")("FILESAVER") <<
           Property("filesaver.format")("TXT") <<
           Property("filesaver.directory")(fileToExport) <<
-          Property("filesaver.renderengine.type")(renderEngine));
+          Property("filesaver.renderengine.type")(renderEngine);
+        auto pprops1 = std::make_shared<Properties>(props1);
+        RenderConfigParse(pprops1);
 
         // Restore the render engine setting
-        RenderConfigParse(Properties() <<
-          Property("renderengine.type")(renderEngine));
+        auto props2 = Properties() << Property("renderengine.type")(renderEngine);
+        auto pprops2 = std::make_shared<Properties>(props2);
+        RenderConfigParse(pprops2);
       }
     }
 

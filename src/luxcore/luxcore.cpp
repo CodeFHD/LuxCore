@@ -55,20 +55,24 @@ extern string currentFile;
 extern unsigned int lineNum;
 
 extern Properties overwriteProps;
-extern Properties *renderConfigProps;
-extern Properties *sceneProps;
+extern PropertiesPtr renderConfigProps;
+extern PropertiesPtr sceneProps;
 
 } }
 
-void luxcore::ParseLXS(const string &fileName, Properties &renderConfigProps, Properties &sceneProps) {
+void luxcore::ParseLXS(
+	const string &fileName,
+	PropertiesPtr renderConfigProps,
+	PropertiesPtr sceneProps
+) {
 	API_BEGIN("{}, {}, {}", ToArgString(fileName), ToArgString(renderConfigProps), ToArgString(sceneProps));
 
 	// Otherwise the code is not thread-safe
 	static std::mutex parseLXSMutex;
 	std::unique_lock<std::mutex> lock(parseLXSMutex);
 
-	luxcore::parselxs::renderConfigProps = &renderConfigProps;
-	luxcore::parselxs::sceneProps = &sceneProps;
+	luxcore::parselxs::renderConfigProps = renderConfigProps;
+	luxcore::parselxs::sceneProps = sceneProps;
 	luxcore::parselxs::ResetParser();
 
 	bool parseSuccess = false;
@@ -283,12 +287,15 @@ std::shared_ptr<Film> Film::Create(const std::string &fileName) {
 	return result;
 }
 
-std::shared_ptr<Film> Film::Create(const luxrays::Properties &props,
+std::shared_ptr<Film> Film::Create(
+		luxrays::PropertiesConstPtr props,
 		const bool hasPixelNormalizedChannel,
 		const bool hasScreenNormalizedChannel) {
 	API_BEGIN("{}, {}, {}", ToArgString(props), hasPixelNormalizedChannel, hasScreenNormalizedChannel);
 
-	auto result = std::make_shared<luxcore::detail::FilmImplStandalone>(props, hasPixelNormalizedChannel, hasScreenNormalizedChannel);
+	auto result = std::make_shared<luxcore::detail::FilmImplStandalone>(
+		props, hasPixelNormalizedChannel, hasScreenNormalizedChannel
+	);
 
 	API_RETURN("{}", (void *)result.get());
 
@@ -371,8 +378,10 @@ Camera::~Camera() {
 // Scene
 //------------------------------------------------------------------------------
 
-std::shared_ptr<Scene> Scene::Create(const luxrays::Properties *resizePolicyProps) {
-	API_BEGIN("{}", (void *)resizePolicyProps);
+std::shared_ptr<Scene> Scene::Create(
+		luxrays::PropertiesConstPtr resizePolicyProps
+) {
+	API_BEGIN("{}", (void *)resizePolicyProps.get());
 
 	auto result = std::make_shared<luxcore::detail::SceneImpl>(resizePolicyProps);
 
@@ -381,23 +390,29 @@ std::shared_ptr<Scene> Scene::Create(const luxrays::Properties *resizePolicyProp
 	return result;
 }
 
-std::shared_ptr<Scene> Scene::Create(const luxrays::Properties &props, const luxrays::Properties *resizePolicyProps) {
-	API_BEGIN("{}, {}", ToArgString(props), (void *)resizePolicyProps);
+std::shared_ptr<Scene> Scene::Create(
+	luxrays::PropertiesConstPtr props,
+	luxrays::PropertiesConstPtr resizePolicyProps
+) {
+	API_BEGIN("{}, {}", ToArgString(props), (void *)resizePolicyProps.get());
 
-	auto result = std::make_shared<luxcore::detail::SceneImpl>(resizePolicyProps);
+	auto result = std::make_shared<luxcore::detail::SceneImpl>(props, resizePolicyProps);
 
 	API_RETURN("{}", (void *)result.get());
 
 	return result;
 }
 
-std::shared_ptr<Scene> Scene::Create(const string &fileName, const luxrays::Properties *resizePolicyProps) {
-	API_BEGIN("{}, {}", ToArgString(fileName), (void *)resizePolicyProps);
+std::shared_ptr<Scene> Scene::Create(
+	const string &fileName,
+	luxrays::PropertiesConstPtr resizePolicyProps
+) {
+	API_BEGIN("{}, {}", ToArgString(fileName), (void *)resizePolicyProps.get());
 
 	auto result = std::make_shared<luxcore::detail::SceneImpl>(fileName, resizePolicyProps);
 
 	API_RETURN("{}", (void *)result.get());
-	
+
 	return result;
 }
 
@@ -415,7 +430,7 @@ template<> void Scene::DefineImageMap<unsigned char>(const std::string &imgMapNa
 
 	DefineImageMapUChar(imgMapName, pixels, gamma, channels, width, height,
 			selectionType, wrapType);
-	
+
 	API_END();
 }
 
@@ -428,7 +443,7 @@ template<> void Scene::DefineImageMap<unsigned short>(const std::string &imgMapN
 
 	DefineImageMapHalf(imgMapName, pixels, gamma, channels, width, height,
 			selectionType, wrapType);
-	
+
 	API_END();
 }
 
@@ -469,7 +484,10 @@ unsigned int *Scene::AllocTrianglesBuffer(const unsigned int meshTriCount) {
 // RenderConfig
 //------------------------------------------------------------------------------
 
-std::shared_ptr<RenderConfig> RenderConfig::Create(const Properties &props, ScenePtr scn) {
+std::shared_ptr<RenderConfig> RenderConfig::Create(
+	PropertiesConstPtr props,
+	ScenePtr scn
+) {
 	API_BEGIN("{}, {}", ToArgString(props), (void *)scn.get());
 
 	auto scnImpl = dynamic_pointer_cast<luxcore::detail::SceneImpl>(scn);

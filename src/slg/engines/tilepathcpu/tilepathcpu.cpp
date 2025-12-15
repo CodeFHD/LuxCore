@@ -51,20 +51,20 @@ RenderStatePtr TilePathCPURenderEngine::GetRenderState() {
 }
 
 void TilePathCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	const auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
 	//--------------------------------------------------------------------------
 
 	// Sobol is the default sampler (but it can not work with TILEPATH)
-	CheckSamplersForTile(RenderEngineType2String(GetType()), cfg);
+	CheckSamplersForTile(RenderEngineType2String(GetType()), *cfg);
 
 	//--------------------------------------------------------------------------
 	// Initialize rendering parameters
 	//--------------------------------------------------------------------------
 
-	aaSamples = Max(1, cfg.Get(GetDefaultProps().Get("tilepath.sampling.aa.size")).Get<int>());
+	aaSamples = Max(1, cfg->Get(GetDefaultProps().Get("tilepath.sampling.aa.size")).Get<int>());
 
 	// pathTracer must be configured here because it is then used
 	// to set tileRepository->varianceClamping, etc.
@@ -92,12 +92,12 @@ void TilePathCPURenderEngine::StartLockLess() {
 		// Transfer the ownership of PhotonGI cache pointer
 		photonGICache = rs->photonGICache;
 		rs->photonGICache = nullptr;
-		
+
 		startRenderState = nullptr;
 	} else {
 		film->Reset();
 
-		tileRepository = TileRepository::FromProperties(renderConfig.cfg);
+		tileRepository = TileRepository::FromProperties(*renderConfig.cfg);
 		tileRepository->varianceClamping = VarianceClamping(pathTracer.sqrtVarianceClampMaxValue);
 		tileRepository->InitTiles(*film);
 	}
@@ -108,7 +108,7 @@ void TilePathCPURenderEngine::StartLockLess() {
 
 	// note: photonGICache could have been restored from the render state
 	if ((GetType() != RTPATHCPU) && !photonGICache) {
-		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, *cfg);
 
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)

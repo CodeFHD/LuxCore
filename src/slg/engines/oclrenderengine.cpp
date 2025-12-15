@@ -37,25 +37,25 @@ using namespace slg;
 OCLRenderEngine::OCLRenderEngine(RenderConfigConstRef rcfg,
 		const bool supportsNativeThreads) : RenderEngine(rcfg) {
 #if !defined(LUXRAYS_DISABLE_OPENCL)
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
-	const bool useCPUs = cfg.Get(GetDefaultProps().Get("opencl.cpu.use")).Get<bool>();
-	const bool useGPUs = cfg.Get(GetDefaultProps().Get("opencl.gpu.use")).Get<bool>();
+	const bool useCPUs = cfg->Get(GetDefaultProps().Get("opencl.cpu.use")).Get<bool>();
+	const bool useGPUs = cfg->Get(GetDefaultProps().Get("opencl.gpu.use")).Get<bool>();
 
 	// 0 means use the value suggested by the OpenCL driver
-	const u_int forceCPUWorkSize = cfg.Get(GetDefaultProps().Get("opencl.cpu.workgroup.size")).Get<u_int>();
+	const u_int forceCPUWorkSize = cfg->Get(GetDefaultProps().Get("opencl.cpu.workgroup.size")).Get<u_int>();
 	// 0 means use the value suggested by the OpenCL driver
 	// Note: I'm using 32 because some driver (i.e. NVIDIA) suggests a value and than
 	// throws a clEnqueueNDRangeKernel(CL_OUT_OF_RESOURCES)
-	const u_int forceGPUWorkSize = cfg.Get(GetDefaultProps().Get("opencl.gpu.workgroup.size")).Get<u_int>();
+	const u_int forceGPUWorkSize = cfg->Get(GetDefaultProps().Get("opencl.gpu.workgroup.size")).Get<u_int>();
 
-	const string oclDeviceConfig = cfg.Get(GetDefaultProps().Get("opencl.devices.select")).Get<string>();
-	const string cudaOptixDeviceConfig = cfg.Get(GetDefaultProps().Get("cuda.optix.devices.select")).Get<string>();
+	const string oclDeviceConfig = cfg->Get(GetDefaultProps().Get("opencl.devices.select")).Get<string>();
+	const string cudaOptixDeviceConfig = cfg->Get(GetDefaultProps().Get("cuda.optix.devices.select")).Get<string>();
 
-	const bool useOutOfCoreMemory = cfg.Get(Property("opencl.outofcore.enable")(false)).Get<bool>();
+	const bool useOutOfCoreMemory = cfg->Get(Property("opencl.outofcore.enable")(false)).Get<bool>();
 	ctx->SetUseOutOfCoreBuffers(useOutOfCoreMemory);
 	
-	useFilmOutOfCoreMemory = cfg.Get(Property("opencl.outofcore.film.enable")(false)).Get<bool>();
+	useFilmOutOfCoreMemory = cfg->Get(Property("opencl.outofcore.film.enable")(false)).Get<bool>();
 
 	//--------------------------------------------------------------------------
 	// Get OpenCL device descriptions
@@ -160,7 +160,7 @@ OCLRenderEngine::OCLRenderEngine(RenderConfigConstRef rcfg,
 		DeviceDescription::Filter(DEVICE_TYPE_NATIVE, nativeDescs);
 		nativeDescs.resize(1);
 
-		nativeRenderThreadCount = cfg.Get(GetDefaultProps().Get("opencl.native.threads.count")).Get<u_int>();
+		nativeRenderThreadCount = cfg->Get(GetDefaultProps().Get("opencl.native.threads.count")).Get<u_int>();
 		if (nativeRenderThreadCount > 0)
 			selectedDeviceDescs.resize(selectedDeviceDescs.size() + nativeRenderThreadCount, nativeDescs[0]);
 	} else

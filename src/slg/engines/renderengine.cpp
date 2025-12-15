@@ -57,8 +57,8 @@ RenderEngine::RenderEngine(RenderConfigConstRef cfg) :
 	editMode = false;
 	pauseMode = false;
 
-	if (renderConfig.cfg.IsDefined("renderengine.seed")) {
-		const u_int seed = Max(1u, renderConfig.cfg.Get("renderengine.seed").Get<u_int>());
+	if (renderConfig.cfg->IsDefined("renderengine.seed")) {
+		const u_int seed = Max(1u, renderConfig.cfg->Get("renderengine.seed").Get<u_int>());
 		seedBaseGenerator.init(seed);
 	}
 	GenerateNewSeedBase();
@@ -263,7 +263,7 @@ Properties RenderEngine::ToProperties(const Properties &cfg) {
 }
 
 RenderEngineUPtr RenderEngine::FromProperties(RenderConfigConstRef rcfg) {
-	const string type = rcfg.cfg.Get(Property("renderengine.type")(PathCPURenderEngine::GetObjectTag())).Get<string>();
+	const string type = rcfg.cfg->Get(Property("renderengine.type")(PathCPURenderEngine::GetObjectTag())).Get<string>();
 	RenderEngineRegistry::FromProperties func;
 	if (RenderEngineRegistry::STATICTABLE_NAME(FromProperties).Get(type, func))
 		return std::unique_ptr<RenderEngine>(func(rcfg));

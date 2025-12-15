@@ -53,7 +53,7 @@ void AcceleratorWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void AcceleratorWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(props.GetAllProperties("accelerator"));
+	app->RenderConfigParse(std::make_shared<Properties>(props.GetAllProperties("accelerator")));
 }
 
 bool AcceleratorWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {

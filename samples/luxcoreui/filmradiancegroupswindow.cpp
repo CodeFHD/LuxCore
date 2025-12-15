@@ -49,7 +49,7 @@ void FilmRadianceGroupsWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void FilmRadianceGroupsWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderSessionParse(GetFilmRadianceGroupsProperties(props));
+	app->RenderSessionParse(std::make_shared<Properties>(GetFilmRadianceGroupsProperties(props)));
 }
 
 bool FilmRadianceGroupsWindow::DrawObjectGUI(Properties &props, bool &modifiedProps) {

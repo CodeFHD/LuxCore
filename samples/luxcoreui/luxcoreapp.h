@@ -55,11 +55,13 @@ public:
 
 	bool isGPURenderingAvailable() const { return isOpenCLAvailable || isCUDAAvailable; }
 
+	void SetRefreshInterval(int interval);
+
 	static void LogHandler(const char *msg);
 	static void ColoredLabelText(const ImVec4 &col, const char *label, const char *fmt, ...);
 	static void ColoredLabelText(const char *label, const char *fmt, ...);
 	static void HelpMarker(const char *desc);
-	
+
 	static ImVec4 colLabel;
 
 	// Mouse "grab" mode. This is the natural way cameras are usually manipulated
@@ -101,8 +103,8 @@ private:
 	void DrawBackgroundLogo();
 	void UpdateMoveStep();
 	void SetRenderingEngineType(const std::string &engineType);
-	void RenderConfigParse(const luxrays::Properties &samplerProps);
-	void RenderSessionParse(const luxrays::Properties &samplerProps);
+	void RenderConfigParse(std::shared_ptr<const luxrays::Properties> samplerProps);
+	void RenderSessionParse(std::shared_ptr<const luxrays::Properties> samplerProps);
 	void AdjustFilmResolutionToWindowSize(unsigned int *filmWidth, unsigned int *filmHeight);
 	void SetFilmResolution(const unsigned int filmWidth, const unsigned int filmHeight);
 	void IncScreenRefreshInterval();

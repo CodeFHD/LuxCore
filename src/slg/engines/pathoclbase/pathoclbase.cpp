@@ -200,7 +200,7 @@ void PathOCLBaseRenderEngine::InitFilm() {
 	film->AddChannel(Film::RADIANCE_PER_PIXEL_NORMALIZED);
 
 	// pathTracer has not yet been initialized
-	const bool hybridBackForwardEnable = renderConfig.cfg.Get(PathTracer::GetDefaultProps().
+	const bool hybridBackForwardEnable = renderConfig.cfg->Get(PathTracer::GetDefaultProps().
 			Get("path.hybridbackforward.enable")).Get<bool>();
 	if (hybridBackForwardEnable)
 		film->AddChannel(Film::RADIANCE_PER_SCREEN_NORMALIZED);
@@ -216,10 +216,10 @@ string PathOCLBaseRenderEngine::GetCachedKernelsHash(const RenderConfig &renderC
 	const float epsilonMin = renderConfig.GetProperty("scene.epsilon.min").Get<double>();
 	const float epsilonMax = renderConfig.GetProperty("scene.epsilon.max").Get<double>();
 		
-	const Properties &cfg = renderConfig.cfg;
-	const bool useCPUs = cfg.Get(GetDefaultProps().Get("opencl.cpu.use")).Get<bool>();
-	const bool useGPUs = cfg.Get(GetDefaultProps().Get("opencl.gpu.use")).Get<bool>();
-	const string oclDeviceConfig = cfg.Get(GetDefaultProps().Get("opencl.devices.select")).Get<string>();
+	auto cfg = renderConfig.cfg;
+	const bool useCPUs = cfg->Get(GetDefaultProps().Get("opencl.cpu.use")).Get<bool>();
+	const bool useGPUs = cfg->Get(GetDefaultProps().Get("opencl.gpu.use")).Get<bool>();
+	const string oclDeviceConfig = cfg->Get(GetDefaultProps().Get("opencl.devices.select")).Get<string>();
 
 	stringstream ssParams;
 	ssParams.precision(6);
@@ -268,19 +268,19 @@ bool PathOCLBaseRenderEngine::HasCachedKernels(const RenderConfig &renderConfig)
 }
 
 void PathOCLBaseRenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Sampler
 	//--------------------------------------------------------------------------
 
-	oclSampler = Sampler::FromPropertiesOCL(cfg);
+	oclSampler = Sampler::FromPropertiesOCL(*cfg);
 
 	//--------------------------------------------------------------------------
 	// Filter
 	//--------------------------------------------------------------------------
 
-	oclPixelFilter = Filter::FromPropertiesOCL(cfg);
+	oclPixelFilter = Filter::FromPropertiesOCL(*cfg);
 
 	InitPixelFilterDistribution();
 
@@ -288,8 +288,8 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 	// Rendering parameters
 	//--------------------------------------------------------------------------
 
-	if (cfg.IsDefined("opencl.memory.maxpagesize"))
-		maxMemPageSize = cfg.Get(Property("opencl.memory.maxpagesize")(512 * 1024 * 1024)).Get<u_longlong>();
+	if (cfg->IsDefined("opencl.memory.maxpagesize"))
+		maxMemPageSize = cfg->Get(Property("opencl.memory.maxpagesize")(512 * 1024 * 1024)).Get<u_longlong>();
 	else {
 		// Look for the max. page size allowed
 		maxMemPageSize = std::numeric_limits<size_t>::max();
@@ -299,8 +299,8 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 		}
 	}
 	SLG_LOG("[PathOCLBaseRenderEngine] OpenCL max. page memory size: " << maxMemPageSize / 1024 << "Kbytes");
-	
-	writeKernelsToFile = cfg.Get(Property("opencl.kernel.writetofile")(false)).Get<bool>();
+
+	writeKernelsToFile = cfg->Get(Property("opencl.kernel.writetofile")(false)).Get<bool>();
 
 	//--------------------------------------------------------------------------
 	// Allocate PhotonGICache if enabled
@@ -309,8 +309,8 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 	// note: photonGICache could have been restored from the render state
 	if ((GetType() != RTPATHOCL) && !photonGICache) {
 		delete photonGICache;
-		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
-		
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, *cfg);
+
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)
 			photonGICache->Preprocess(renderNativeThreads.size() + renderOCLThreads.size());
@@ -324,7 +324,7 @@ void PathOCLBaseRenderEngine::StartLockLess() {
 
 	compiledScene = new CompiledScene(renderConfig.scene, &pathTracer);
 	compiledScene->SetMaxMemPageSize(maxMemPageSize);
-	compiledScene->EnableCode(cfg.Get(Property("opencl.code.alwaysenabled")("")).Get<string>());
+	compiledScene->EnableCode(cfg->Get(Property("opencl.code.alwaysenabled")("")).Get<string>());
 	compiledScene->Compile();
 
 	//--------------------------------------------------------------------------

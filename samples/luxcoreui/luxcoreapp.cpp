@@ -121,24 +121,32 @@ void LuxCoreApp::UpdateMoveStep() {
 	optMoveStep = optMoveScale * worldSize / 50.f;
 }
 
+void LuxCoreApp::SetRefreshInterval(int interval) {
+    auto props = std::make_shared<Properties>();
+    props->Set(Property("screen.refresh.interval")(interval));
+    config->Parse(props);
+}
+
 void LuxCoreApp::IncScreenRefreshInterval() {
+
+
 	const unsigned int screenRefreshInterval = config->ToProperties().Get("screen.refresh.interval").Get<unsigned int>();
-	if (screenRefreshInterval >= 1000)
-		config->Parse(Properties().Set(Property("screen.refresh.interval")(screenRefreshInterval + 1000)));
+
+	if (screenRefreshInterval >= 1000) SetRefreshInterval(screenRefreshInterval + 1000);
 	else if (screenRefreshInterval >= 100)
-		config->Parse(Properties().Set(Property("screen.refresh.interval")(screenRefreshInterval + 50)));
+		SetRefreshInterval(screenRefreshInterval +50);
 	else
-		config->Parse(Properties().Set(Property("screen.refresh.interval")(screenRefreshInterval + 5)));
+		SetRefreshInterval(screenRefreshInterval + 5);
 }
 
 void LuxCoreApp::DecScreenRefreshInterval() {
 	const unsigned int screenRefreshInterval = config->ToProperties().Get("screen.refresh.interval").Get<unsigned int>();
 	if (screenRefreshInterval > 1000)
-		config->Parse(Properties().Set(Property("screen.refresh.interval")(Max(1000u, screenRefreshInterval - 1000))));
+		SetRefreshInterval(Max(1000u, screenRefreshInterval - 1000));
 	else if (screenRefreshInterval > 100)
-		config->Parse(Properties().Set(Property("screen.refresh.interval")(Max(50u, screenRefreshInterval - 50))));
+		SetRefreshInterval(Max(50u, screenRefreshInterval - 50));
 	else
-		config->Parse(Properties().Set(Property("screen.refresh.interval")(Max(10u, screenRefreshInterval - 5))));
+		SetRefreshInterval(Max(10u, screenRefreshInterval - 5));
 }
 
 void LuxCoreApp::CloseAllRenderConfigEditors() {
@@ -181,13 +189,14 @@ void LuxCoreApp::SetRenderingEngineType(const string &engineType) {
 					Property("sampler.type")("SOBOL");
 		}
 
-		RenderConfigParse(props);
+		auto pprops = std::make_shared<Properties>(props);
+		RenderConfigParse(pprops);
 	}
 }
 
-void LuxCoreApp::RenderConfigParse(const Properties &props) {
+void LuxCoreApp::RenderConfigParse(std::shared_ptr<const luxrays::Properties> props) {
 	if (session) {
-		// Delete the session
+		// Reset the session
 		session.reset();
 	}
 
@@ -204,7 +213,7 @@ void LuxCoreApp::RenderConfigParse(const Properties &props) {
 	StartRendering();
 }
 
-void LuxCoreApp::RenderSessionParse(const Properties &props) {
+void LuxCoreApp::RenderSessionParse(std::shared_ptr<const Properties> props) {
 	try {
 		session->Parse(props);
 	} catch(exception &ex) {
@@ -258,7 +267,8 @@ void LuxCoreApp::LoadRenderConfig(const std::string &fileName, const std::string
 		if (ext == ".lxs") {
 			// It is a LuxRender SDL file
 			LA_LOG("Parsing LuxRender SDL file...");
-			Properties renderConfigProps, sceneProps;
+			auto renderConfigProps = std::make_shared<Properties>();
+			auto sceneProps = std::make_shared<Properties>();
 			luxcore::ParseLXS(fileName, renderConfigProps, sceneProps);
 
 			// For debugging
@@ -273,7 +283,7 @@ void LuxCoreApp::LoadRenderConfig(const std::string &fileName, const std::string
 			StartRendering();
 		} else if (ext == ".cfg") {
 			// It is a LuxCore SDL file
-			config = RenderConfig::Create(Properties(fileName));
+			config = RenderConfig::Create(std::make_shared<Properties>(fileName));
 
 			StartRendering();
 		} else if (ext == ".bcf") {
@@ -314,7 +324,7 @@ void LuxCoreApp::StartRendering(
 	const string engineType = config->ToProperties().Get("renderengine.type").Get<string>();
 	if (engineType.starts_with("RT")) {
 		if (config->ToProperties().Get("screen.refresh.interval").Get<unsigned int>() > 25)
-			config->Parse(Properties().Set(Property("screen.refresh.interval")(25)));
+			SetRefreshInterval(25);
 		optRealTimeMode = true;
 		// Reset the dropped frames counter
 		droppedFramesCount = 0;
@@ -339,7 +349,8 @@ void LuxCoreApp::StartRendering(
 		// automatically adjust the ratio
 		Properties cameraProps = config->GetScene().ToProperties().GetAllProperties("scene.camera");
 		cameraProps.DeleteAll(cameraProps.GetAllNames("scene.camera.screenwindow"));
-		config->GetScene().Parse(cameraProps);
+		auto pprops = std::make_shared<Properties>(cameraProps);
+		config->GetScene().Parse(pprops);
 
 		// Adjust the width and height to match the window width and height ratio
 		AdjustFilmResolutionToWindowSize(&filmWidth, &filmHeight);
@@ -349,7 +360,8 @@ void LuxCoreApp::StartRendering(
 	cfgProps <<
 			Property("film.width")(filmWidth) <<
 			Property("film.height")(filmHeight);
-	config->Parse(cfgProps);
+	auto pcfgProps = std::make_shared<Properties>(cfgProps);
+	config->Parse(pcfgProps);
 
 	LA_LOG("RenderConfig has cached kernels: " << (config->HasCachedKernels() ? "True" : "False"));
 

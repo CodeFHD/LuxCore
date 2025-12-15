@@ -48,13 +48,13 @@ RenderStatePtr LightCPURenderEngine::GetRenderState() {
 }
 
 void LightCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	const auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
 	//--------------------------------------------------------------------------
 
-	CheckSamplersForNoTile(RenderEngineType2String(GetType()), cfg);
+	CheckSamplersForNoTile(RenderEngineType2String(GetType()), *cfg);
 
 	//--------------------------------------------------------------------------
 	// Restore render state if there is one

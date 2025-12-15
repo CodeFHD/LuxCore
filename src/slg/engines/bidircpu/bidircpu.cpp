@@ -51,34 +51,34 @@ RenderStatePtr BiDirCPURenderEngine::GetRenderState() {
 }
 
 void BiDirCPURenderEngine::StartLockLess() {
-	const Properties &cfg = renderConfig.cfg;
+	auto cfg = renderConfig.cfg;
 
 	//--------------------------------------------------------------------------
 	// Check to have the right sampler settings
 	//--------------------------------------------------------------------------
 
-	CheckSamplersForNoTile(RenderEngineType2String(GetType()), cfg);
+	CheckSamplersForNoTile(RenderEngineType2String(GetType()), *cfg);
 
 	//--------------------------------------------------------------------------
 	// Rendering parameters
 	//--------------------------------------------------------------------------
 
-	maxEyePathDepth = (u_int)Max(1, cfg.Get(GetDefaultProps().Get("path.maxdepth")).Get<int>());
-	maxLightPathDepth = (u_int)Max(1, cfg.Get(GetDefaultProps().Get("light.maxdepth")).Get<int>());
+	maxEyePathDepth = (u_int)Max(1, cfg->Get(GetDefaultProps().Get("path.maxdepth")).Get<int>());
+	maxLightPathDepth = (u_int)Max(1, cfg->Get(GetDefaultProps().Get("light.maxdepth")).Get<int>());
 	
-	rrDepth = (u_int)Max(1, cfg.Get(GetDefaultProps().Get("path.russianroulette.depth")).Get<int>());
-	rrImportanceCap = Clamp(cfg.Get(GetDefaultProps().Get("path.russianroulette.cap")).Get<double>(), 0.0, 1.0);
+	rrDepth = (u_int)Max(1, cfg->Get(GetDefaultProps().Get("path.russianroulette.depth")).Get<int>());
+	rrImportanceCap = Clamp(cfg->Get(GetDefaultProps().Get("path.russianroulette.cap")).Get<double>(), 0.0, 1.0);
 
 	// Clamping settings
 	// clamping.radiance.maxvalue is the old radiance clamping, now converted in variance clamping
-	sqrtVarianceClampMaxValue = cfg.Get(Property("path.clamping.radiance.maxvalue")(0.0)).Get<double>();
-	if (cfg.IsDefined("path.clamping.variance.maxvalue"))
-		sqrtVarianceClampMaxValue = cfg.Get(GetDefaultProps().Get("path.clamping.variance.maxvalue")).Get<double>();
+	sqrtVarianceClampMaxValue = cfg->Get(Property("path.clamping.radiance.maxvalue")(0.0)).Get<double>();
+	if (cfg->IsDefined("path.clamping.variance.maxvalue"))
+		sqrtVarianceClampMaxValue = cfg->Get(GetDefaultProps().Get("path.clamping.variance.maxvalue")).Get<double>();
 	sqrtVarianceClampMaxValue = Max(0.f, sqrtVarianceClampMaxValue);
 
 	// Albedo AOV settings
-	albedoSpecularSetting = String2AlbedoSpecularSetting(cfg.Get(GetDefaultProps().Get("path.albedospecular.type")).Get<string>());
-	albedoSpecularGlossinessThreshold = Max(cfg.Get(GetDefaultProps().Get("path.albedospecular.glossinessthreshold")).Get<double>(), 0.0);
+	albedoSpecularSetting = String2AlbedoSpecularSetting(cfg->Get(GetDefaultProps().Get("path.albedospecular.type")).Get<string>());
+	albedoSpecularGlossinessThreshold = Max(cfg->Get(GetDefaultProps().Get("path.albedospecular.glossinessthreshold")).Get<double>(), 0.0);
 
 	//--------------------------------------------------------------------------
 	// Restore render state if there is one
@@ -113,7 +113,7 @@ void BiDirCPURenderEngine::StartLockLess() {
 
 	// note: photonGICache could have been restored from the render state
 	if (!photonGICache) {
-		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, cfg);
+		photonGICache = PhotonGICache::FromProperties(renderConfig.scene, *cfg);
 
 		// photonGICache will be nullptr if the cache is disabled
 		if (photonGICache)
@@ -124,7 +124,7 @@ void BiDirCPURenderEngine::StartLockLess() {
 	// Albedo and Normal AOV warm up settings
 	//--------------------------------------------------------------------------
 
-	aovWarmupSPP = Max(0u, cfg.Get(GetDefaultProps().Get("path.aovs.warmup.spp")).Get<u_int>());
+	aovWarmupSPP = Max(0u, cfg->Get(GetDefaultProps().Get("path.aovs.warmup.spp")).Get<u_int>());
 	if (!film->HasChannel(Film::ALBEDO) && !film->HasChannel(Film::AVG_SHADING_NORMAL))
 		aovWarmupSPP = 0;
 	if (aovWarmupSPP > 0)

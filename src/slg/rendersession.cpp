@@ -224,17 +224,17 @@ RenderStatePtr RenderSession::GetRenderState() {
 	return renderEngine->GetRenderState();
 }
 
-void RenderSession::Parse(const luxrays::Properties &props) {
+void RenderSession::Parse(luxrays::PropertiesConstPtr props) {
 	assert (renderEngine->IsStarted());
 
-	if ((props.IsDefined("film.width") && (props.Get("film.width").Get<u_int>() != film->GetWidth())) ||
-			(props.IsDefined("film.height") && (props.Get("film.height").Get<u_int>() != film->GetHeight()))) {
+	if ((props->IsDefined("film.width") && (props->Get("film.width").Get<u_int>() != film->GetWidth())) ||
+			(props->IsDefined("film.height") && (props->Get("film.height").Get<u_int>() != film->GetHeight()))) {
 		// I have to use a special procedure if the parsed props include
 		// a film resize
 		renderEngine->BeginFilmEdit();
 
 		// Update render config properties
-		renderConfig.UpdateFilmProperties(props);
+		renderConfig.UpdateFilmProperties(*props);
 
 		// Create the new film
 		film = renderConfig.AllocFilm();
@@ -248,7 +248,7 @@ void RenderSession::Parse(const luxrays::Properties &props) {
 		film->Parse(props);
 
 		// Update render config properties
-		renderConfig.UpdateFilmProperties(props);
+		renderConfig.UpdateFilmProperties(*props);
 	}
 }
 

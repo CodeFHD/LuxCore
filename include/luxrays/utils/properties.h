@@ -28,6 +28,7 @@
 #include <istream>
 #include <cstdarg>
 #include <stdexcept>
+#include <memory>
 
 #include <luxrays/utils/exportdefs.h>
 
@@ -42,9 +43,8 @@ public:
 	Blob(const Blob &blob);
 	Blob(const char *data, const size_t size);
 	Blob(const std::string &base64Data);
-	~Blob();
 
-	const char *GetData() const { return data; }
+	const char *GetData() const { return data.get(); }
 	size_t GetSize() const { return size; }
 
 	std::string ToString() const;
@@ -52,7 +52,7 @@ public:
 	Blob &operator=(const Blob &blob);
 
 private:
-	char *data;
+	std::unique_ptr<char[]> data;
 	size_t size;
 };
 
@@ -83,7 +83,7 @@ CPP_EXPORT CPP_API std::ostream &operator<<(std::ostream &os, const Blob &blob);
 CPP_EXPORT class CPP_API PropertyValue {
 public:
 	typedef enum {
-		NONE_VAL,
+		NONE_VAL=0,
 		BOOL_VAL,
 		INT_VAL,
 		UINT_VAL,

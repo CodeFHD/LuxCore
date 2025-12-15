@@ -25,6 +25,7 @@
 #include "luxrays/cfg.h"
 #include "luxrays/utils/utils.h"
 
+
 /*!
  * \namespace luxrays
  *

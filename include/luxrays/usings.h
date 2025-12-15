@@ -138,5 +138,11 @@ using VectorPtr = std::shared_ptr<Vector>;
 using VectorConstPtr = std::shared_ptr<const Vector>;
 using VectorUPtr = std::unique_ptr<Vector>;
 using VectorConstUPtr = std::unique_ptr<const Vector>;
+
+class Properties;
+using PropertiesPtr = std::shared_ptr<Properties>;
+using PropertiesConstPtr = std::shared_ptr<const Properties>;
+using PropertiesConstRef = const Properties &;
+
 }
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

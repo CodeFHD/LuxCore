@@ -102,13 +102,13 @@ bool Film::GetFilmSize(const Properties &cfg,
 	return subRegionUsed;
 }
 
-FilmPtr Film::FromProperties(const Properties &cfg) {
+FilmPtr Film::FromProperties(PropertiesConstPtr cfg) {
 	//--------------------------------------------------------------------------
 	// Create the Film
 	//--------------------------------------------------------------------------
 
 	u_int filmFullWidth, filmFullHeight, filmSubRegion[4];
-	const bool filmSubRegionUsed = GetFilmSize(cfg, &filmFullWidth, &filmFullHeight, filmSubRegion);
+	const bool filmSubRegionUsed = GetFilmSize(*cfg, &filmFullWidth, &filmFullHeight, filmSubRegion);
 
 	SLG_LOG("Film resolution: " << filmFullWidth << "x" << filmFullHeight);
 	if (filmSubRegionUsed)
@@ -118,28 +118,28 @@ FilmPtr Film::FromProperties(const Properties &cfg) {
 			filmSubRegionUsed ? filmSubRegion : nullptr);
 
 	// For compatibility with the past
-	if (cfg.IsDefined("film.alphachannel.enable")) {
+	if (cfg->IsDefined("film.alphachannel.enable")) {
 		SLG_LOG("WARNING: deprecated property film.alphachannel.enable");
 
-		if (cfg.Get(Property("film.alphachannel.enable")(false)).Get<bool>())
+		if (cfg->Get(Property("film.alphachannel.enable")(false)).Get<bool>())
 			film->AddChannel(Film::ALPHA);
 		else
 			film->RemoveChannel(Film::ALPHA);
 	}
 
-	film->hwEnable = cfg.Get(Property("film.hw.enable")(
-			cfg.Get(Property("film.opencl.enable")(true)).Get<bool>()
+	film->hwEnable = cfg->Get(Property("film.hw.enable")(
+			cfg->Get(Property("film.opencl.enable")(true)).Get<bool>()
 			)).Get<bool>();
-	film->hwDeviceIndex = cfg.Get(Property("film.hw.device")(
+	film->hwDeviceIndex = cfg->Get(Property("film.hw.device")(
 			// For compatibility with the past
-			cfg.Get(Property("film.opencl.device")(-1)).Get<int>()
+			cfg->Get(Property("film.opencl.device")(-1)).Get<int>()
 			)).Get<int>();
 
 	//--------------------------------------------------------------------------
 	// Add the default image pipeline
 	//--------------------------------------------------------------------------
 
-	unique_ptr<ImagePipeline> imagePipeline(new ImagePipeline());
+	auto imagePipeline = std::make_unique<ImagePipeline>();
 	imagePipeline->AddPlugin(new AutoLinearToneMap());
 	imagePipeline->AddPlugin(new GammaCorrectionPlugin(2.2f));
 
@@ -149,9 +149,11 @@ FilmPtr Film::FromProperties(const Properties &cfg) {
 	// Add the default output
 	//--------------------------------------------------------------------------
 
-	film->Parse(Properties() << 
-			Property("film.outputs.0.type")("RGB_IMAGEPIPELINE") <<
-			Property("film.outputs.0.filename")("image.png"));
+	auto filmProps = std::make_shared<Properties>();
+	*filmProps <<
+		Property("film.outputs.0.type")("RGB_IMAGEPIPELINE") <<
+		Property("film.outputs.0.filename")("image.png");
+	film->Parse(filmProps);
 
 	//--------------------------------------------------------------------------
 	// Create the image pipeline, initialize radiance channel scales

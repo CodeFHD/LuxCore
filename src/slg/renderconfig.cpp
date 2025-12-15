@@ -66,17 +66,17 @@ static std::unique_ptr<Properties> defaultProperties;
 
 BOOST_CLASS_EXPORT_IMPLEMENT(slg::RenderConfig)
 
-RenderConfigUPtr RenderConfig::Create(const luxrays::Properties &props, ScenePtr scene) {
+RenderConfigUPtr RenderConfig::Create(luxrays::PropertiesConstPtr props, ScenePtr scene) {
 	return std::make_unique<RenderConfig>(Private(), props, scene);
 }
 
-RenderConfig::RenderConfig(Private p, const Properties &props, ScenePtr scn) : scene(scn) {
+RenderConfig::RenderConfig(Private p, PropertiesConstPtr props, ScenePtr scn) : cfg(std::make_shared<Properties>()), scene(scn) {
 	InitDefaultProperties();
 
 	SLG_LOG("Configuration: ");
-	const vector<string> &keys = props.GetAllNames();
+	const vector<string> &keys = props->GetAllNames();
 	for (vector<string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
-		SLG_LOG("  " << props.Get(*i));
+		SLG_LOG("  " << props->Get(*i));
 
 	SLG_FileNameResolver.Print();
 
@@ -87,10 +87,13 @@ RenderConfig::RenderConfig(Private p, const Properties &props, ScenePtr scn) : s
 	} else {
 		// Create the Scene
 		const string defaultSceneName = GetDefaultProperties().Get("scene.file").Get<string>();
-		const string sceneFileName = SLG_FileNameResolver.ResolveFile(props.Get(Property("scene.file")(defaultSceneName)).Get<string>());
+		const string sceneFileName = SLG_FileNameResolver.ResolveFile(props->Get(Property("scene.file")(defaultSceneName)).Get<string>());
 
 		SDL_LOG("Reading scene: " << sceneFileName);
-		scene = std::make_shared<Scene>(sceneFileName, &props);
+		scene = std::make_shared<Scene>(
+			std::make_shared<Properties>(sceneFileName),
+			props
+		);
 		allocatedScene = true;
 	}
 
@@ -98,7 +101,7 @@ RenderConfig::RenderConfig(Private p, const Properties &props, ScenePtr scn) : s
 		throw runtime_error("You can not build a RenderConfig with a scene not including a camera");
 	
 	// Parse the configuration
-	Parse(props);
+	Parse(*props);
 }
 
 void RenderConfig::InitDefaultProperties() {
@@ -106,10 +109,10 @@ void RenderConfig::InitDefaultProperties() {
 	if (!defaultProperties.get()) {
 		std::unique_lock<std::mutex> lock(defaultPropertiesMutex);
 		if (!defaultProperties.get()) {
-			Properties *props = new Properties();
+			auto props = std::make_unique<Properties>();
 			*props << RenderConfig::ToProperties(Properties());
 
-			defaultProperties.reset(props);
+			defaultProperties = std::move(props);
 		}
 	}
 }
@@ -123,7 +126,7 @@ const Properties &RenderConfig::GetDefaultProperties() {
 
 bool RenderConfig::HasCachedKernels() {
 #if !defined(LUXRAYS_DISABLE_OPENCL)
-	const string type = cfg.Get(Property("renderengine.type")(PathCPURenderEngine::GetObjectTag())).Get<string>();
+	const string type = cfg->Get(Property("renderengine.type")(PathCPURenderEngine::GetObjectTag())).Get<string>();
 	if ((type == "PATHOCL") ||
 			(type == "RTPATHOCL") ||
 			(type == "TILEPATHOCL")) {
@@ -142,8 +145,10 @@ const Property RenderConfig::GetProperty(const string &name) const {
 void RenderConfig::Parse(const Properties &props) {
 	// I can not use GetProperty() here because it triggers a ToProperties() and it can
 	// be a problem with OpenCL disabled (PATHOCL is not defined, etc.)
-	if (cfg.Get(Property("debug.renderconfig.parse.print")(false)).Get<bool>()) {
-		SDL_LOG("====================RenderConfig::Parse()======================" << endl <<
+	assert(cfg);
+	if (cfg->Get(Property("debug.renderconfig.parse.print")(false)).Get<bool>()) {
+		SDL_LOG("====================RenderConfig::Parse()======================"
+				<< endl <<
 				props);
 		SDL_LOG("===============================================================");
 	}
@@ -151,10 +156,10 @@ void RenderConfig::Parse(const Properties &props) {
 	// Reset the properties cache
 	propsCache.Clear();
 
-	cfg.Set(props);
+	cfg->Set(props);
 	// I can not use GetProperty() here because it triggers a ToProperties() and it can
 	// be a problem with OpenCL disabled (PATHOCL is not defined, etc.)
-	scene->enableParsePrint = cfg.Get(Property("debug.scene.parse.print")(false)).Get<bool>();
+	scene->enableParsePrint = cfg->Get(Property("debug.scene.parse.print")(false)).Get<bool>();
 
 	UpdateFilmProperties(props);
 
@@ -165,24 +170,24 @@ void RenderConfig::Parse(const Properties &props) {
 	// the render engine
 
 	// Light strategy
-	scene->lightDefs.SetLightStrategy(cfg);
+	scene->lightDefs.SetLightStrategy(*cfg);
 
 	// Update the Camera
 	u_int filmFullWidth, filmFullHeight, filmSubRegion[4];
-	u_int *subRegion = Film::GetFilmSize(cfg, &filmFullWidth, &filmFullHeight, filmSubRegion) ?
+	u_int *subRegion = Film::GetFilmSize(*cfg, &filmFullWidth, &filmFullHeight, filmSubRegion) ?
 		filmSubRegion : NULL;
 	scene->camera->Update(filmFullWidth, filmFullHeight, subRegion);
 }
 
 void RenderConfig::DeleteAllFilmImagePipelinesProperties() {
-	cfg.DeleteAll(cfg.GetAllNamesRE("film\\.imagepipeline\\.[0-9]+\\..*"));
-	cfg.DeleteAll(cfg.GetAllNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\..*")); 
+	cfg->DeleteAll(cfg->GetAllNamesRE("film\\.imagepipeline\\.[0-9]+\\..*"));
+	cfg->DeleteAll(cfg->GetAllNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\..*")); 
 }
 
 void RenderConfig::UpdateFilmProperties(const luxrays::Properties &props) {
 	// I can not use GetProperty() here because it triggers a ToProperties() and it can
 	// be a problem with OpenCL disabled (PATHOCL is not defined, etc.)
-	if (cfg.Get(Property("debug.renderconfig.parse.print")(false)).Get<bool>()) {
+	if (cfg->Get(Property("debug.renderconfig.parse.print")(false)).Get<bool>()) {
 		SDL_LOG("=============RenderConfig::UpdateFilmProperties()==============" << endl <<
 				props);
 		SDL_LOG("===============================================================");
@@ -195,8 +200,8 @@ void RenderConfig::UpdateFilmProperties(const luxrays::Properties &props) {
 	if (props.HaveNamesRE("film\\.imagepipeline\\.[0-9]+\\.type") ||
 			props.HaveNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\.type")) {
 		// Delete the old image pipeline properties
-		cfg.DeleteAll(cfg.GetAllNamesRE("film\\.imagepipeline\\.[0-9]+\\..*"));
-		cfg.DeleteAll(cfg.GetAllNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\..*"));
+		cfg->DeleteAll(cfg->GetAllNamesRE("film\\.imagepipeline\\.[0-9]+\\..*"));
+		cfg->DeleteAll(cfg->GetAllNamesRE("film\\.imagepipelines\\.[0-9]+\\.[0-9]+\\..*"));
 
 		// Update the RenderConfig properties with the new image pipeline definition
 		std::regex reOldSyntax("film\\.imagepipeline\\.[0-9]+\\..*");
@@ -204,7 +209,7 @@ void RenderConfig::UpdateFilmProperties(const luxrays::Properties &props) {
 		for(string propName: props.GetAllNames()) {
 			if (std::regex_match(propName, reOldSyntax) ||
 					std::regex_match(propName, reNewSyntax))
-				cfg.Set(props.Get(propName));
+				cfg->Set(props.Get(propName));
 		}
 		
 		// Reset the properties cache
@@ -218,15 +223,15 @@ void RenderConfig::UpdateFilmProperties(const luxrays::Properties &props) {
 	if (props.HaveNames("film.imagepipeline.radiancescales.") ||
 			props.HaveNamesRE("film\\.imagepipelines\\.[0-9]+\\.radiancescales\\..*")) {
 		// Delete the old image pipeline properties
-		cfg.DeleteAll(cfg.GetAllNames("film.imagepipeline.radiancescales."));
-		cfg.DeleteAll(cfg.GetAllNamesRE("film\\.imagepipelines\\.[0-9]+\\.radiancescales\\..*"));
+		cfg->DeleteAll(cfg->GetAllNames("film.imagepipeline.radiancescales."));
+		cfg->DeleteAll(cfg->GetAllNamesRE("film\\.imagepipelines\\.[0-9]+\\.radiancescales\\..*"));
 
 		// Update the RenderConfig properties with the new image pipeline definition
 		std::regex reNewSyntax("film\\.imagepipelines\\.[0-9]+\\.radiancescales\\..*");
 		for(string propName: props.GetAllNames()) {
 			if (propName.starts_with("film.imagepipeline.radiancescales.") ||
 					std::regex_match(propName, reNewSyntax))
-				cfg.Set(props.Get(propName));
+				cfg->Set(props.Get(propName));
 		}
 
 		// Reset the properties cache
@@ -239,12 +244,12 @@ void RenderConfig::UpdateFilmProperties(const luxrays::Properties &props) {
 
 	if (props.HaveNames("film.outputs.")) {
 		// Delete old radiance groups scale properties
-		cfg.DeleteAll(cfg.GetAllNames("film.outputs."));
+		cfg->DeleteAll(cfg->GetAllNames("film.outputs."));
 		
 		// Update the RenderConfig properties with the new outputs definition properties
 		for(string propName: props.GetAllNames()) {
 			if (propName.starts_with("film.outputs."))
-				cfg.Set(props.Get(propName));
+				cfg->Set(props.Get(propName));
 		}
 
 		// Reset the properties cache
@@ -259,9 +264,9 @@ void RenderConfig::UpdateFilmProperties(const luxrays::Properties &props) {
 	const bool filmHeightDefined = props.IsDefined("film.height");
 	if (filmWidthDefined || filmHeightDefined) {
 		if (filmWidthDefined)
-			cfg.Set(props.Get("film.width"));
+			cfg->Set(props.Get("film.width"));
 		if (filmHeightDefined)
-			cfg.Set(props.Get("film.height"));
+			cfg->Set(props.Get("film.height"));
 		
 		// Reset the properties cache
 		propsCache.Clear();
@@ -272,19 +277,19 @@ void RenderConfig::Delete(const string &prefix) {
 	// Reset the properties cache
 	propsCache.Clear();
 
-	cfg.DeleteAll(cfg.GetAllNames(prefix));
+	cfg->DeleteAll(cfg->GetAllNames(prefix));
 }
 
 Filter *RenderConfig::AllocPixelFilter() const {
-	return Filter::FromProperties(cfg);
+	return Filter::FromProperties(*cfg);
 }
 
 FilmPtr RenderConfig::AllocFilm() const {
-	FilmPtr film = Film::FromProperties(cfg);
+	auto film = Film::FromProperties(cfg);
 
 	// Add the channels required by the Sampler
 	Film::FilmChannels channels;
-	Sampler::AddRequiredChannels(channels, cfg);
+	Sampler::AddRequiredChannels(channels, *cfg);
 	for (auto const c : channels)
 		film->AddChannel(c);
 
@@ -292,12 +297,12 @@ FilmPtr RenderConfig::AllocFilm() const {
 }
 
 SamplerSharedData *RenderConfig::AllocSamplerSharedData(RandomGenerator *rndGen, FilmPtr film) const {
-	return SamplerSharedData::FromProperties(cfg, rndGen, film);
+	return SamplerSharedData::FromProperties(*cfg, rndGen, film);
 }
 
 Sampler *RenderConfig::AllocSampler(RandomGenerator *rndGen, FilmPtr film, const FilmSampleSplatter *flmSplatter,
 		SamplerSharedData *sharedData, const Properties &additionalProps) const {
-	Properties props = cfg;
+	auto& props = *cfg;
 	props << additionalProps;
 
 	return Sampler::FromProperties(props, rndGen, film, flmSplatter, sharedData);
@@ -307,7 +312,7 @@ RenderEngineUPtr RenderConfig::AllocRenderEngine() const {
 #if defined(LUXRAYS_DISABLE_OPENCL)
 	// This is a specific test for OpenCL-less version in order to print
 	// a more clear error
-	const string type = cfg.Get(Property("renderengine.type")(PathCPURenderEngine::GetObjectTag())).Get<string>();
+	const string type = cfg->Get(Property("renderengine.type")(PathCPURenderEngine::GetObjectTag())).Get<string>();
 	if ((type == "PATHOCL") ||
 			(type == "RTPATHOCL") ||
 			(type == "TILEPATHOCL"))
@@ -319,7 +324,7 @@ RenderEngineUPtr RenderConfig::AllocRenderEngine() const {
 
 const Properties &RenderConfig::ToProperties() const {
 	if (!propsCache.GetSize())
-		propsCache = ToProperties(cfg);
+		propsCache = ToProperties(*cfg);
 
 	return propsCache;
 }
@@ -463,7 +468,7 @@ void RenderConfig::SaveSerialized(
 
 template<class Archive> void RenderConfig::save(Archive &ar, const unsigned int version) const {
 	Properties completeCfg;
-	completeCfg.Set(cfg);
+	completeCfg.Set(*cfg);
 	completeCfg.Set(saveAdditionalCfg);
 
 	ar & completeCfg;

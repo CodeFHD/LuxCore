@@ -116,7 +116,7 @@ void RenderEngineWindow::RefreshObjectProperties(Properties &props) {
 }
 
 void RenderEngineWindow::ParseObjectProperties(const Properties &props) {
-	app->RenderConfigParse(GetAllRenderEngineProperties(props));
+	app->RenderConfigParse(std::make_shared<Properties>(GetAllRenderEngineProperties(props)));
 }
 
 void RenderEngineWindow::DrawVarianceClampingSuggestedValue(const string &prefix, Properties &props, bool &modifiedProps) {

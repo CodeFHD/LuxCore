@@ -249,14 +249,14 @@ void Film::Output() {
 		Output(
 			filmOutputs.GetFileName(i),
 			filmOutputs.GetType(i),
-			&filmOutputs.GetProperties(i)
+			filmOutputs.GetProperties(i)
 		);
 }
 
 void Film::Output(
 	const string &fileName,
 	const FilmOutputs::FilmOutputType type,
-	const Properties *props,
+	PropertiesConstPtr props,
 	const bool executeImagePipeline
 ) {
 	// Handle the special case of the serialized film output
