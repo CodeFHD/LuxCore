@@ -48,6 +48,8 @@ using namespace luxcore;
 using namespace luxcore::detail;
 namespace py = pybind11;
 
+using PropertyPtr = std::shared_ptr<luxrays::Property>;
+using SceneImplPtr = std::shared_ptr<luxcore::detail::SceneImpl>;
 
 
 namespace luxcore {
@@ -305,7 +307,7 @@ py::tuple GetOpenVDBGridInfo(const std::string &filePathStr, const std::string &
 // Glue for Property class
 //------------------------------------------------------------------------------
 
-static py::list Property_GetBlobByIndex(luxrays::Property *prop, const size_t i) {
+static py::list Property_GetBlobByIndex(PropertyPtr prop, const size_t i) {
   const luxrays::Blob &blob = prop->Get<const luxrays::Blob &>(i);
   const char *data = blob.GetData();
   const size_t size = blob.GetSize();
@@ -317,10 +319,10 @@ static py::list Property_GetBlobByIndex(luxrays::Property *prop, const size_t i)
   return l;
 }
 
-static py::list Property_Get(luxrays::Property *prop) {
+static py::list Property_Get(PropertyPtr prop) {
   py::list l;
   for (u_int i = 0; i < prop->GetSize(); ++i) {
-    const luxrays::PropertyValue::DataType dataType = prop->GetValueType(i);
+    const auto dataType = prop->GetValueType(i);
 
     switch (dataType) {
       case luxrays::PropertyValue::BOOL_VAL:
@@ -347,66 +349,66 @@ static py::list Property_Get(luxrays::Property *prop) {
   return l;
 }
 
-static py::list Property_GetBools(luxrays::Property *prop) {
+static py::list Property_GetBools(PropertyPtr prop) {
   py::list l;
   for (u_int i = 0; i < prop->GetSize(); ++i)
     l.append(prop->Get<bool>(i));
   return l;
 }
 
-static py::list Property_GetInts(luxrays::Property *prop) {
+static py::list Property_GetInts(PropertyPtr prop) {
   py::list l;
   for (u_int i = 0; i < prop->GetSize(); ++i)
     l.append(prop->Get<long long>(i));
   return l;
 }
 
-static py::list Property_GetFloats(luxrays::Property *prop) {
+static py::list Property_GetFloats(PropertyPtr prop) {
   py::list l;
   for (u_int i = 0; i < prop->GetSize(); ++i)
     l.append(prop->Get<double>(i));
   return l;
 }
 
-static py::list Property_GetStrings(luxrays::Property *prop) {
+static py::list Property_GetStrings(PropertyPtr prop) {
   py::list l;
   for (u_int i = 0; i < prop->GetSize(); ++i)
     l.append(prop->Get<std::string>(i));
   return l;
 }
 
-static py::list Property_GetBlobs(luxrays::Property *prop) {
+static py::list Property_GetBlobs(PropertyPtr prop) {
   py::list l;
   for (u_int i = 0; i < prop->GetSize(); ++i)
     l.append(Property_GetBlobByIndex(prop, i));
   return l;
 }
 
-static bool Property_GetBool(luxrays::Property *prop) {
+static bool Property_GetBool(PropertyPtr prop) {
   return prop->Get<bool>(0);
 }
 
-static long long Property_GetInt(luxrays::Property *prop) {
+static long long Property_GetInt(PropertyPtr prop) {
   return prop->Get<long long>(0);
 }
 
-static unsigned long long Property_GetUnsignedLongLong(luxrays::Property *prop) {
+static unsigned long long Property_GetUnsignedLongLong(PropertyPtr prop) {
   return prop->Get<unsigned long long>(0);
 }
 
-static double Property_GetFloat(luxrays::Property *prop) {
+static double Property_GetFloat(PropertyPtr prop) {
   return prop->Get<double>(0);
 }
 
-static std::string Property_GetString(luxrays::Property *prop) {
+static std::string Property_GetString(PropertyPtr prop) {
   return prop->Get<std::string>(0);
 }
 
-static py::list Property_GetBlob(luxrays::Property *prop) {
+static py::list Property_GetBlob(PropertyPtr prop) {
   return Property_GetBlobByIndex(prop, 0);
 }
 
-static luxrays::Property &Property_Add(luxrays::Property *prop, const py::list &l) {
+static luxrays::Property &Property_Add(PropertyPtr prop, const py::list &l) {
   const py::ssize_t size = len(l);
   for (py::ssize_t i = 0; i < size; ++i) {
     const std::string objType = py::cast<std::string>((l[i].attr("__class__")).attr("__name__"));
@@ -453,7 +455,7 @@ static luxrays::Property &Property_Add(luxrays::Property *prop, const py::list &
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllBool(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllBool(PropertyPtr prop,
     const py::object &obj) {
   std::vector<bool> v;
   GetArray<bool>(obj, v);
@@ -464,7 +466,7 @@ static luxrays::Property &Property_AddAllBool(luxrays::Property *prop,
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllInt(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllInt(PropertyPtr prop,
     const py::object &obj) {
   std::vector<long long> v;
   GetArray<long long>(obj, v);
@@ -475,7 +477,7 @@ static luxrays::Property &Property_AddAllInt(luxrays::Property *prop,
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllUnsignedLongLong(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllUnsignedLongLong(PropertyPtr prop,
     const py::object &obj) {
   std::vector<unsigned long long> v;
   GetArray<unsigned long long>(obj, v);
@@ -486,7 +488,7 @@ static luxrays::Property &Property_AddAllUnsignedLongLong(luxrays::Property *pro
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllFloat(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllFloat(PropertyPtr prop,
     const py::object &obj) {
   std::vector<float> v;
   GetArray<float>(obj, v);
@@ -497,7 +499,7 @@ static luxrays::Property &Property_AddAllFloat(luxrays::Property *prop,
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllBoolStride(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllBoolStride(PropertyPtr prop,
     const py::object &obj, const size_t width, const size_t stride) {
   std::vector<bool> v;
   GetArray<bool>(obj, v, width, stride);
@@ -508,7 +510,7 @@ static luxrays::Property &Property_AddAllBoolStride(luxrays::Property *prop,
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllIntStride(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllIntStride(PropertyPtr prop,
     const py::object &obj, const size_t width, const size_t stride) {
   std::vector<long long> v;
   GetArray<long long>(obj, v, width, stride);
@@ -519,7 +521,7 @@ static luxrays::Property &Property_AddAllIntStride(luxrays::Property *prop,
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllUnsignedLongLongStride(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllUnsignedLongLongStride(PropertyPtr prop,
     const py::object &obj, const size_t width, const size_t stride) {
   std::vector<unsigned long long> v;
   GetArray<unsigned long long>(obj, v, width, stride);
@@ -530,7 +532,7 @@ static luxrays::Property &Property_AddAllUnsignedLongLongStride(luxrays::Propert
   return *prop;
 }
 
-static luxrays::Property &Property_AddAllFloatStride(luxrays::Property *prop,
+static luxrays::Property &Property_AddAllFloatStride(PropertyPtr prop,
     const py::object &obj, const size_t width, const size_t stride) {
   std::vector<float> v;
   GetArray<float>(obj, v, width, stride);
@@ -541,7 +543,7 @@ static luxrays::Property &Property_AddAllFloatStride(luxrays::Property *prop,
   return *prop;
 }
 
-static luxrays::Property &Property_Set(luxrays::Property *prop, const size_t i,
+static luxrays::Property &Property_Set(PropertyPtr prop, const size_t i,
     const py::object &obj) {
   const std::string objType = py::cast<std::string>((obj.attr("__class__")).attr("__name__"));
 
@@ -585,7 +587,7 @@ static luxrays::Property &Property_Set(luxrays::Property *prop, const size_t i,
   return *prop;
 }
 
-static luxrays::Property &Property_Set(luxrays::Property *prop, const py::list &l) {
+static luxrays::Property &Property_Set(PropertyPtr prop, const py::list &l) {
   const py::ssize_t size = len(l);
   for (py::ssize_t i = 0; i < size; ++i) {
     const py::object obj = l[i];
@@ -595,8 +597,8 @@ static luxrays::Property &Property_Set(luxrays::Property *prop, const py::list &
   return *prop;
 }
 
-static luxrays::Property *Property_InitWithList(const py::str &name, const py::list &l) {
-  luxrays::Property *prop = new luxrays::Property(py::cast<std::string>(name));
+static PropertyPtr Property_InitWithList(const py::str &name, const py::list &l) {
+  PropertyPtr prop = std::make_shared<luxrays::Property>(py::cast<std::string>(name));
 
   Property_Add(prop, l);
 
@@ -979,11 +981,11 @@ static void Camera_Rotate(luxcore::detail::CameraImpl *camera, const float angle
 // Glue for Scene class
 //------------------------------------------------------------------------------
 
-static luxcore::detail::CameraImpl &Scene_GetCamera(luxcore::detail::SceneImpl *scene) {
+static luxcore::detail::CameraImpl &Scene_GetCamera(SceneImplPtr scene) {
   return (luxcore::detail::CameraImpl &)scene->GetCamera();
 }
 
-static void Scene_DefineImageMap(luxcore::detail::SceneImpl *scene, const std::string &imgMapName,
+static void Scene_DefineImageMap(SceneImplPtr scene, const std::string &imgMapName,
     py::object &obj, const float gamma,
     const size_t channels, const size_t width, const size_t height) {
   if (PyObject_CheckBuffer(obj.ptr())) {
@@ -1012,7 +1014,7 @@ static void Scene_DefineImageMap(luxcore::detail::SceneImpl *scene, const std::s
   }
 }
 
-static void Scene_DefineMesh1(luxcore::detail::SceneImpl *scene, const std::string &meshName,
+static void Scene_DefineMesh1(SceneImplPtr scene, const std::string &meshName,
     const py::object &p, const py::object &vi,
     const py::object &n, const py::object &uv,
     const py::object &cols, const py::object &alphas,
@@ -1165,14 +1167,14 @@ static void Scene_DefineMesh1(luxcore::detail::SceneImpl *scene, const std::stri
   scene->DefineMesh(mesh);
 }
 
-static void Scene_DefineMesh2(luxcore::detail::SceneImpl *scene, const std::string &meshName,
+static void Scene_DefineMesh2(SceneImplPtr scene, const std::string &meshName,
     const py::object &p, const py::object &vi,
     const py::object &n, const py::object &uv,
     const py::object &cols, const py::object &alphas) {
   Scene_DefineMesh1(scene, meshName, p, vi, n, uv, cols, alphas, py::none());
 }
 
-static void Scene_DefineMeshExt1(luxcore::detail::SceneImpl *scene, const std::string &meshName,
+static void Scene_DefineMeshExt1(SceneImplPtr scene, const std::string &meshName,
     const py::object &p, const py::object &vi,
     const py::object &n, const py::object &uv,
     const py::object &cols, const py::object &alphas,
@@ -1366,7 +1368,7 @@ static void Scene_DefineMeshExt1(luxcore::detail::SceneImpl *scene, const std::s
   scene->DefineMesh(mesh);
 }
 
-static void Scene_DefineMeshExt2(luxcore::detail::SceneImpl *scene, const std::string &meshName,
+static void Scene_DefineMeshExt2(SceneImplPtr scene, const std::string &meshName,
     const py::object &p, const py::object &vi,
     const py::object &n, const py::object &uv,
     const py::object &cols, const py::object &alphas) {
@@ -1456,7 +1458,7 @@ using py_float_array= py::array_t<float, py::array::c_style>;
 
 // Define Mesh from Numpy arrays
 static void Scene_DefineMeshExt3(
-	luxcore::detail::SceneImpl *scene,
+	SceneImplPtr scene,
 	const std::string &meshName,
     const py_float_array p,
 	const py::array_t<triangle_underlying_type, py::array::c_style > tri,
@@ -1578,7 +1580,7 @@ static void Scene_DefineMeshExt3(
 
 }
 
-static void Scene_SetMeshVertexAOV(luxcore::detail::SceneImpl *scene, const std::string &meshName,
+static void Scene_SetMeshVertexAOV(SceneImplPtr scene, const std::string &meshName,
     const size_t index, const py::object &data) {
   std::vector<float> v;
   GetArray<float>(data, v);
@@ -1590,7 +1592,7 @@ static void Scene_SetMeshVertexAOV(luxcore::detail::SceneImpl *scene, const std:
 }
 
 static void Scene_SetMeshTriangleAOV(
-    luxcore::detail::SceneImpl *scene,
+    SceneImplPtr scene,
     const std::string &meshName,
     const size_t index,
     const py::object &data) {
@@ -1604,7 +1606,7 @@ static void Scene_SetMeshTriangleAOV(
 }
 
 static void Scene_SetMeshAppliedTransformation(
-    luxcore::detail::SceneImpl *scene,
+    SceneImplPtr scene,
     const std::string &meshName,
     const py::object &transformation) {
   float mat[16];
@@ -1613,7 +1615,7 @@ static void Scene_SetMeshAppliedTransformation(
 }
 
 static void Scene_DefineStrands(
-    luxcore::detail::SceneImpl *scene,
+    SceneImplPtr scene,
     const std::string &shapeName,
     const py::int_ strandsCount,
     const py::int_ pointsCount,
@@ -1804,7 +1806,7 @@ static void Scene_DefineStrands(
       useCameraPosition);
 }
 
-static void Scene_DuplicateObject(luxcore::detail::SceneImpl *scene,
+static void Scene_DuplicateObject(SceneImplPtr scene,
     const std::string &srcObjName,
     const std::string &dstObjName,
     const py::object &transformation,
@@ -1815,7 +1817,7 @@ static void Scene_DuplicateObject(luxcore::detail::SceneImpl *scene,
   scene->DuplicateObject(srcObjName, dstObjName, mat, objectID);
 }
 
-static void Scene_DuplicateObjectMulti(luxcore::detail::SceneImpl *scene,
+static void Scene_DuplicateObjectMulti(SceneImplPtr scene,
     const std::string &srcObjName,
     const std::string &dstObjNamePrefix,
     const unsigned int count,
@@ -1874,7 +1876,7 @@ static void Scene_DuplicateObjectMulti(luxcore::detail::SceneImpl *scene,
   PyBuffer_Release(&objectIDsView);
 }
 
-static void Scene_DuplicateMotionObject(luxcore::detail::SceneImpl *scene,
+static void Scene_DuplicateMotionObject(SceneImplPtr scene,
     const std::string &srcObjName,
     const std::string &dstObjName,
     const size_t steps,
@@ -1909,7 +1911,7 @@ static void Scene_DuplicateMotionObject(luxcore::detail::SceneImpl *scene,
     throw std::runtime_error("None times and/or transformations in Scene.DuplicateObject(): " + srcObjName);
 }
 
-static void Scene_DuplicateMotionObjectMulti(luxcore::detail::SceneImpl *scene,
+static void Scene_DuplicateMotionObjectMulti(SceneImplPtr scene,
     const std::string &srcObjName,
     const std::string &dstObjName,
     const unsigned int count,
@@ -1997,7 +1999,7 @@ static void Scene_DuplicateMotionObjectMulti(luxcore::detail::SceneImpl *scene,
     PyBuffer_Release(&objectIDsView);
 }
 
-static void Scene_DeleteObjects(luxcore::detail::SceneImpl *scene,
+static void Scene_DeleteObjects(SceneImplPtr scene,
     const py::list &l) {
   const py::ssize_t size = len(l);
   std::vector<std::string> names;
@@ -2014,7 +2016,7 @@ static void Scene_DeleteObjects(luxcore::detail::SceneImpl *scene,
   scene->DeleteObjects(names);
 }
 
-static void Scene_DeleteLights(luxcore::detail::SceneImpl *scene,
+static void Scene_DeleteLights(SceneImplPtr scene,
     const py::list &l) {
   const py::ssize_t size = len(l);
   std::vector<std::string> names;
@@ -2031,7 +2033,7 @@ static void Scene_DeleteLights(luxcore::detail::SceneImpl *scene,
   scene->DeleteLights(names);
 }
 
-static void Scene_UpdateObjectTransformation(luxcore::detail::SceneImpl *scene,
+static void Scene_UpdateObjectTransformation(SceneImplPtr scene,
     const std::string &objName,
     const py::object &transformation) {
   float mat[16];
@@ -2281,9 +2283,9 @@ PYBIND11_MODULE(pyluxcore, m) {
     .def("AddAllInt", &Property_AddAllIntStride, py::return_value_policy::move)
     .def("AddUnsignedLongLong", &Property_AddAllUnsignedLongLongStride, py::return_value_policy::move)
     .def("AddAllFloat", &Property_AddAllFloatStride, py::return_value_policy::move)
-    .def<luxrays::Property &(*)(luxrays::Property *, const py::list &)>
+    .def<luxrays::Property &(*)(PropertyPtr , const py::list &)>
       ("Set", &Property_Set, py::return_value_policy::move)
-    .def<luxrays::Property &(*)(luxrays::Property *, const size_t, const py::object &)>
+    .def<luxrays::Property &(*)(PropertyPtr , const size_t, const py::object &)>
       ("Set", &Property_Set, py::return_value_policy::move)
 
     //.def(self_ns::str(self))  TODO
@@ -2547,7 +2549,7 @@ PYBIND11_MODULE(pyluxcore, m) {
 		py::keep_alive<1, 2>(),
 		py::keep_alive<1, 3>()
 	)
-    //.def(py::init<luxrays::Properties, luxcore::detail::SceneImpl *>()[with_custodian_and_ward<1, 3>()])
+    //.def(py::init<luxrays::Properties, SceneImplPtr >()[with_custodian_and_ward<1, 3>()])
     //.def(
 		//py::init<luxrays::PropertiesPtr, std::unique_ptr<luxcore::detail::SceneImpl> >()
 			//, py::return_value_policy::move)
