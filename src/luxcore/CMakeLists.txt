@@ -132,6 +132,15 @@ install(
       WORLD_READ WORLD_EXECUTE
 )
 
+# Install pdb file (if msvc and debug)
+if(MSVC)
+  install(FILES "$<$<CONFIG:Debug>:$<TARGET_PDB_FILE:luxcore>>"
+    COMPONENT luxcore
+    DESTINATION bin
+    OPTIONAL
+  )
+endif()
+
 # Install oidn_denoise_cpu
 if(WIN32)
     install(
