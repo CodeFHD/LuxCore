@@ -614,10 +614,9 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 			}
 		}
 
-		assert (!bsdfSample.IsNaN() && !bsdfSample.IsInf() && !bsdfSample.IsNeg());
+		verify (!bsdfSample.IsNaN() && !bsdfSample.IsInf() && !bsdfSample.IsNeg());
 		if (bsdfSample.Black())
 			break;
-		assert (!isnan(bsdfPdfW) && !isinf(bsdfPdfW) && (bsdfPdfW >= 0.f));
 
 		if (sampleResult.firstPathVertex)
 			sampleResult.firstPathVertexEvent = bsdfEvent;
@@ -636,7 +635,7 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 		}
 
 		pathThroughput *= bsdfSample;
-		assert (!pathThroughput.IsNaN() && !pathThroughput.IsInf());
+		verify (!pathThroughput.IsNaN() && !pathThroughput.IsInf());
 
 		// This is valid for irradiance AOV only if it is not a SPECULAR material and
 		// first path vertex. Set or update sampleResult.irradiancePathThroughput
@@ -921,7 +920,7 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			}
 
 			lightPathFlux *= bsdfSample;
-			assert (!lightPathFlux.IsNaN() && !lightPathFlux.IsInf());
+			verify (!lightPathFlux.IsNaN() && !lightPathFlux.IsInf());
 
 			nextEventRay.Update(bsdf.GetRayOrigin(sampledDir), sampledDir);
 		}
