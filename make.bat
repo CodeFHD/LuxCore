@@ -59,8 +59,10 @@ if "%COMMAND%" == "" (
     call :ListPresets
 ) else if "%COMMAND%" == "wheel-test" (
     call :WheelTest
+) else if "%COMMAND%" == "msvc-init" (
+    call :MsvcInit
 ) else (
-    echo Command "%COMMAND%" unknown
+    echo Unknown command: "%COMMAND%"
 )
 exit /B
 
@@ -100,6 +102,16 @@ goto :EOF
 call %LUXMAKE% config
 call %LUXMAKE% build-and-install pyluxcore
 call %LUXMAKE% wheel-test
+goto :EOF
+
+:MsvcInit
+REM 'setup_x64.bat' must be in PATH
+set CMAKE_CXX_COMPILER_LAUNCHER=ccache
+set CMAKE_C_COMPILER_LAUNCHER=ccache
+set BUILD_CMAKE_ARGS="-DCMAKE_VERBOSE_MAKEFILE=ON"
+set CCACHE_DIRECT=true
+set CCACHE_DEPEND=true
+call setup_x64.bat
 goto :EOF
 
 :Clear
