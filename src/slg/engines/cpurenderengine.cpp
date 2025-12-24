@@ -74,8 +74,8 @@ void CPURenderThread::StartRenderThread() {
 
 void CPURenderThread::StopRenderThread() {
 	if (renderThread) {
-		renderThread->request_stop();
-		renderThread->join();
+		bool res = renderThread->request_stop();
+		if (res) renderThread->join();
 	}
 }
 
