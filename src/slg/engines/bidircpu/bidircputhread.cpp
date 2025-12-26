@@ -64,7 +64,7 @@ void BiDirCPURenderThread::AOVWarmUp(std::stop_token stop_token, RandomGenerator
 
 	SobolSampler sampler(rndGen, engine->film, engine->sampleSplatter, true, 0.f, 0.f,
 		16, 16, 1, 1,
-		engine->aovWarmupSamplerSharedData);
+		*engine->aovWarmupSamplerSharedData);
 
 	// Request the samples
 	const u_int sampleBootSize = 5;
@@ -560,7 +560,7 @@ void BiDirCPURenderThread::DirectHitLight(const bool finiteLightSource,
 }
 
 bool BiDirCPURenderThread::TraceLightPath(const float time,
-		Sampler *sampler, CameraPtr camera,
+		const SamplerUPtr& sampler, CameraPtr camera,
 		vector<PathVertexVM> &lightPathVertices,
 		vector<SampleResult> &sampleResults) const {
 	BiDirCPURenderEngine *engine = (BiDirCPURenderEngine *)renderEngine;
@@ -672,7 +672,7 @@ bool BiDirCPURenderThread::TraceLightPath(const float time,
 	return true;
 }
 
-bool BiDirCPURenderThread::Bounce(const float time, Sampler *sampler,
+bool BiDirCPURenderThread::Bounce(const float time, const SamplerUPtr& sampler,
 		const u_int sampleOffset, PathVertexVM *pathVertex, Ray *nextEventRay) const {
 	BiDirCPURenderEngine *engine = (BiDirCPURenderEngine *)renderEngine;
 
@@ -763,7 +763,7 @@ void BiDirCPURenderThread::RenderFunc(std::stop_token stop_token) {
 		AOVWarmUp(stop_token, rndGen);
 
 	// Setup the sampler
-	Sampler *sampler = engine->renderConfig.AllocSampler(rndGen, engine->film, engine->sampleSplatter,
+	auto sampler = engine->renderConfig.AllocSampler(rndGen, engine->film, engine->sampleSplatter,
 			engine->samplerSharedData, Properties());
 	const u_int sampleSize = 
 		sampleBootSize + // To generate the initial light vertex and trace eye ray
@@ -1025,7 +1025,7 @@ void BiDirCPURenderThread::RenderFunc(std::stop_token stop_token) {
                 }
 	} // ~for
 
-	delete sampler;
+	sampler.reset();
 	delete rndGen;
 
 	threadDone = true;

@@ -74,9 +74,9 @@ u_int SobolSamplerSharedData::GetPassCount(const u_int bucketCount) const {
 	return bucketIndex / bucketCount;
 }
 
-SamplerSharedData *SobolSamplerSharedData::FromProperties(const Properties &cfg,
+std::unique_ptr<SamplerSharedData> SobolSamplerSharedData::FromProperties(const Properties &cfg,
 		RandomGenerator *rndGen, FilmPtr film) {
-	return new SobolSamplerSharedData(rndGen, film);
+	return std::make_unique<SobolSamplerSharedData>(rndGen, film);
 }
 
 //------------------------------------------------------------------------------
@@ -89,7 +89,9 @@ SobolSampler::SobolSampler(RandomGenerator *rnd, FilmPtr flm,
 		const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 		const float adaptiveStr, const float adaptiveUserImpWeight,
 		const u_int bucketSz, const u_int tileSz, const u_int superSmpl,
-		const u_int overlap, SobolSamplerSharedData *samplerSharedData) :
+		const u_int overlap,
+		SobolSamplerSharedData& samplerSharedData
+) :
 		Sampler(rnd, flm, flmSplatter, imgSamplesEnable),
 		sharedData(samplerSharedData), sobolSequence(), adaptiveStrength(adaptiveStr),
 		adaptiveUserImportanceWeight(adaptiveUserImpWeight), bucketSize(bucketSz),
@@ -129,7 +131,7 @@ void SobolSampler::InitNewSample() {
 			if (pixelOffset >= bucketSize) {
 				// Ask for a new bucket
 				u_int bucketSeed;
-				sharedData->GetNewBucket(bucketCount,
+				sharedData.GetNewBucket(bucketCount,
 						&bucketIndex, &bucketSeed);
 
 				pixelOffset = 0;
@@ -161,7 +163,7 @@ void SobolSampler::InitNewSample() {
 			pixelY = filmSubRegion[2] + subRegionPixelY;
 
 			// Check if the current pixel is over or under the convergence threshold
-			FilmConstPtr film = sharedData->engineFilm;
+			FilmConstPtr film = sharedData.engineFilm;
 			if ((adaptiveStrength > 0.f) && film->HasChannel(Film::NOISE)) {
 				// Pixels are sampled in accordance with how far from convergence they are
 				const float noise = *(film->channel_NOISE->GetPixel(pixelX, pixelY));
@@ -194,12 +196,12 @@ void SobolSampler::InitNewSample() {
 				}
 			}
 
-			pass = sharedData->GetNewPixelPass(subRegionPixelX + subRegionPixelY * subRegionWidth);
+			pass = sharedData.GetNewPixelPass(subRegionPixelX + subRegionPixelY * subRegionWidth);
 		} else {
 			pixelX = 0;
 			pixelY = 0;
 
-			pass = sharedData->GetNewPixelPass();
+			pass = sharedData.GetNewPixelPass();
 		}
 
 		// Initialize rng0, rng1 and rngPass
@@ -277,7 +279,7 @@ u_int SobolSampler::GetPassCount() const {
 
 	const u_int bucketCount = overlapping * (tiletWidthCount * tileSize * tileHeightCount * tileSize + bucketSize - 1) / bucketSize;
 
-	return sharedData->GetPassCount(bucketCount);
+	return sharedData.GetPassCount(bucketCount);
 }
 
 Properties SobolSampler::ToProperties() const {
@@ -306,8 +308,8 @@ Properties SobolSampler::ToProperties(const Properties &cfg) {
 			cfg.Get(GetDefaultProps().Get("sampler.sobol.overlapping"));
 }
 
-Sampler *SobolSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+SamplerUPtr SobolSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData& sharedData) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
 	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.sobol.adaptive.strength")).Get<double>(), 0.0, .95);
@@ -317,10 +319,11 @@ Sampler *SobolSampler::FromProperties(const Properties &cfg, RandomGenerator *rn
 	const float superSampling = cfg.Get(GetDefaultProps().Get("sampler.sobol.supersampling")).Get<u_int>();
 	const float overlapping = cfg.Get(GetDefaultProps().Get("sampler.sobol.overlapping")).Get<u_int>();
 
-	return new SobolSampler(rndGen, film, flmSplatter, imageSamplesEnable,
+	return std::make_unique<SobolSampler>(rndGen, film, flmSplatter, imageSamplesEnable,
 			adaptiveStrength, adaptiveUserImportanceWeight,
 			bucketSize, tileSize, superSampling, overlapping,
-			(SobolSamplerSharedData *)sharedData);
+			dynamic_cast<SobolSamplerSharedData&>(sharedData)
+	);
 }
 
 slg::ocl::Sampler *SobolSampler::FromPropertiesOCL(const Properties &cfg) {

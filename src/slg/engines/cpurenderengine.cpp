@@ -211,7 +211,6 @@ CPUNoTileRenderEngine::CPUNoTileRenderEngine(RenderConfigConstRef cfg) : CPURend
 }
 
 CPUNoTileRenderEngine::~CPUNoTileRenderEngine() {
-	delete samplerSharedData;
 }
 
 void CPUNoTileRenderEngine::StartLockLess() {
@@ -223,8 +222,7 @@ void CPUNoTileRenderEngine::StartLockLess() {
 void CPUNoTileRenderEngine::StopLockLess() {
 	CPURenderEngine::StopLockLess();
 
-	delete samplerSharedData;
-	samplerSharedData = NULL;
+	samplerSharedData.reset();
 }
 
 void CPUNoTileRenderEngine::EndSceneEditLockLess(const EditActionList &editActions) {

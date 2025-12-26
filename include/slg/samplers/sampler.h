@@ -53,8 +53,11 @@ public:
 
 	virtual void Reset() = 0;
 
-	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, FilmPtr film);
+	static std::unique_ptr<SamplerSharedData> FromProperties(
+		const luxrays::Properties &cfg,
+		luxrays::RandomGenerator *rndGen,
+		FilmPtr film
+	);
 };
 
 //------------------------------------------------------------------------------
@@ -101,8 +104,11 @@ public:
 	// object Properties (including all defaults values)
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
 	// Allocate a Object based on the cfg definition
-	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+	static SamplerUPtr FromProperties(
+		const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
+		FilmPtr film, const FilmSampleSplatter *flmSplatter,
+		SamplerSharedData& sharedData
+	);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);

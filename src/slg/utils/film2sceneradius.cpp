@@ -133,7 +133,7 @@ static void Film2SceneRadiusThread(Film2SceneRadiusThreadParams &params) {
 	SobolSamplerSharedData sobolSharedData(131, nullptr);
 	SobolSampler sampler(&rnd, NULL, NULL, true, 0.f, 0.f,
 			16, 16, 1, 1,
-			&sobolSharedData);
+			sobolSharedData);
 
 	// Request the samples
 	const u_int sampleBootSize = 5;

@@ -30,7 +30,9 @@ using namespace slg;
 // SamplerSharedData
 //------------------------------------------------------------------------------
 
-SamplerSharedData *SamplerSharedData::FromProperties(const Properties &cfg, RandomGenerator *rndGen, FilmPtr film) {
+std::unique_ptr<SamplerSharedData> SamplerSharedData::FromProperties(
+	const Properties &cfg, RandomGenerator *rndGen, FilmPtr film
+) {
 	const string type = cfg.Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
 
 	SamplerSharedDataRegistry::FromProperties func;
@@ -71,8 +73,13 @@ Properties Sampler::ToProperties(const Properties &cfg) {
 		throw runtime_error("Unknown sampler type in Sampler::ToProperties(): " + type);
 }
 
-Sampler *Sampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+SamplerUPtr Sampler::FromProperties(
+	const Properties &cfg,
+	RandomGenerator *rndGen,
+	FilmPtr film,
+	const FilmSampleSplatter *flmSplatter,
+	SamplerSharedData& sharedData
+) {
 	const string type = cfg.Get(Property("sampler.type")(SobolSampler::GetObjectTag())).Get<string>();
 
 	SamplerRegistry::FromProperties func;
@@ -141,9 +148,13 @@ STATICTABLE_DECLARATION(SamplerSharedDataRegistry, string, FromProperties);
 //------------------------------------------------------------------------------
 
 SAMPLERSHAREDDATA_STATICTABLE_REGISTER(RandomSampler::GetObjectTag(), RandomSamplerSharedData);
+
 SAMPLERSHAREDDATA_STATICTABLE_REGISTER(SobolSampler::GetObjectTag(), SobolSamplerSharedData);
+
 SAMPLERSHAREDDATA_STATICTABLE_REGISTER(MetropolisSampler::GetObjectTag(), MetropolisSamplerSharedData);
+
 SAMPLERSHAREDDATA_STATICTABLE_REGISTER(RTPathCPUSampler::GetObjectTag(), RTPathCPUSamplerSharedData);
+
 SAMPLERSHAREDDATA_STATICTABLE_REGISTER(TilePathSampler::GetObjectTag(), TilePathSamplerSharedData);
 // Just add here any new SamplerSharedData (don't forget in the .h too)
 

@@ -55,19 +55,22 @@ void BiDirVMCPURenderThread::RenderFuncVM(std::stop_token stop_token) {
 	auto camera = scene->camera;
 
 	// Setup the samplers
-	vector<Sampler *> samplers(engine->lightPathsCount, NULL);
+	std::vector<SamplerUPtr> samplers(engine->lightPathsCount);
 	const u_int sampleSize = 
 		sampleBootSizeVM + // To generate the initial light vertex and trace eye ray
 		engine->maxLightPathDepth * sampleLightStepSize + // For each light vertex
 		engine->maxEyePathDepth * sampleEyeStepSize; // For each eye vertex
 
 	for (u_int i = 0; i < samplers.size(); ++i) {
-		Sampler *sampler = engine->renderConfig.AllocSampler(rndGen, engine->film,
-				engine->sampleSplatter,	engine->samplerSharedData, Properties());
+		auto sampler = engine->renderConfig.AllocSampler(
+			rndGen, engine->film,
+			engine->sampleSplatter,
+			engine->samplerSharedData, Properties()
+		);
 		sampler->SetThreadIndex(threadIndex);
 		sampler->RequestSamples(PIXEL_NORMALIZED_AND_SCREEN_NORMALIZED, sampleSize);
 
-		samplers[i] = sampler;
+		samplers[i] = std::move(sampler);
 	}
 
 	u_int iteration = 0;
@@ -118,7 +121,7 @@ void BiDirVMCPURenderThread::RenderFuncVM(std::stop_token stop_token) {
 		//----------------------------------------------------------------------
 
 		for (u_int samplerIndex = 0; samplerIndex < samplers.size(); ++samplerIndex) {
-			Sampler *sampler = samplers[samplerIndex];
+			auto& sampler = samplers[samplerIndex];
 
 			// Sample a point on the camera lens
 			if (!camera->SampleLens(time, sampler->GetSample(3), sampler->GetSample(4),
@@ -144,7 +147,7 @@ void BiDirVMCPURenderThread::RenderFuncVM(std::stop_token stop_token) {
 		//----------------------------------------------------------------------
 
 		for (u_int samplerIndex = 0; samplerIndex < samplers.size(); ++samplerIndex) {
-			Sampler *sampler = samplers[samplerIndex];
+			auto& sampler = samplers[samplerIndex];
 
 			PathVertexVM eyeVertex;
 			SampleResult &eyeSampleResult = AddResult(samplesResults[samplerIndex], false);
@@ -280,7 +283,7 @@ void BiDirVMCPURenderThread::RenderFuncVM(std::stop_token stop_token) {
 	}
 
 	for (u_int samplerIndex = 0; samplerIndex < samplers.size(); ++samplerIndex)
-		delete samplers[samplerIndex];
+		samplers[samplerIndex].reset();
 	delete rndGen;
 
 	threadDone = true;

@@ -53,11 +53,12 @@ public:
 	Filter *AllocPixelFilter() const;
 	FilmPtr AllocFilm() const;
 
-	SamplerSharedData *AllocSamplerSharedData(luxrays::RandomGenerator *rndGen, FilmPtr film) const;
-	Sampler *AllocSampler(luxrays::RandomGenerator *rndGen, FilmPtr film,
+	std::unique_ptr<SamplerSharedData> AllocSamplerSharedData(luxrays::RandomGenerator *rndGen, FilmPtr film) const;
+	std::unique_ptr<Sampler> AllocSampler(luxrays::RandomGenerator *rndGen, FilmPtr film,
 		const FilmSampleSplatter *flmSplatter,
-		SamplerSharedData *sharedData,
-		const luxrays::Properties &additionalProps) const;
+		const std::unique_ptr<SamplerSharedData>& sharedData,
+		const luxrays::Properties &additionalProps
+	) const;
 
 	RenderEngineUPtr AllocRenderEngine() const;
 

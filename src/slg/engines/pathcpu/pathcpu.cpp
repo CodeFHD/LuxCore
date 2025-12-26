@@ -38,7 +38,6 @@ PathCPURenderEngine::PathCPURenderEngine(RenderConfigConstRef rcfg) :
 PathCPURenderEngine::~PathCPURenderEngine() {
 	delete photonGICache;
 	delete lightSampleSplatter;
-	delete lightSamplerSharedData;
 }
 
 void PathCPURenderEngine::InitFilm() {
@@ -154,9 +153,6 @@ void PathCPURenderEngine::StopLockLess() {
 	pathTracer.DeletePixelFilterDistribution();
 	delete lightSampleSplatter;
 	lightSampleSplatter = NULL;
-
-	delete lightSamplerSharedData;
-	lightSamplerSharedData = nullptr;
 
 	delete photonGICache;
 	photonGICache = nullptr;

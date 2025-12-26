@@ -49,7 +49,7 @@ class ImageMapResizePolicy {
 public:
 	ImageMapResizePolicy() { }
 	virtual ~ImageMapResizePolicy() { }
-	
+
 	virtual ImageMapResizePolicyType GetType() const = 0;
 
 	virtual ImageMapPtr ApplyResizePolicy(const std::string &fileName, const ImageMapConfig &imgCfg, bool &toApply) const = 0;
@@ -73,10 +73,16 @@ private:
 
 
 
-	static void RenderFunc(std::stop_token stop_token, const u_int threadIndex,
-		ImageMapCache *imc, const std::vector<u_int> *imgMapsIndices, u_int *workCounter,
-		SceneConstPtr scene, SobolSamplerSharedData *sobolSharedData,
-		std::barrier<completion_t> *threadsSyncBarrier);
+	static void RenderFunc(
+		size_t threadIndex,
+		ImageMapCache& imc,
+		const std::vector<u_int>& imgMapsIndices,
+		u_int& workCounter,
+		SceneConstPtr scene,
+		SobolSamplerSharedData& sobolSharedData,
+		std::barrier<completion_t>& threadsSyncBarrier,
+		std::stop_token stop_token
+	);
 };
 
 //------------------------------------------------------------------------------

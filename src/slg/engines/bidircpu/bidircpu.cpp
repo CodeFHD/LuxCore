@@ -43,7 +43,6 @@ BiDirCPURenderEngine::BiDirCPURenderEngine(RenderConfigConstRef rcfg) :
 
 BiDirCPURenderEngine::~BiDirCPURenderEngine() {
 	delete photonGICache;
-	delete aovWarmupSamplerSharedData;
 }
 
 RenderStatePtr BiDirCPURenderEngine::GetRenderState() {
@@ -128,7 +127,7 @@ void BiDirCPURenderEngine::StartLockLess() {
 	if (!film->HasChannel(Film::ALBEDO) && !film->HasChannel(Film::AVG_SHADING_NORMAL))
 		aovWarmupSPP = 0;
 	if (aovWarmupSPP > 0)
-		aovWarmupSamplerSharedData = new SobolSamplerSharedData(seedBaseGenerator.uintValue(), film);
+		aovWarmupSamplerSharedData = std::make_unique<SobolSamplerSharedData>(seedBaseGenerator.uintValue(), film);
 
 	//--------------------------------------------------------------------------
 

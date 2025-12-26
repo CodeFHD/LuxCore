@@ -104,10 +104,11 @@ protected:
 		const luxrays::Point &lensPoint, std::vector<SampleResult> &sampleResults) const;
 
 	bool TraceLightPath(const float time,
-		Sampler *sampler, CameraPtr camera,
+		const SamplerUPtr& sampler,
+		CameraPtr camera,
 		std::vector<PathVertexVM> &lightPathVertices,
 		std::vector<SampleResult> &sampleResults) const;
-	bool Bounce(const float time, Sampler *sampler, const u_int sampleOffset,
+	bool Bounce(const float time, const SamplerUPtr& sampler, const u_int sampleOffset,
 		PathVertexVM *pathVertex, luxrays::Ray *nextEventRay) const;
 
 	float misVmWeightFactor; // Weight of vertex merging (used in VC)
@@ -172,7 +173,7 @@ protected:
 	PhotonGICache *photonGICache;
 
 	u_int aovWarmupSPP;
-	SobolSamplerSharedData *aovWarmupSamplerSharedData;
+	std::unique_ptr<SobolSamplerSharedData> aovWarmupSamplerSharedData;
 
 private:
 	CPURenderThread *NewRenderThread(const u_int index, luxrays::IntersectionDevice *device) {

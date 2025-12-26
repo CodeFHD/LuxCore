@@ -126,7 +126,7 @@ void RTPathCPURenderEngine::EndFilmEdit(FilmPtr flm, std::mutex *flmMutex) {
 	filmMutex = flmMutex;
 	InitFilm();
 
-	((RTPathCPUSamplerSharedData *)samplerSharedData)->Reset(film);
+	((RTPathCPUSamplerSharedData *)samplerSharedData.get())->Reset(film);
 
 	// Check if the threads were already suspended for pause
 	if (!pauseMode)

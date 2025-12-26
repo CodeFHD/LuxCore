@@ -41,8 +41,11 @@ public:
 
 	virtual void Reset() { }
 
-	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, FilmPtr film);
+	static std::unique_ptr<SamplerSharedData> FromProperties(
+		const luxrays::Properties &cfg,
+		luxrays::RandomGenerator *rndGen,
+		FilmPtr film
+	);
 
 	// Nothing to share
 };
@@ -78,8 +81,12 @@ public:
 	static SamplerType GetObjectType() { return TILEPATHSAMPLER; }
 	static std::string GetObjectTag() { return "TILEPATHSAMPLER"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+	static SamplerUPtr FromProperties(
+		const luxrays::Properties &cfg,
+		luxrays::RandomGenerator *rndGen,
+		FilmPtr film, const FilmSampleSplatter *flmSplatter,
+		SamplerSharedData& sharedData
+	);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 

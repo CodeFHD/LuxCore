@@ -46,9 +46,10 @@ void RandomSamplerSharedData::GetNewBucket(const u_int bucketCount,
 	*newBucketIndex = AtomicInc(&bucketIndex) % bucketCount;
 }
 
-SamplerSharedData *RandomSamplerSharedData::FromProperties(const Properties &cfg,
-		RandomGenerator *rndGen, FilmPtr film) {
-	return new RandomSamplerSharedData(film);
+std::unique_ptr<SamplerSharedData> RandomSamplerSharedData::FromProperties(
+	const Properties &cfg, RandomGenerator *rndGen, FilmPtr film
+) {
+	return std::make_unique<RandomSamplerSharedData>(film);
 }
 
 //------------------------------------------------------------------------------
@@ -59,7 +60,9 @@ RandomSampler::RandomSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
 		const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 		const float adaptiveStr, const float adaptiveUserImpWeight,
 		const u_int bucketSz, const u_int tileSz, const u_int superSmpl,
-		const u_int overlap, RandomSamplerSharedData *samplerSharedData) :
+		const u_int overlap,
+		RandomSamplerSharedData& samplerSharedData
+) :
 		Sampler(rnd, flm, flmSplatter, imgSamplesEnable), sharedData(samplerSharedData),
 		adaptiveStrength(adaptiveStr), adaptiveUserImportanceWeight(adaptiveUserImpWeight),
 		bucketSize(bucketSz), tileSize(tileSz), superSampling(superSmpl), overlapping(overlap) {
@@ -94,7 +97,7 @@ void RandomSampler::InitNewSample() {
 
 			if (pixelOffset >= bucketSize) {
 				// Ask for a new bucket
-				sharedData->GetNewBucket(bucketCount,
+				sharedData.GetNewBucket(bucketCount,
 						&bucketIndex);
 
 				pixelOffset = 0;
@@ -123,7 +126,7 @@ void RandomSampler::InitNewSample() {
 			pixelY = filmSubRegion[2] + subRegionPixelY;
 
 			// Check if the current pixel is over or under the convergence threshold
-			FilmConstPtr film = sharedData->engineFilm;
+			FilmConstPtr film = sharedData.engineFilm;
 			if ((adaptiveStrength > 0.f) && film->HasChannel(Film::NOISE)) {
 				// Pixels are sampled in accordance with how far from convergence they are
 				const float noise = *(film->channel_NOISE->GetPixel(pixelX, pixelY));
@@ -235,8 +238,9 @@ Properties RandomSampler::ToProperties(const Properties &cfg) {
 			cfg.Get(GetDefaultProps().Get("sampler.random.overlapping"));
 }
 
-Sampler *RandomSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
+SamplerUPtr RandomSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
+		FilmPtr film, const FilmSampleSplatter *flmSplatter,
+		SamplerSharedData& sharedData) {
 	const bool imageSamplesEnable = cfg.Get(GetDefaultProps().Get("sampler.imagesamples.enable")).Get<bool>();
 
 	const float adaptiveStrength = Clamp(cfg.Get(GetDefaultProps().Get("sampler.random.adaptive.strength")).Get<double>(), 0.0, .95);
@@ -246,10 +250,10 @@ Sampler *RandomSampler::FromProperties(const Properties &cfg, RandomGenerator *r
 	const float superSampling = cfg.Get(GetDefaultProps().Get("sampler.random.supersampling")).Get<u_int>();
 	const float overlapping = cfg.Get(GetDefaultProps().Get("sampler.random.overlapping")).Get<u_int>();
 
-	return new RandomSampler(rndGen, film, flmSplatter, imageSamplesEnable,
+	return std::make_unique<RandomSampler>(rndGen, film, flmSplatter, imageSamplesEnable,
 			adaptiveStrength, adaptiveUserImportanceWeight,
 			bucketSize, tileSize, superSampling, overlapping,
-			(RandomSamplerSharedData *)sharedData);
+			dynamic_cast<RandomSamplerSharedData&>(sharedData));
 }
 
 slg::ocl::Sampler *RandomSampler::FromPropertiesOCL(const Properties &cfg) {

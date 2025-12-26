@@ -117,7 +117,7 @@ void SceneVisibility<T>::TraceVisibilityThread::RenderFunc(std::stop_token stop_
 	RandomGenerator rnd(1 + threadIndex);
 	SobolSampler sampler(&rnd, NULL, NULL, true, 0.f, 0.f,
 			16, 16, 1, 1,
-			&visibilitySobolSharedData);
+			visibilitySobolSharedData);
 
 	// Request the samples
 	const u_int sampleBootSize = 5;

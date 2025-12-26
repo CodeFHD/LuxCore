@@ -16,6 +16,7 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
+#include <functional>
 #include <boost/format.hpp>
 
 #include "luxrays/utils/thread.h"
@@ -34,28 +35,34 @@ using namespace slg;
 //------------------------------------------------------------------------------
 
 static void GenerateEyeRay(CameraConstPtr camera, const UV &sampleOffestUV, Ray &eyeRay,
-		PathVolumeInfo &volInfo, Sampler *sampler, SampleResult &sampleResult) {
+		PathVolumeInfo &volInfo, Sampler& sampler, SampleResult &sampleResult) {
 	const u_int *subRegion = camera->filmSubRegion;
 	// Removed the +1 from region width to have room for sampleOffestUV
-	sampleResult.filmX = subRegion[0] + sampler->GetSample(0) * (subRegion[1] - subRegion[0]) +
+	sampleResult.filmX = subRegion[0] + sampler.GetSample(0) * (subRegion[1] - subRegion[0]) +
 			 sampleOffestUV.u;
 	// Removed the +1 from region height to have room for sampleOffestUV
-	sampleResult.filmY = subRegion[2] + sampler->GetSample(1) * (subRegion[3] - subRegion[2]) +
+	sampleResult.filmY = subRegion[2] + sampler.GetSample(1) * (subRegion[3] - subRegion[2]) +
 			 sampleOffestUV.v;
 	
 	//cout << "Sample: " << sampleResult.filmX << ", " << sampleResult.filmY << endl;
 
-	const float timeSample = sampler->GetSample(4);
+	const float timeSample = sampler.GetSample(4);
 	const float time = camera->GenerateRayTime(timeSample);
 
 	camera->GenerateRay(time, sampleResult.filmX, sampleResult.filmY, &eyeRay, &volInfo,
-		sampler->GetSample(2), sampler->GetSample(3));
+		sampler.GetSample(2), sampler.GetSample(3));
 }
 
-void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int threadIndex,
-		ImageMapCache *imc, const vector<u_int> *imgMapsIndices, u_int *workCounter,
-		SceneConstPtr scene, SobolSamplerSharedData *sobolSharedData,
-		std::barrier<completion_t> *threadsSyncBarrier) {
+void ImageMapResizePolicy::RenderFunc(
+	size_t threadIndex,
+	ImageMapCache& imc,
+	const std::vector<u_int>& imgMapsIndices,
+	u_int& workCounter,
+	SceneConstPtr scene,
+	SobolSamplerSharedData& sobolSharedData,
+	std::barrier<completion_t>& threadsSyncBarrier,
+	std::stop_token stop_token
+) {
 	// Hard coded parameters
 	const u_int passesCount = 1;
 	const u_int workSize = 4096;
@@ -70,10 +77,10 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 	SetThreadGroupAffinity(threadIndex);
 
 	// Setup thread image maps instrumentation
-	for (auto i : *imgMapsIndices)
-		imc->maps[i]->instrumentationInfo->ThreadSetUp();
+	for (auto i : imgMapsIndices)
+		imc.maps[i]->instrumentationInfo->ThreadSetUp();
 
-	threadsSyncBarrier->arrive_and_wait();
+	threadsSyncBarrier.arrive_and_wait();
 
 	CameraConstPtr camera = scene->camera;
 
@@ -115,9 +122,9 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 	//cout << "totalWorkUnit: " << totalWorkUnit << endl;
 
 	//GenericFrameBuffer<4, 1, float> frameBuffer(camera->filmWidth, camera->filmHeight);
-	while (!stop_token.stop_requested() && (*workCounter < totalWorkUnit)) {
-		AtomicInc(workCounter);
-		
+	while (!stop_token.stop_requested() && (workCounter < totalWorkUnit)) {
+		AtomicInc(&workCounter);
+
 		for (u_int workUnitIndex = 0; workUnitIndex < workSize; ++workUnitIndex) {
 			for (u_int i = 0; i < 3; ++i) {
 				ImageMap::InstrumentationInfo::InstrumentationSampleIndex sampleIndex;
@@ -136,14 +143,14 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 						break;
 				}
 
-				for (auto j : *imgMapsIndices)
-					imc->maps[j]->instrumentationInfo->ThreadSetSampleIndex(sampleIndex);
+				for (auto j : imgMapsIndices)
+					imc.maps[j]->instrumentationInfo->ThreadSetSampleIndex(sampleIndex);
 
 				sampleResult.radiance[0] = Spectrum();
 
 				Ray eyeRay;
 				PathVolumeInfo volInfo;
-				GenerateEyeRay(camera, sampleOffestUV, eyeRay, volInfo, &sampler, sampleResult);
+				GenerateEyeRay(camera, sampleOffestUV, eyeRay, volInfo, sampler, sampleResult);
 
 				BSDFEvent lastBSDFEvent = SPECULAR;
 				Spectrum pathThroughput(1.f);
@@ -228,8 +235,8 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 			}
 
 			// Accumulate image maps instrumentation data
-			for (auto j : *imgMapsIndices)
-				imc->maps[j]->instrumentationInfo->ThreadAccumulateSamples();
+			for (auto j : imgMapsIndices)
+				imc.maps[j]->instrumentationInfo->ThreadAccumulateSamples();
 
 			sampler.NextSample(sampleResults);
 		}
@@ -237,11 +244,11 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 
 	//frameBuffer.SaveHDR("thread" + ToString(threadIndex) + ".exr");
 	
-	threadsSyncBarrier->arrive_and_wait();
+	threadsSyncBarrier.arrive_and_wait();
 
 	// Delete thread image maps instrumentation
-	for (auto i : *imgMapsIndices)
-		imc->maps[i]->instrumentationInfo->ThreadFinalize();
+	for (auto i : imgMapsIndices)
+		imc.maps[i]->instrumentationInfo->ThreadFinalize();
 }
 
 //------------------------------------------------------------------------------
@@ -250,10 +257,10 @@ void ImageMapResizePolicy::RenderFunc(std::stop_token stop_token, const u_int th
 
 
 void ImageMapResizePolicy::CalcOptimalImageMapSizes(ImageMapCache &imc, SceneConstPtr scene,
-		const vector<u_int> &imgMapsIndices) {
+		const std::vector<u_int> &imgMapsIndices) {
 	// Do a test render to establish the optimal image maps sizes
 	const size_t renderThreadCount = GetHardwareThreadCount();
-	std::vector<luxrays::JThreadPtr> renderThreads(renderThreadCount);
+	std::vector<luxrays::JThread> renderThreads(renderThreadCount);
 	SLG_LOG("Optimal image map size preprocess thread count: " << renderThreadCount);
 
 	std::barrier threadsSyncBarrier(renderThreadCount, completion_t());
@@ -262,15 +269,23 @@ void ImageMapResizePolicy::CalcOptimalImageMapSizes(ImageMapCache &imc, SceneCon
 
 	// Start the preprocessing threads
 	u_int workCounter = 0;
-	for (size_t i = 0; i < renderThreadCount; ++i)
-		renderThreads[i] = std::make_unique<luxrays::JThread>(
-			&RenderFunc, i, &imc, &imgMapsIndices,
-			&workCounter, scene, &sobolSharedData, &threadsSyncBarrier
+	for (size_t i = 0; i < renderThreadCount; ++i) {
+		std::function<void(std::stop_token)> worker = std::bind_front(
+			RenderFunc,
+			i,
+			std::ref(imc),
+			std::cref(imgMapsIndices),
+			std::ref(workCounter),
+			scene,  // scene is a pointer
+			std::ref(sobolSharedData),
+			std::ref(threadsSyncBarrier)
 		);
+		renderThreads[i] = luxrays::JThread(worker);
+	}
 
 	// Wait for the end of threads
 	for (size_t i = 0; i < renderThreadCount; ++i) {
-		renderThreads[i]->join();
+		renderThreads[i].join();
 	}
 
 	for (auto i : imgMapsIndices) {

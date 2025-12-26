@@ -48,8 +48,11 @@ public:
 	
 	u_int GetPassCount(const u_int bucketCount) const;
 	
-	static SamplerSharedData *FromProperties(const luxrays::Properties &cfg,
-			luxrays::RandomGenerator *rndGen, FilmPtr film);
+	static std::unique_ptr<SamplerSharedData> FromProperties(
+		const luxrays::Properties &cfg,
+		luxrays::RandomGenerator *rndGen,
+		FilmPtr film
+	);
 
 	FilmPtr engineFilm;
 	u_int seedBase;
@@ -60,6 +63,7 @@ private:
 
 	// Holds the current pass for each pixel when using adaptive sampling
 	std::vector<u_int> passPerPixel;
+
 
 };
 
@@ -75,7 +79,9 @@ public:
 			const FilmSampleSplatter *flmSplatter, const bool imgSamplesEnable,
 			const float adaptiveStr, const float adaptiveUserImpWeight,
 			const u_int bucketSize, const u_int tileSize, const u_int superSampling,
-			const u_int overlapping, SobolSamplerSharedData *samplerSharedData);
+			const u_int overlapping,
+			SobolSamplerSharedData& samplerSharedData
+	);
 	virtual ~SobolSampler();
 
 	virtual SamplerType GetType() const { return GetObjectType(); }
@@ -96,8 +102,10 @@ public:
 	static SamplerType GetObjectType() { return SOBOL; }
 	static std::string GetObjectTag() { return "SOBOL"; }
 	static luxrays::Properties ToProperties(const luxrays::Properties &cfg);
-	static Sampler *FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData);
+	static SamplerUPtr FromProperties(const luxrays::Properties &cfg, luxrays::RandomGenerator *rndGen,
+		FilmPtr film, const FilmSampleSplatter *flmSplatter,
+		SamplerSharedData& sharedData
+	);
 	static slg::ocl::Sampler *FromPropertiesOCL(const luxrays::Properties &cfg);
 	static void AddRequiredChannels(Film::FilmChannels &channels, const luxrays::Properties &cfg);
 
@@ -107,7 +115,7 @@ private:
 
 	static const luxrays::Properties &GetDefaultProps();
 
-	SobolSamplerSharedData *sharedData;
+	SobolSamplerSharedData& sharedData;
 	SobolSequence sobolSequence;
 	float adaptiveStrength, adaptiveUserImportanceWeight;
 	u_int bucketSize, tileSize, superSampling, overlapping;

@@ -130,7 +130,7 @@ protected:
 	virtual void UpdateFilmLockLess();
 	virtual void UpdateCounters();
 
-	SamplerSharedData *samplerSharedData;
+	std::unique_ptr<SamplerSharedData> samplerSharedData;
 };
 
 //------------------------------------------------------------------------------

@@ -93,7 +93,7 @@ protected:
 	PhotonGICache *photonGICache;
 	PathTracer pathTracer;
 	FilmSampleSplatter *lightSampleSplatter;
-	SamplerSharedData *lightSamplerSharedData;
+	std::unique_ptr<SamplerSharedData> lightSamplerSharedData;
 };
 
 }

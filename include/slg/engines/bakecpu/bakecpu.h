@@ -125,7 +125,7 @@ protected:
 	PhotonGICache *photonGICache;
 	FilmSampleSplatter *sampleSplatter;
 	PathTracer pathTracer;
-	SamplerSharedData *lightSamplerSharedData;
+	std::unique_ptr<SamplerSharedData> lightSamplerSharedData;
 
 	FilmPtr mapFilm;
 	std::vector<SceneObjectConstPtr> currentSceneObjsToBake;

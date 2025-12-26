@@ -66,7 +66,6 @@ PathOCLRenderEngine::PathOCLRenderEngine(RenderConfigConstRef rcfg) :
 
 PathOCLRenderEngine::~PathOCLRenderEngine() {
 	delete lightSampleSplatter;
-	delete eyeSamplerSharedData;
 }
 
 PathOCLBaseOCLRenderThread *PathOCLRenderEngine::CreateOCLThread(const u_int index,
@@ -167,8 +166,7 @@ void PathOCLRenderEngine::StopLockLess() {
 	delete lightSampleSplatter;
 	lightSampleSplatter = NULL;
 
-	delete eyeSamplerSharedData;
-	eyeSamplerSharedData = nullptr;
+	eyeSamplerSharedData.reset();
 
 	delete photonGICache;
 	photonGICache = nullptr;

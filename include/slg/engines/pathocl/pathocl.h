@@ -114,7 +114,7 @@ protected:
 	u_int GetTotalEyeSPP() const;
 
 	FilmSampleSplatter *lightSampleSplatter;
-	SamplerSharedData *eyeSamplerSharedData;
+	std::unique_ptr<SamplerSharedData> eyeSamplerSharedData;
 
 	bool hasStartFilm, allRenderingThreadsStarted;
 };

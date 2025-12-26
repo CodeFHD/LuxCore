@@ -99,7 +99,6 @@ BakeCPURenderEngine::~BakeCPURenderEngine() {
 	currentSceneObjDist.clear();
 	delete currentSceneObjsDist;
 	delete photonGICache;
-	delete lightSamplerSharedData;
 	delete sampleSplatter;
 	delete threadsSyncBarrier;
 }
@@ -280,9 +279,8 @@ void BakeCPURenderEngine::StopLockLess() {
 	
 	pathTracer.DeletePixelFilterDistribution();
 
-	delete lightSamplerSharedData;
-	lightSamplerSharedData = nullptr;
-
+	lightSamplerSharedData.reset();
+	
 	delete photonGICache;
 	photonGICache = nullptr;
 

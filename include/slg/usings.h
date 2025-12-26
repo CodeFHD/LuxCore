@@ -125,6 +125,9 @@ using VolumeConstPtr = std::shared_ptr<const Volume>;
 using VolumeRef = Volume&;
 using VolumeConstRef = const Volume&;
 
+class Sampler;
+using SamplerUPtr = std::unique_ptr<Sampler>;
+
 }  // namespace slg
 
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

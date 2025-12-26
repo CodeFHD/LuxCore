@@ -32,7 +32,8 @@ using namespace slg;
 //------------------------------------------------------------------------------
 
 PathTracerThreadState::PathTracerThreadState(IntersectionDevice *dev,
-		Sampler *eSampler, Sampler *lSampler,
+		const SamplerUPtr& eSampler,
+		const SamplerUPtr& lSampler,
 		SceneConstPtr scn, FilmPtr flm,
 		const VarianceClamping *varClamping,
 		const bool useFilmSplat) : device(dev),
@@ -342,9 +343,9 @@ void PathTracer::DirectHitInfiniteLight(SceneConstPtr scene,
 }
 
 void PathTracer::GenerateEyeRay(CameraConstPtr camera, FilmConstPtr film, Ray &eyeRay,
-		PathVolumeInfo &volInfo, Sampler *sampler, SampleResult &sampleResult) const {
-	const float filmX = sampler->GetSample(0);
-	const float filmY = sampler->GetSample(1);
+		PathVolumeInfo &volInfo, Sampler& sampler, SampleResult &sampleResult) const {
+	const float filmX = sampler.GetSample(0);
+	const float filmY = sampler.GetSample(1);
 
 	// Use fast pixel filtering, like the one used in TILEPATH.
 
@@ -366,11 +367,11 @@ void PathTracer::GenerateEyeRay(CameraConstPtr camera, FilmConstPtr film, Ray &e
 	sampleResult.filmX = sampleResult.pixelX + .5f + distX;
 	sampleResult.filmY = sampleResult.pixelY + .5f + distY;
 
-	const float timeSample = sampler->GetSample(4);
+	const float timeSample = sampler.GetSample(4);
 	const float time = camera->GenerateRayTime(timeSample);
 
 	camera->GenerateRay(time, sampleResult.filmX, sampleResult.filmY, &eyeRay, &volInfo,
-		sampler->GetSample(2), sampler->GetSample(3));
+		sampler.GetSample(2), sampler.GetSample(3));
 }
 
 //------------------------------------------------------------------------------
@@ -378,7 +379,7 @@ void PathTracer::GenerateEyeRay(CameraConstPtr camera, FilmConstPtr film, Ray &e
 //------------------------------------------------------------------------------
 
 void PathTracer::RenderEyePath(IntersectionDevice *device,
-		SceneConstPtr scene, Sampler *sampler, EyePathInfo &pathInfo,
+		SceneConstPtr scene, Sampler& sampler, EyePathInfo &pathInfo,
 		Ray &eyeRay,  const luxrays::Spectrum &eyeTroughput,
 		vector<SampleResult> &sampleResults) const {
 	// To keep track of the number of rays traced
@@ -402,7 +403,7 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 
 		RayHit eyeRayHit;
 		Spectrum connectionThroughput;
-		const float passThrough = sampler->GetSample(sampleOffset);
+		const float passThrough = sampler.GetSample(sampleOffset);
 		const bool hit = scene->Intersect(device,
 				EYE_RAY | (sampleResult.firstPathVertex ? CAMERA_RAY : INDIRECT_RAY),
 				&pathInfo.volume, passThrough,
@@ -570,11 +571,11 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 		const DirectLightResult directLightResult = DirectLightSampling(
 				device, scene,
 				eyeRay.time,
-				sampler->GetSample(sampleOffset + 1),
-				sampler->GetSample(sampleOffset + 2),
-				sampler->GetSample(sampleOffset + 3),
-				sampler->GetSample(sampleOffset + 4),
-				sampler->GetSample(sampleOffset + 5),
+				sampler.GetSample(sampleOffset + 1),
+				sampler.GetSample(sampleOffset + 2),
+				sampler.GetSample(sampleOffset + 3),
+				sampler.GetSample(sampleOffset + 4),
+				sampler.GetSample(sampleOffset + 5),
 				pathInfo, 
 				pathThroughput, bsdf, &sampleResult);
 
@@ -607,8 +608,8 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 				bsdfEvent = pathInfo.lastBSDFEvent;
 			} else {
 				bsdfSample = bsdf.Sample(&sampledDir,
-						sampler->GetSample(sampleOffset + 6),
-						sampler->GetSample(sampleOffset + 7),
+						sampler.GetSample(sampleOffset + 6),
+						sampler.GetSample(sampleOffset + 7),
 						&bsdfPdfW, &cosSampledDir, &bsdfEvent);
 				pathInfo.isPassThroughPath = false;
 			}
@@ -627,7 +628,7 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 		float rrProb = 1.f;
 		if (pathInfo.UseRR(rrDepth)) {
 			 rrProb = RenderEngine::RussianRouletteProb(bsdfSample, rrImportanceCap);
-			if (rrProb < sampler->GetSample(sampleOffset + 8))
+			if (rrProb < sampler.GetSample(sampleOffset + 8))
 				break;
 
 			// Increase path contribution
@@ -666,9 +667,12 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 // RenderEyeSample
 //------------------------------------------------------------------------------
 
-void PathTracer::RenderEyeSample(IntersectionDevice *device,
-		SceneConstPtr scene, FilmConstPtr film,
-		Sampler *sampler, vector<SampleResult> &sampleResults) const {
+void PathTracer::RenderEyeSample(
+	IntersectionDevice *device,
+	SceneConstPtr scene, FilmConstPtr film,
+	Sampler& sampler,
+	vector<SampleResult> &sampleResults
+) const {
 	ResetEyeSampleResults(sampleResults);
 
 	EyePathInfo pathInfo;
@@ -795,27 +799,27 @@ void PathTracer::ConnectToEye(IntersectionDevice *device,
 
 void PathTracer::RenderLightSample(IntersectionDevice *device,
 		SceneConstPtr scene, FilmConstPtr film,
-		Sampler *sampler, vector<SampleResult> &sampleResults,
+		Sampler& sampler, vector<SampleResult> &sampleResults,
 		const ConnectToEyeCallBackType &ConnectToEyeCallBack) const {
 	sampleResults.clear();
 
 	Spectrum lightPathFlux;
 
-	const float timeSample = sampler->GetSample(8);
+	const float timeSample = sampler.GetSample(8);
 	const float time = scene->camera->GenerateRayTime(timeSample);
 
 	// Select one light source
 	float lightPickPdf;
 	LightSourceConstPtr light = scene->lightDefs.GetEmitLightStrategy()->
-			SampleLights(scene, sampler->GetSample(0), &lightPickPdf);
+			SampleLights(scene, sampler.GetSample(0), &lightPickPdf);
 
 	if (light) {
 		// Initialize the light path
 		Ray nextEventRay;
 		float lightEmitPdfW;
 		lightPathFlux = light->Emit(scene,
-				time, sampler->GetSample(1), sampler->GetSample(2),
-				sampler->GetSample(3), sampler->GetSample(4), sampler->GetSample(5),
+				time, sampler.GetSample(1), sampler.GetSample(2),
+				sampler.GetSample(3), sampler.GetSample(4), sampler.GetSample(5),
 				nextEventRay, lightEmitPdfW);
 
 		if (lightPathFlux.Black())
@@ -828,7 +832,7 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 
 		/*
 		// Sample a point on the camera lens
-		if (!scene->camera->SampleLens(time, sampler->GetSample(6), sampler->GetSample(7),
+		if (!scene->camera->SampleLens(time, sampler.GetSample(6), sampler.GetSample(7),
 				&pathInfo.lensPoint))
 			return;
 		*/
@@ -843,7 +847,7 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			RayHit nextEventRayHit;
 			BSDF bsdf;
 			Spectrum connectionThroughput;
-			const bool hit = scene->Intersect(device, LIGHT_RAY | INDIRECT_RAY, &pathInfo.volume, sampler->GetSample(sampleOffset),
+			const bool hit = scene->Intersect(device, LIGHT_RAY | INDIRECT_RAY, &pathInfo.volume, sampler.GetSample(sampleOffset),
 					&nextEventRay, &nextEventRayHit, &bsdf,
 					&connectionThroughput);
 			if (!hit) {
@@ -865,7 +869,7 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			// Try to connect the light path vertex with the eye
 			//--------------------------------------------------------------
 
-			scene->camera->SampleLens(time, sampler->GetSample(6), sampler->GetSample(7),
+			scene->camera->SampleLens(time, sampler.GetSample(6), sampler.GetSample(7),
 				&pathInfo.lensPoint);
 
 			if (ConnectToEyeCallBack){
@@ -873,9 +877,9 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			} else {
 				ConnectToEye(device, scene, film,
 						nextEventRay.time,
-						sampler->GetSample(sampleOffset + 1),
-						sampler->GetSample(sampleOffset + 2),
-						sampler->GetSample(sampleOffset + 3),
+						sampler.GetSample(sampleOffset + 1),
+						sampler.GetSample(sampleOffset + 2),
+						sampler.GetSample(sampleOffset + 3),
 						*light, bsdf, lightPathFlux, pathInfo, sampleResults);
 			}
 
@@ -891,8 +895,8 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			BSDFEvent bsdfEvent;
 			float cosSampleDir;
 			Spectrum bsdfSample = bsdf.Sample(&sampledDir,
-						sampler->GetSample(sampleOffset + 4),
-						sampler->GetSample(sampleOffset + 5),
+						sampler.GetSample(sampleOffset + 4),
+						sampler.GetSample(sampleOffset + 5),
 					&bsdfPdf, &cosSampleDir, &bsdfEvent);
 			if (bsdfSample.Black())
 				break;
@@ -912,7 +916,7 @@ void PathTracer::RenderLightSample(IntersectionDevice *device,
 			if (pathInfo.UseRR(rrDepth)) {
 				// Russian Roulette
 				const float rrProb = RenderEngine::RussianRouletteProb(bsdfSample, rrImportanceCap);
-				if (rrProb < sampler->GetSample(sampleOffset + 6))
+				if (rrProb < sampler.GetSample(sampleOffset + 6))
 					break;
 
 				// Increase path contribution
@@ -968,24 +972,15 @@ void PathTracer::ApplyVarianceClamp(const PathTracerThreadState &state,
 
 void PathTracer::RenderSample(PathTracerThreadState &state) const {
 	// Check if I have to trace an eye or light path
-	Sampler *sampler;
-	vector<SampleResult> *sampleResults;
-	if (HasToRenderEyeSample(state)) {
-		// Trace an eye path
-		sampler = state.eyeSampler;
-		sampleResults = &state.eyeSampleResults;
-	} else {
-		// Trace a light path
-		sampler = state.lightSampler;
-		sampleResults = &state.lightSampleResults;
-	}
+	auto& sampler = HasToRenderEyeSample(state) ? state.eyeSampler : state.lightSampler;
+	auto& sampleResults = HasToRenderEyeSample(state) ? state.eyeSampleResults : state.lightSampleResults;
 
 	if (sampler == state.eyeSampler)
 		RenderEyeSample(
 			state.device,
 			state.scene.lock(),
 			state.film,
-			state.eyeSampler,
+			*state.eyeSampler,
 			state.eyeSampleResults
 		);
 	else
@@ -993,14 +988,14 @@ void PathTracer::RenderSample(PathTracerThreadState &state) const {
 			state.device,
 			state.scene.lock(),
 			state.film,
-			state.lightSampler,
+			*state.lightSampler,
 			state.lightSampleResults
 		);
 
 	// Variance clamping
-	ApplyVarianceClamp(state, *sampleResults);
+	ApplyVarianceClamp(state, sampleResults);
 
-	sampler->NextSample(*sampleResults);
+	sampler->NextSample(sampleResults);
 }
 
 //------------------------------------------------------------------------------

@@ -84,15 +84,15 @@ void TilePathNativeRenderThread::RenderThreadImpl(std::stop_token stop_token) {
 	RandomGenerator *rndGen = new RandomGenerator(engine->seedBase + threadIndex);
 
 	// Setup the sampler
-	Sampler *genericSampler = engine->renderConfig.AllocSampler(rndGen,
+	auto genericSampler = engine->renderConfig.AllocSampler(rndGen,
 			engine->film, NULL, NULL, Properties());
 	genericSampler->RequestSamples(PIXEL_NORMALIZED_ONLY, pathTracer.eyeSampleSize);
 
-	TilePathSampler *sampler = dynamic_cast<TilePathSampler *>(genericSampler);
-	sampler->SetAASamples(engine->aaSamples);
+	auto& sampler = dynamic_cast<TilePathSampler&>(*genericSampler);
+	sampler.SetAASamples(engine->aaSamples);
 
 	// Initialize SampleResult
-	vector<SampleResult> sampleResults(1);
+	std::vector<SampleResult> sampleResults(1);
 	PathTracer::InitEyeSampleResults(engine->film, sampleResults);
 
 	//--------------------------------------------------------------------------
@@ -122,7 +122,7 @@ void TilePathNativeRenderThread::RenderThreadImpl(std::stop_token stop_token) {
 		// Render the tile
 		//----------------------------------------------------------------------
 
-		sampler->Init(&tileWork, tileFilm);
+		sampler.Init(&tileWork, tileFilm);
 
 		for (u_int y = 0; y < tileWork.GetCoord().height && !interruptionRequested; ++y) {
 			for (u_int x = 0; x < tileWork.GetCoord().width && !interruptionRequested; ++x) {
@@ -131,7 +131,7 @@ void TilePathNativeRenderThread::RenderThreadImpl(std::stop_token stop_token) {
 						pathTracer.RenderEyeSample(intersectionDevice, engine->renderConfig.scene,
 								engine->film, sampler, sampleResults);
 
-						sampler->NextSample(sampleResults);
+						sampler.NextSample(sampleResults);
 					}
 				}
 

@@ -56,10 +56,10 @@ void PathCPURenderThread::RenderFunc(std::stop_token stop_token) {
 
 	// Setup the sampler(s)
 
-	Sampler *eyeSampler = nullptr;
-	Sampler *lightSampler = nullptr;
+	
+	SamplerUPtr lightSampler;
 
-	eyeSampler = engine->renderConfig.AllocSampler(rndGen, engine->film,
+	auto eyeSampler = engine->renderConfig.AllocSampler(rndGen, engine->film,
 			nullptr, engine->samplerSharedData, Properties());
 	eyeSampler->SetThreadIndex(threadIndex);
 	eyeSampler->RequestSamples(PIXEL_NORMALIZED_ONLY, pathTracer.eyeSampleSize);
@@ -74,7 +74,7 @@ void PathCPURenderThread::RenderFunc(std::stop_token stop_token) {
 			Property("sampler.metropolis.addonlycaustics")(true);
 
 		lightSampler = Sampler::FromProperties(props, rndGen, engine->film, engine->lightSampleSplatter,
-				engine->lightSamplerSharedData);
+				*engine->lightSamplerSharedData);
 		
 		lightSampler->SetThreadIndex(threadIndex);
 		lightSampler->RequestSamples(SCREEN_NORMALIZED_ONLY, pathTracer.lightSampleSize);
@@ -123,8 +123,7 @@ void PathCPURenderThread::RenderFunc(std::stop_token stop_token) {
 		}
 	}
 
-	delete eyeSampler;
-	delete lightSampler;
+	
 	delete rndGen;
 
 	threadDone = true;

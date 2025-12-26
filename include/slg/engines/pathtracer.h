@@ -48,7 +48,8 @@ class VarianceClamping;
 class PathTracerThreadState {
 public:
 	PathTracerThreadState(luxrays::IntersectionDevice *device,
-			Sampler *eyeSampler, Sampler *lightSampler,
+			const SamplerUPtr& eyeSampler,
+			const SamplerUPtr& lightSampler,
 			SceneConstPtr scene, FilmPtr film,
 			const VarianceClamping *varianceClamping,
 			const bool useFilmSplat = false);
@@ -56,7 +57,8 @@ public:
 
 	luxrays::IntersectionDevice *device;
 
-	Sampler *eyeSampler, *lightSampler;
+	const SamplerUPtr& eyeSampler;
+	const SamplerUPtr& lightSampler;
 	SceneConstWPtr scene;
 	FilmPtr film;
 	const VarianceClamping *varianceClamping;
@@ -102,21 +104,31 @@ public:
 		const BSDF &bsdf, SampleResult *sampleResult,
 		const bool useBSDFEVal = true) const;
 
-	void RenderEyePath(luxrays::IntersectionDevice *device,
-			SceneConstPtr scene, Sampler *sampler, EyePathInfo &pathInfo,
-			luxrays::Ray &eyeRay, const luxrays::Spectrum &eyeTroughput,
-			std::vector<SampleResult> &sampleResults) const;
-	void RenderEyeSample(luxrays::IntersectionDevice *device,
-			SceneConstPtr scene, FilmConstPtr film, Sampler *sampler,
-			std::vector<SampleResult> &sampleResults) const;
+	void RenderEyePath(
+		luxrays::IntersectionDevice *device,
+		SceneConstPtr scene,
+		Sampler& sampler,
+		EyePathInfo &pathInfo,
+		luxrays::Ray &eyeRay, const luxrays::Spectrum &eyeTroughput,
+		std::vector<SampleResult> &sampleResults) const;
+	void RenderEyeSample(
+		luxrays::IntersectionDevice *device,
+		SceneConstPtr scene, FilmConstPtr film,
+		Sampler& sampler,
+		std::vector<SampleResult> &sampleResults) const;
 
-	void RenderLightSample(luxrays::IntersectionDevice *device,
-			SceneConstPtr scene, FilmConstPtr film, Sampler *sampler,
-			std::vector<SampleResult> &sampleResults,
-			const ConnectToEyeCallBackType &ConnectToEyeCallBack) const;
-	void RenderLightSample(luxrays::IntersectionDevice *device,
-			SceneConstPtr scene, FilmConstPtr film, Sampler *sampler,
-			std::vector<SampleResult> &sampleResults) const {
+	void RenderLightSample(
+		luxrays::IntersectionDevice *device,
+		SceneConstPtr scene, FilmConstPtr film,
+		Sampler& sampler,
+		std::vector<SampleResult> &sampleResults,
+		const ConnectToEyeCallBackType &ConnectToEyeCallBack) const;
+	void RenderLightSample(
+		luxrays::IntersectionDevice *device,
+		SceneConstPtr scene, FilmConstPtr film,
+		Sampler& sampler,
+		std::vector<SampleResult> &sampleResults
+		) const {
 		static const ConnectToEyeCallBackType noCallback;
 		RenderLightSample(device, scene, film, sampler, sampleResults, noCallback);
 	}
@@ -161,7 +173,8 @@ public:
 private:
 	void GenerateEyeRay(CameraConstPtr camera, FilmConstPtr film,
 			luxrays::Ray &eyeRay, PathVolumeInfo &volInfo,
-			Sampler *sampler, SampleResult &sampleResult) const;
+			Sampler& sampler,
+			SampleResult &sampleResult) const;
 
 	// RenderEyeSample methods
 

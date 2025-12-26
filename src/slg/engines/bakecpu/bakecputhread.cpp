@@ -232,7 +232,7 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 				//--------------------------------------------------------------
 
 				pathTracer.RenderEyePath(state.device, state.scene.lock(),
-						state.eyeSampler, pathInfo, eyeRay, bsdfSample,
+						*state.eyeSampler, pathInfo, eyeRay, bsdfSample,
 						state.eyeSampleResults);
 			}
 			break;
@@ -294,7 +294,7 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 
 				const float NdotL = Dot(bsdf.hitPoint.shadeN, sampledDir);
 				pathTracer.RenderEyePath(state.device, state.scene.lock(),
-						state.eyeSampler, pathInfo, eyeRay, Spectrum(NdotL * INV_PI / samplePdf),
+						*state.eyeSampler, pathInfo, eyeRay, Spectrum(NdotL * INV_PI / samplePdf),
 						state.eyeSampleResults);
 			}
 			break;
@@ -358,7 +358,7 @@ void BakeCPURenderThread::RenderLightSample(const BakeMapInfo &mapInfo, PathTrac
 	const PathTracer::ConnectToEyeCallBackType connectToEyeCallBack = std::bind(
 			&BakeCPURenderThread::RenderConnectToEyeCallBack, this, mapInfo, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
 
-	pathTracer.RenderLightSample(state.device, state.scene.lock(), state.film, state.lightSampler,
+	pathTracer.RenderLightSample(state.device, state.scene.lock(), state.film, *state.lightSampler,
 			state.lightSampleResults, connectToEyeCallBack);
 }
 
@@ -367,26 +367,21 @@ void BakeCPURenderThread::RenderSample(const BakeMapInfo &mapInfo, PathTracerThr
 	const PathTracer &pathTracer = engine->pathTracer;
 
 	// Check if I have to trace an eye or light path
-	Sampler *sampler;
-	vector<SampleResult> *sampleResults;
-	if (pathTracer.HasToRenderEyeSample(state)) {
-		// Trace an eye path
-		sampler = state.eyeSampler;
-		sampleResults = &state.eyeSampleResults;
-	} else {
-		// Trace a light path
-		sampler = state.lightSampler;
-		sampleResults = &state.lightSampleResults;
-	}
+	const SamplerUPtr& sampler =
+		pathTracer.HasToRenderEyeSample(state) ? state.eyeSampler : state.lightSampler;
+
+	std::vector<SampleResult>& sampleResults = pathTracer.HasToRenderEyeSample(state) ?
+		state.eyeSampleResults : state.lightSampleResults;
+
 	if (sampler == state.eyeSampler)
 		RenderEyeSample(mapInfo, state);
 	else
 		RenderLightSample(mapInfo, state);
 
 	// Variance clamping
-	pathTracer.ApplyVarianceClamp(state, *sampleResults);
+	pathTracer.ApplyVarianceClamp(state, sampleResults);
 
-	sampler->NextSample(*sampleResults);
+	sampler->NextSample(sampleResults);
 }
 
 void BakeCPURenderThread::RenderFunc(std::stop_token stop_token) {
@@ -436,10 +431,9 @@ void BakeCPURenderThread::RenderFunc(std::stop_token stop_token) {
 
 		// Setup the sampler(s)
 
-		Sampler *eyeSampler = nullptr;
-		Sampler *lightSampler = nullptr;
+		SamplerUPtr lightSampler;
 
-		eyeSampler = engine->renderConfig.AllocSampler(rndGen, engine->mapFilm,
+		auto eyeSampler = engine->renderConfig.AllocSampler(rndGen, engine->mapFilm,
 				engine->sampleSplatter, engine->samplerSharedData, samplerAdditionalProps);
 		eyeSampler->SetThreadIndex(threadIndex);
 		// Below, I need 7 additional samples
@@ -455,7 +449,7 @@ void BakeCPURenderThread::RenderFunc(std::stop_token stop_token) {
 				Property("sampler.metropolis.addonlycaustics")(true);
 
 			lightSampler = Sampler::FromProperties(props, rndGen, engine->mapFilm, nullptr,
-					engine->lightSamplerSharedData);
+					*engine->lightSamplerSharedData);
 			lightSampler->SetThreadIndex(threadIndex);
 
 			lightSampler->RequestSamples(SCREEN_NORMALIZED_ONLY, pathTracer.lightSampleSize);
@@ -524,7 +518,6 @@ void BakeCPURenderThread::RenderFunc(std::stop_token stop_token) {
 
 		}
 
-		delete eyeSampler;
 		delete rndGen;
 
 		engine->threadsSyncBarrier->arrive_and_wait();

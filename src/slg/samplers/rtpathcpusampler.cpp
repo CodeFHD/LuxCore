@@ -82,19 +82,22 @@ void RTPathCPUSamplerSharedData::Reset() {
 	step = 0;
 }
 
-SamplerSharedData *RTPathCPUSamplerSharedData::FromProperties(const Properties &cfg,
-		RandomGenerator *rndGen, FilmPtr film) {
-	return new RTPathCPUSamplerSharedData(film);
+std::unique_ptr<SamplerSharedData> RTPathCPUSamplerSharedData::FromProperties(
+	const Properties &cfg, RandomGenerator *rndGen, FilmPtr film
+) {
+	return std::make_unique<RTPathCPUSamplerSharedData>(film);
 }
 
 //------------------------------------------------------------------------------
 // RTPathCPU specific sampler
 //------------------------------------------------------------------------------
 
-RTPathCPUSampler::RTPathCPUSampler(luxrays::RandomGenerator *rnd, FilmPtr flm,
-			const FilmSampleSplatter *flmSplatter,
-			RTPathCPUSamplerSharedData *samplerSharedData) :
-			Sampler(rnd, flm, flmSplatter, true), sharedData(samplerSharedData) {
+RTPathCPUSampler::RTPathCPUSampler(
+	luxrays::RandomGenerator *rnd,
+	FilmPtr flm,
+	const FilmSampleSplatter *flmSplatter,
+	SamplerSharedData& samplerSharedData
+) :	Sampler(rnd, flm, flmSplatter, true), sharedData(dynamic_cast<RTPathCPUSamplerSharedData&>(samplerSharedData)) {
 	film = flm;
 	// Disable denoiser statistics collection
 	film->GetDenoiser().SetEnabled(false);
@@ -116,8 +119,8 @@ void RTPathCPUSampler::Reset(FilmPtr flm) {
 	// Disable denoiser statistics collection
 	film->GetDenoiser().SetEnabled(false);
 
-	myStep = sharedData->step.fetch_add(1);
-	frameHeight = RoundUp<u_int>(sharedData->filmSubRegionHeight, engine->zoomFactor);
+	myStep = sharedData.step.fetch_add(1);
+	frameHeight = RoundUp<u_int>(sharedData.filmSubRegionHeight, engine->zoomFactor);
 	currentX = 0;
 	currentY = (myStep * engine->zoomFactor) % frameHeight;
 	linesDone = 0;
@@ -129,12 +132,12 @@ void RTPathCPUSampler::NextPixel() {
 		// Render one pixel every engine->zoomFactor x engine->zoomFactor on the first frame
 		currentX += engine->zoomFactor;
 
-		if (currentX >= sharedData->filmSubRegionWidth) {
+		if (currentX >= sharedData.filmSubRegionWidth) {
 			// This should be done as atomic operation but it is only for statistics
 			// (adding the effective number of samples rendered, not the pixels count)
-			film->AddSampleCount(threadIndex, sharedData->filmSubRegionWidth / (double)engine->zoomFactor, 0.0);
+			film->AddSampleCount(threadIndex, sharedData.filmSubRegionWidth / (double)engine->zoomFactor, 0.0);
 			currentX = 0;
-			myStep = sharedData->step.fetch_add(1);
+			myStep = sharedData.step.fetch_add(1);
 			currentY = (myStep * engine->zoomFactor) % frameHeight;
 			linesDone = 0;
 
@@ -155,16 +158,16 @@ void RTPathCPUSampler::NextPixel() {
 		// Normal rendering
 		++currentX;
 
-		if (currentX >= sharedData->filmSubRegionWidth) {
+		if (currentX >= sharedData.filmSubRegionWidth) {
 			currentX = 0;
 			++linesDone;
 			++currentY;
 
-			if ((currentY >= sharedData->filmSubRegionHeight) || (linesDone == engine->zoomFactor)) {
+			if ((currentY >= sharedData.filmSubRegionHeight) || (linesDone == engine->zoomFactor)) {
 				// This should be done as atomic operation but it is only for statistics
-				film->AddSampleCount(threadIndex, sharedData->filmSubRegionWidth * linesDone, 0.0);
+				film->AddSampleCount(threadIndex, sharedData.filmSubRegionWidth * linesDone, 0.0);
 
-				myStep = sharedData->step.fetch_add(1);
+				myStep = sharedData.step.fetch_add(1);
 				currentY = (myStep * engine->zoomFactor) % frameHeight;
 				linesDone = 0;
 			}
@@ -179,15 +182,15 @@ float RTPathCPUSampler::GetSample(const u_int index) {
 	switch (index) {
 		case 0: {
 			const u_int px = firstFrameDone ?
-				sharedData->pixelRenderSequence[currentX + currentY * sharedData->filmSubRegionWidth].x :
-				(currentX + sharedData->filmSubRegion[0]);
+				sharedData.pixelRenderSequence[currentX + currentY * sharedData.filmSubRegionWidth].x :
+				(currentX + sharedData.filmSubRegion[0]);
 			u = px + rndGen->floatValue();
 			break;
 		}
 		case 1: {
 			const u_int py = firstFrameDone ?
-				sharedData->pixelRenderSequence[currentX + currentY * sharedData->filmSubRegionWidth].y :
-				(currentY + sharedData->filmSubRegion[2]);
+				sharedData.pixelRenderSequence[currentX + currentY * sharedData.filmSubRegionWidth].y :
+				(currentY + sharedData.filmSubRegion[2]);
 			u = py + rndGen->floatValue();
 			break;
 		}
@@ -217,10 +220,10 @@ void RTPathCPUSampler::NextSample(const vector<SampleResult> &sampleResults) {
 				const u_int x = sr->pixelX + px;
 				const u_int y = sr->pixelY + py;
 
-				if ((x >= sharedData->filmSubRegion[0]) &&
-						(x <= sharedData->filmSubRegion[1]) &&
-						(y >= sharedData->filmSubRegion[2]) &&
-						(y <= sharedData->filmSubRegion[3]))
+				if ((x >= sharedData.filmSubRegion[0]) &&
+						(x <= sharedData.filmSubRegion[1]) &&
+						(y >= sharedData.filmSubRegion[2]) &&
+						(y <= sharedData.filmSubRegion[3]))
 					film->AddSample(x, y, *sr, w);
 			}
 		}
@@ -238,9 +241,9 @@ Properties RTPathCPUSampler::ToProperties(const Properties &cfg) {
 			cfg.Get(GetDefaultProps().Get("sampler.type"));
 }
 
-Sampler *RTPathCPUSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
-		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData *sharedData) {
-	return new RTPathCPUSampler(rndGen, film, flmSplatter, (RTPathCPUSamplerSharedData *)sharedData);
+SamplerUPtr RTPathCPUSampler::FromProperties(const Properties &cfg, RandomGenerator *rndGen,
+		FilmPtr film, const FilmSampleSplatter *flmSplatter, SamplerSharedData& sharedData) {
+	return std::make_unique<RTPathCPUSampler>(rndGen, film, flmSplatter, sharedData);
 }
 
 slg::ocl::Sampler *RTPathCPUSampler::FromPropertiesOCL(const Properties &cfg) {

@@ -155,7 +155,6 @@ PathOCLBaseRenderEngine::~PathOCLBaseRenderEngine() {
 	delete[] pixelFilterDistribution;
 	delete oclSampler;
 	delete oclPixelFilter;
-	delete lightSamplerSharedData;
 }
 
 void PathOCLBaseRenderEngine::InitGPUTaskConfiguration() {
@@ -398,8 +397,6 @@ void PathOCLBaseRenderEngine::StopLockLess() {
 	photonGICache = nullptr;
 	delete[] pixelFilterDistribution;
 	pixelFilterDistribution = nullptr;
-	delete lightSamplerSharedData;
-	lightSamplerSharedData = nullptr;
 }
 
 void PathOCLBaseRenderEngine::BeginSceneEditLockLess() {
