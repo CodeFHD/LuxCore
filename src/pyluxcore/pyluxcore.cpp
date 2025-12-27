@@ -2299,30 +2299,30 @@ PYBIND11_MODULE(pyluxcore, m) {
   py::class_<luxrays::Properties, py::smart_holder>(m, "Properties")
     .def(py::init<>())
     .def(py::init<std::string>())
-    .def(py::init<luxrays::Properties>())
+    .def(py::init<luxrays::Properties>(), py::keep_alive<1,2>())
 
     // Required because Properties::Set is overloaded
     .def<luxrays::Properties &(luxrays::Properties::*)(const luxrays::Property &)>
-      ("Set", &luxrays::Properties::Set, py::return_value_policy::move)
+      ("Set", &luxrays::Properties::Set, py::return_value_policy::reference_internal)
     .def<luxrays::Properties &(luxrays::Properties::*)(const luxrays::Properties &)>
-      ("Set", &luxrays::Properties::Set, py::return_value_policy::move)
+      ("Set", &luxrays::Properties::Set, py::return_value_policy::reference_internal)
     .def<luxrays::Properties &(luxrays::Properties::*)(const luxrays::Properties &, const std::string &)>
-      ("Set", &luxrays::Properties::Set, py::return_value_policy::move)
-    .def("SetFromFile", &luxrays::Properties::SetFromFile, py::return_value_policy::move)
-    .def("SetFromString", &luxrays::Properties::SetFromString, py::return_value_policy::move)
+      ("Set", &luxrays::Properties::Set, py::return_value_policy::reference_internal)
+    .def("SetFromFile", &luxrays::Properties::SetFromFile, py::return_value_policy::reference_internal)
+    .def("SetFromString", &luxrays::Properties::SetFromString, py::return_value_policy::reference_internal)
 
-    .def("Clear", &luxrays::Properties::Clear, py::return_value_policy::move)
+    .def("Clear", &luxrays::Properties::Clear, py::return_value_policy::reference_internal)
     .def("GetAllNamesRE", &Properties_GetAllNamesRE)
     .def("GetAllNames", &Properties_GetAllNames1)
     .def("GetAllNames", &Properties_GetAllNames2)
     .def("GetAllUniqueSubNames", &Properties_GetAllUniqueSubNames)
     .def("HaveNames", &luxrays::Properties::HaveNames)
     .def("HaveNamesRE", &luxrays::Properties::HaveNamesRE)
-    .def("GetAllProperties", &luxrays::Properties::GetAllProperties)
+    .def("GetAllProperties", &luxrays::Properties::GetAllProperties, py::return_value_policy::reference_internal)
 
     .def<const luxrays::Property &(luxrays::Properties::*)(const std::string &) const>
-      ("Get", &luxrays::Properties::Get, py::return_value_policy::move)
-    .def("Get", &Properties_GetWithDefaultValues)
+      ("Get", &luxrays::Properties::Get, py::return_value_policy::reference_internal)
+    .def("Get", &Properties_GetWithDefaultValues, py::return_value_policy::reference_internal)
 
     .def("GetSize", &luxrays::Properties::GetSize)
 
