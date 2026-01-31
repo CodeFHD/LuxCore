@@ -275,8 +275,8 @@ nRefinedVerts
 
 	// Alphas
 	std::vector<BufferPtr> alphasBuffers(EXTMESH_MAX_DATA_COUNT);
-	if (srcMesh.HasAlphas(0)) {
-		for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
+	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
+		if (srcMesh.HasAlphas(i)) {
 			alphasBuffers[i] = BuildBuffer<1>(
 				stencilTable,
 				(const float *)srcMesh.GetAlphas(i),
