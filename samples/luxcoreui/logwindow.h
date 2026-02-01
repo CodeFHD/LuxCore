@@ -20,6 +20,7 @@
 #define	_LUXCOREAPP_LOGWINDOW_H
 
 #include "objectwindow.h"
+#include <mutex>
 
 class LogWindow : public ObjectWindow {
 public:
@@ -34,6 +35,7 @@ public:
 private:
 	ImGuiTextBuffer buffer;
 	ImGuiTextFilter filter;
+        mutable std::mutex addMsgMtx;
 	ImVector<int> lineOffsets; // Index to lines offset
 
 	bool scrollToBottom;

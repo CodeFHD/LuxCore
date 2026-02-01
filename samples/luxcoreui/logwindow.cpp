@@ -16,9 +16,10 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
-#include <iostream>
 
 #include "logwindow.h"
+#include <iostream>
+#include <mutex>
 
 using namespace std;
 
@@ -32,12 +33,16 @@ void LogWindow::Clear() {
 }
 
 void LogWindow::AddMsg(const char *msg) {
+  // Following section is critical and has to be protected. Race condition can
+  // happen, for instance, if the buffer or lineOffset vectors have to resize
+  std::lock_guard<std::mutex> lk(addMsgMtx);
   int oldSize = buffer.size();
   buffer.append(msg);
 
   for (int newSize = buffer.size(); oldSize < newSize; oldSize++)
-    if (buffer[oldSize] == '\n')
+    if (buffer[oldSize] == '\n') {
       lineOffsets.push_back(oldSize);
+    }
 
   scrollToBottom = true;
 }
