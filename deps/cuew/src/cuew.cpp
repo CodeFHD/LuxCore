@@ -66,8 +66,20 @@ typedef void* DynamicLibrary;
         _LIBRARY_FIND_CHECKED(nvrtc_lib, name)
 #define NVRTC_LIBRARY_FIND(name) _LIBRARY_FIND(nvrtc_lib, name)
 
-static DynamicLibrary cuda_lib;
-static DynamicLibrary nvrtc_lib;
+struct Libs {
+  DynamicLibrary cuda_lib = nullptr;
+  DynamicLibrary nvrtc_lib = nullptr;
+
+  ~Libs() {
+    if (cuda_lib) dynamic_library_close(cuda_lib);
+    if (nvrtc_lib) dynamic_library_close(nvrtc_lib);
+  }
+
+};
+
+static Libs libs;
+auto& cuda_lib = libs.cuda_lib;
+auto& nvrtc_lib = libs.nvrtc_lib;
 
 /* Function definitions. */
 tcuGetErrorString *cuGetErrorString;
@@ -352,12 +364,6 @@ static int cuewCudaInit(void) {
 
   initialized = 1;
 
-  error = atexit(cuewCudaExit);
-  if (error) {
-    result = CUEW_ERROR_ATEXIT_FAILED;
-    return result;
-  }
-
   /* Load library. */
   cuda_lib = dynamic_library_open_find(cuda_paths);
 
@@ -611,14 +617,6 @@ static int cuewCudaInit(void) {
   return result;
 }
 
-static void cuewExitNvrtc(void) {
-  if (nvrtc_lib != NULL) {
-    /*  Ignore errors. */
-    dynamic_library_close(nvrtc_lib);
-    nvrtc_lib = NULL;
-  }
-}
-
 static int cuewNvrtcInit(void) {
   /* Library paths. */
 #ifdef _WIN32
@@ -656,12 +654,6 @@ static int cuewNvrtcInit(void) {
   }
 
   initialized = 1;
-
-  error = atexit(cuewExitNvrtc);
-  if (error) {
-    result = CUEW_ERROR_ATEXIT_FAILED;
-    return result;
-  }
 
   /* Load library. */
   nvrtc_lib = dynamic_library_open_find(nvrtc_paths);
