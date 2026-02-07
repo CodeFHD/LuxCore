@@ -440,14 +440,14 @@ static PropertyPtr Property_Add(PropertyPtr prop, const py::list &l) {
       for (py::ssize_t i = 0; i < os; ++i)
         data[i] = py::cast<int>(ol[i]);
 
-      prop->Add(luxrays::Blob(&data[0], os));
+      prop->Add(std::make_shared<luxrays::Blob>(&data[0], os));
     } else if (PyObject_CheckBuffer(obj.ptr())) {
       Py_buffer view;
       if (!PyObject_GetBuffer(obj.ptr(), &view, PyBUF_SIMPLE)) {
         const char *buffer = (char *)view.buf;
         const size_t size = (size_t)view.len;
 
-        luxrays::Blob blob(buffer, size);
+        auto blob = std::make_shared<luxrays::Blob>(buffer, size);
         prop->Add(blob);
 
         PyBuffer_Release(&view);
@@ -573,14 +573,14 @@ static PropertyPtr Property_Set(PropertyPtr prop, const size_t i,
     for (py::ssize_t i = 0; i < os; ++i)
       data[i] = py::cast<int>(ol[i]);
 
-    prop->Set(i, luxrays::Blob(&data[0], os));
+    prop->Set(i, std::make_shared<luxrays::Blob>(&data[0], os));
   } else if (PyObject_CheckBuffer(obj.ptr())) {
     Py_buffer view;
     if (!PyObject_GetBuffer(obj.ptr(), &view, PyBUF_SIMPLE)) {
       const char *buffer = (char *)view.buf;
       const size_t size = (size_t)view.len;
 
-      luxrays::Blob blob(buffer, size);
+      auto blob = std::make_shared<luxrays::Blob>(buffer, size);
       prop->Set(i, blob);
 
       PyBuffer_Release(&view);

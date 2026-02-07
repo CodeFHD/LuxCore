@@ -47,12 +47,13 @@ using namespace std;
 // Blob class
 //------------------------------------------------------------------------------
 
-Blob::Blob(const Blob &blob) {
-	data = std::make_unique<char[]>(blob.size);
-	size = blob.size;
+// TODO
+//Blob::Blob(const Blob &blob) {
+	//data = std::make_unique<char[]>(blob.size);
+	//size = blob.size;
 
-	std::copy(blob.data.get(), blob.data.get() + blob.size, data.get());
-}
+	//std::copy(blob.data.get(), blob.data.get() + blob.size, data.get());
+//}
 
 Blob::Blob(const char *d, const size_t s) {
 	data = std::make_unique<char[]>(s);
@@ -78,15 +79,16 @@ Blob::Blob(const string &base64Data) {
 	std::copy(decoded.begin(), decoded.end(), data.get());
 }
 
-Blob &Blob::operator=(const Blob &blob) {
+// TODO
+//Blob &Blob::operator=(const Blob &blob) {
 
-	data = std::make_unique<char[]>(blob.size);
-	size = blob.size;
+	//data = std::make_unique<char[]>(blob.size);
+	//size = blob.size;
 
-	copy(blob.data.get(), blob.data.get() + blob.size, data.get());
+	//copy(blob.data.get(), blob.data.get() + blob.size, data.get());
 
-	return *this;
-}
+	//return *this;
+//}
 
 string Blob::ToString() const {
 	stringstream ss;
@@ -125,39 +127,39 @@ PropertyValue::PropertyValue(const PropertyValue &prop) : dataType(NONE_VAL) {
 }
 
 PropertyValue::PropertyValue(const bool val) : dataType(BOOL_VAL) {
-	data.boolVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const int val) : dataType(INT_VAL) {
-	data.intVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const unsigned int val) : dataType(UINT_VAL) {
-	data.uintVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const float val) : dataType(FLOAT_VAL) {
-	data.floatVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const double val) : dataType(DOUBLE_VAL) {
-	data.doubleVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const long long val) : dataType(LONGLONG_VAL) {
-	data.longlongVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const unsigned long long val) : dataType(ULONGLONG_VAL) {
-	data.ulonglongVal = val;
+	data = val;
 }
 
 PropertyValue::PropertyValue(const std::string &val) : dataType(STRING_VAL) {
-	data.stringVal = new std::string(val);
+	data = std::string(val);
 }
 
-PropertyValue::PropertyValue(const Blob &val) : dataType(BLOB_VAL) {
-	data.blobVal = new Blob(val);
+PropertyValue::PropertyValue(BlobSPtr val) : dataType(BLOB_VAL) {
+	data = val;
 }
 
 PropertyValue::~PropertyValue() noexcept(false) {
@@ -171,36 +173,56 @@ PropertyValue::~PropertyValue() noexcept(false) {
 		case DOUBLE_VAL:
 		case LONGLONG_VAL:
 		case ULONGLONG_VAL:
-			break;
 		case STRING_VAL:
-			delete data.stringVal;
-			break;
 		case BLOB_VAL:
-			delete data.blobVal;
 			break;
 		default:
 			throw std::runtime_error("Unknown type in PropertyValue::~PropertyValue(): " + ToString(dataType));
 	}
 }
 
+// Helper
+template<typename T>
+static auto ret(
+	const PropertyValue::VariantType& data, const PropertyValue::DataType& dataType
+) {
+	switch (dataType) {
+		case luxrays::PropertyValue::DataType::BOOL_VAL:
+			return boost::lexical_cast<T>(std::get<bool>(data));
+		case luxrays::PropertyValue::DataType::INT_VAL:
+			return boost::lexical_cast<T>(std::get<int>(data));
+		case luxrays::PropertyValue::DataType::UINT_VAL:
+			return boost::lexical_cast<T>(std::get<unsigned int>(data));
+		case luxrays::PropertyValue::DataType::FLOAT_VAL:
+			return boost::lexical_cast<T>(std::get<float>(data));
+		case luxrays::PropertyValue::DataType::DOUBLE_VAL:
+			return boost::lexical_cast<T>(std::get<double>(data));
+		case luxrays::PropertyValue::DataType::LONGLONG_VAL:
+			return boost::lexical_cast<T>(std::get<long long>(data));
+		case luxrays::PropertyValue::DataType::ULONGLONG_VAL:
+			return boost::lexical_cast<T>(std::get<unsigned long long>(data));
+		case luxrays::PropertyValue::DataType::STRING_VAL:
+			return FromString<T>(std::get<std::string>(data));
+		case luxrays::PropertyValue::DataType::BLOB_VAL:
+			throw std::runtime_error("Misuse");
+		default:
+			throw std::runtime_error(
+				"Unknown type in PropertyValue::Get<>(): " + ToString(dataType)
+			);
+	}
+}
+
 template<> bool PropertyValue::Get<bool>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<bool>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<bool>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<bool>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<bool>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<bool>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<bool>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<bool>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<bool>(*data.stringVal);
+			return ret<bool>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -211,21 +233,14 @@ template<> bool PropertyValue::Get<bool>() const {
 template<> int PropertyValue::Get<int>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<int>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<int>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<int>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<int>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<int>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<int>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<int>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<int>(*data.stringVal);
+			return ret<int>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -236,21 +251,14 @@ template<> int PropertyValue::Get<int>() const {
 template<> unsigned int PropertyValue::Get<unsigned int>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<unsigned int>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<unsigned int>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<unsigned int>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<unsigned int>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<unsigned int>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<unsigned int>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<unsigned int>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<unsigned int>(*data.stringVal);
+			return ret<unsigned int>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -261,21 +269,14 @@ template<> unsigned int PropertyValue::Get<unsigned int>() const {
 template<> float PropertyValue::Get<float>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<float>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<float>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<float>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<float>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<float>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<float>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<float>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<float>(*data.stringVal);
+			return ret<float>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -286,21 +287,14 @@ template<> float PropertyValue::Get<float>() const {
 template<> double PropertyValue::Get<double>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<double>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<double>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<double>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<double>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<double>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<double>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<double>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<double>(*data.stringVal);
+			return ret<double>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -311,21 +305,14 @@ template<> double PropertyValue::Get<double>() const {
 template<> long long PropertyValue::Get<long long>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<long long>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<long long>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<long long>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<long long>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<long long>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<long long>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<long long>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<long long>(*data.stringVal);
+			return ret<long long>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -336,21 +323,14 @@ template<> long long PropertyValue::Get<long long>() const {
 template<> unsigned long long PropertyValue::Get<unsigned long long>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return boost::lexical_cast<unsigned long long>(data.boolVal);
 		case INT_VAL:
-			return boost::lexical_cast<unsigned long long>(data.intVal);
 		case UINT_VAL:
-			return boost::lexical_cast<unsigned long long>(data.uintVal);
 		case FLOAT_VAL:
-			return boost::lexical_cast<unsigned long long>(data.floatVal);
 		case DOUBLE_VAL:
-			return boost::lexical_cast<unsigned long long>(data.doubleVal);
 		case LONGLONG_VAL:
-			return boost::lexical_cast<unsigned long long>(data.longlongVal);
 		case ULONGLONG_VAL:
-			return boost::lexical_cast<unsigned long long>(data.ulonglongVal);
 		case STRING_VAL:
-			return FromString<unsigned long long>(*data.stringVal);
+			return ret<unsigned long long>(data, dataType);
 		case BLOB_VAL:
 			throw std::runtime_error("A Blob property can not be converted to other types");
 		default:
@@ -358,26 +338,26 @@ template<> unsigned long long PropertyValue::Get<unsigned long long>() const {
 	}
 }
 
-template<> string PropertyValue::Get<string>() const {
+template<> std::string PropertyValue::Get<std::string>() const {
 	switch (dataType) {
 		case BOOL_VAL:
-			return ToString(data.boolVal);
+			return ToString(std::get<bool>(data));
 		case INT_VAL:
-			return ToString(data.intVal);
+			return ToString(std::get<int>(data));
 		case UINT_VAL:
-			return ToString(data.uintVal);
+			return ToString(std::get<unsigned int>(data));
 		case FLOAT_VAL:
-			return ToString(data.floatVal);
+			return ToString(std::get<float>(data));
 		case DOUBLE_VAL:
-			return ToString(data.doubleVal);
+			return ToString(std::get<double>(data));
 		case LONGLONG_VAL:
-			return ToString(data.longlongVal);
+			return ToString(std::get<long long>(data));
 		case ULONGLONG_VAL:
-			return ToString(data.ulonglongVal);
+			return ToString(std::get<unsigned long long>(data));
 		case STRING_VAL:
-			return ToString(*data.stringVal);
+			return ToString(std::get<std::string>(data));
 		case BLOB_VAL:
-			return data.blobVal->ToString();
+			return std::get<BlobSPtr>(data)->ToString();
 		default:
 			throw std::runtime_error("Unknown type in PropertyValue::Get<string>(): " + ToString(dataType));
 	}
@@ -395,7 +375,7 @@ template<> const Blob &PropertyValue::Get<const Blob &>() const {
 		case STRING_VAL:
 			throw std::runtime_error("Only a Blob property can be converted in a Blob");
 		case BLOB_VAL:
-			return *data.blobVal;
+			return *std::get<BlobSPtr>(data);
 		default:
 			throw std::runtime_error("Unknown type in PropertyValue::Get<const Blob &>(): " + ToString(dataType));
 	}
@@ -421,12 +401,8 @@ void PropertyValue::Copy(const PropertyValue &propVal0, PropertyValue &propVal1)
 		case DOUBLE_VAL:
 		case LONGLONG_VAL:
 		case ULONGLONG_VAL:
-			break;
 		case STRING_VAL:
-			delete propVal1.data.stringVal;
-			break;
 		case BLOB_VAL:
-			delete propVal1.data.blobVal;
 			break;
 		default:
 			throw std::runtime_error("Unknown type in PropertyValue::Copy(): " + ToString(propVal1.dataType));
@@ -436,34 +412,18 @@ void PropertyValue::Copy(const PropertyValue &propVal0, PropertyValue &propVal1)
 
 	switch (propVal1.dataType) {
 		case NONE_VAL:
-			// Nothig to do
+			// Nothing to do
 			break;
 		case BOOL_VAL:
-			propVal1.data.boolVal = propVal0.data.boolVal;
-			break;
 		case INT_VAL:
-			propVal1.data.intVal = propVal0.data.intVal;
-			break;
 		case UINT_VAL:
-			propVal1.data.uintVal = propVal0.data.uintVal;
-			break;
 		case FLOAT_VAL:
-			propVal1.data.floatVal = propVal0.data.floatVal;
-			break;
 		case DOUBLE_VAL:
-			propVal1.data.doubleVal = propVal0.data.doubleVal;
-			break;
 		case LONGLONG_VAL:
-			propVal1.data.longlongVal = propVal0.data.longlongVal;
-			break;
 		case ULONGLONG_VAL:
-			propVal1.data.ulonglongVal = propVal0.data.ulonglongVal;
-			break;
 		case STRING_VAL:
-			propVal1.data.stringVal = new std::string(*propVal0.data.stringVal);
-			break;
 		case BLOB_VAL:
-			propVal1.data.blobVal = new Blob(*propVal0.data.blobVal);
+			propVal1.data = propVal0.data;
 			break;
 		default:
 			throw std::runtime_error("Unknown type in PropertyValue::Copy(): " + ToString(propVal1.dataType));
@@ -685,7 +645,7 @@ Property Property::FromString(string &line) {
 			while (last < len - 1) {
 				if ((value[last] == ']') || (value[last + 1] == '}')) {
 					const size_t size = last - first + 2; // +2 is for "]}"
-					const Blob blob(value.substr(first, size).c_str());
+					BlobSPtr blob = std::make_shared<Blob>(value.substr(first, size).c_str());
 					prop.Add(blob);
 					found = true;
 					// Eat the "]}"

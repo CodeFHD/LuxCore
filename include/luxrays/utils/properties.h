@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <memory>
 #include <mutex>
+#include <variant>
 
 #include "luxrays/usings.h"
 #include "luxrays/utils/exportdefs.h"
@@ -42,7 +43,6 @@ namespace luxrays {
 
 CPP_EXPORT class CPP_API Blob {
 public:
-	Blob(const Blob &blob);
 	Blob(const char *data, const size_t size);
 	Blob(const std::string &base64Data);
 
@@ -51,7 +51,11 @@ public:
 
 	std::string ToString() const;
 
-	Blob &operator=(const Blob &blob);
+	// Disable copy, keep moving only
+	Blob(const Blob &) = delete;
+	Blob &operator=(const Blob &) = delete;
+	Blob(Blob&&) = default;
+	Blob &operator=(Blob&&) = default;
 
 private:
 	std::unique_ptr<char[]> data;
@@ -107,7 +111,7 @@ public:
 	PropertyValue(const long long val);
 	PropertyValue(const unsigned long long val);
 	PropertyValue(const std::string &val);
-	PropertyValue(const Blob &val);
+	PropertyValue(BlobSPtr val);  // Manage blobs as shared objects, to avoid copy
 	~PropertyValue() noexcept(false);
 
 	template<class T> T Get() const;
@@ -116,22 +120,38 @@ public:
 	
 	PropertyValue &operator=(const PropertyValue &propVal);
 
+	using VariantType = std::variant<
+		bool,
+		int,
+		unsigned int,
+		float,
+		double,
+		long long,
+		unsigned long long,
+		std::string,
+		BlobSPtr
+	>;
+
 private:
 	static void Copy(const PropertyValue &prop0Val, PropertyValue &prop1Val);
 
 	DataType dataType;
 
-	union {
-		bool boolVal;
-		int intVal;
-		unsigned int uintVal;
-		float floatVal;
-		double doubleVal;
-		long long longlongVal;
-		unsigned long long ulonglongVal;
-		std::string *stringVal;
-		Blob *blobVal;
-	} data;
+	VariantType data;
+
+
+	// TODO
+	//union {
+		//bool boolVal;
+		//int intVal;
+		//unsigned int uintVal;
+		//float floatVal;
+		//double doubleVal;
+		//long long longlongVal;
+		//unsigned long long ulonglongVal;
+		//std::string *stringVal;
+		//BlobSPtr blobVal;
+	//} data;
 };
 
 // Get<>() basic types specializations

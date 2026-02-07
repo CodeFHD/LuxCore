@@ -1575,7 +1575,9 @@ PropertiesUPtr ImageMap::ToProperties(const string &prefix, const bool includeBl
 
 	if (includeBlobImg)
 		props <<
-				Property(prefix + ".blob")(Blob((char *)pixelStorage->GetPixelsData(), pixelStorage->GetMemorySize())) <<
+				Property(prefix + ".blob")(
+					std::make_shared<Blob>((char *)pixelStorage->GetPixelsData(), pixelStorage->GetMemorySize())
+					) <<
 				Property(prefix + ".blob.width")(pixelStorage->width) <<
 				Property(prefix + ".blob.height")(pixelStorage->height) <<
 				Property(prefix + ".blob.channelcount")(pixelStorage->GetChannelCount());
