@@ -165,10 +165,10 @@ PathTracer::DirectLightResult PathTracer::DirectLightSampling(
 			Spectrum lightRadiance = light->Illuminate(
 				scene, bsdf, time, u1, u2, u3, shadowRay, directPdfW
 			);
-			assert (!lightRadiance.IsNaN() && !lightRadiance.IsInf());
+			verify (!lightRadiance.IsNaN() && !lightRadiance.IsInf());
 
 			if (!lightRadiance.Black()) {
-				assert (!isnan(directPdfW) && !isinf(directPdfW));
+				verify (!isnan(directPdfW) && !isinf(directPdfW));
 
 				BSDFEvent event;
 				float bsdfPdfW;
@@ -182,12 +182,12 @@ PathTracer::DirectLightResult PathTracer::DirectLightSampling(
 					bsdfPdfW = INV_TWOPI;
 					event = DIFFUSE | REFLECT;
 				}
-				assert (!bsdfEval.IsNaN() && !bsdfEval.IsInf());
+				verify (!bsdfEval.IsNaN() && !bsdfEval.IsInf());
 
 				if (!bsdfEval.Black() &&
 						(!hybridBackForwardEnable ||
 						!pathInfo.IsCausticPath(event, bsdf.GetGlossiness(), hybridBackForwardGlossinessThreshold))) {
-					assert (!isnan(bsdfPdfW) && !isinf(bsdfPdfW));
+					verify (!isnan(bsdfPdfW) && !isinf(bsdfPdfW));
 					
 					// Create a new PathDepthInfo for the path to the light source
 					PathDepthInfo directLightDepthInfo = pathInfo.depth;
