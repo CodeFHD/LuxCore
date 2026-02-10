@@ -340,6 +340,7 @@ def main(
         "-o",
         "--output",
         type=Path,
+        default=BINARY_DIR,
         help="Output directory",
     )
     parser.add_argument(
@@ -405,6 +406,10 @@ def main(
                 "Using local dependency set ('%s')",
                 args.local,
             )
+            # Unzip
+            with ZipFile(args.local) as downloaded:
+                downloaded.extractall(tmpdir)
+
 
         # Retrieve deps build information
         show_build_info(tmpdir)
@@ -425,10 +430,7 @@ def main(
 
         # Install
         logger.info("Installing")
-        if not (local := args.local):
-            archive = tmpdir / "conan-cache-save.tgz"
-        else:
-            archive = local
+        archive = tmpdir / "conan-cache-save.tgz"
         res = run_conan(
             [
                 "cache",
@@ -487,6 +489,8 @@ def main(
             "Debug",
             "Release",
         ]
+        if args.release:
+            main_block += [f"--options:all=&:deps_version={args.release}"]
         if args.extended:
             build_types += [
                 "RelWithDebInfo",

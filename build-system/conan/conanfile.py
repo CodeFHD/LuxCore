@@ -29,9 +29,21 @@ class LuxCore(ConanFile):
     user = "luxcore"
     channel = "luxcore"
 
-    requires = f"luxcoredeps/{LUXDEPS_VERSION}@luxcore/luxcore"
     tool_requires = "ninja/[*]", "doxygen/[*]"
     settings = "os", "compiler", "build_type", "arch"
+
+    options = {
+        "deps_version": ["ANY"]  # Override json file (for tests)
+    }
+    default_options = {
+        "deps_version": ""
+    }
+
+    def requirements(self):
+        luxversion = self.options.deps_version or LUXDEPS_VERSION
+        self.requires(
+            f"luxcoredeps/{luxversion}@luxcore/luxcore"
+        )
 
     def _generate_oidn(self, toolchain):
         """Generate toolchain part related to oidn."""
