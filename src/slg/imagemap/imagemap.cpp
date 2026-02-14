@@ -231,6 +231,8 @@ ImageMapStorage::ImageMapStorage(
 	filterType(ft)
 {}
 
+u_int ImageMapStorage::GetIndex(u_int x, u_int y) const { return x + y * GetWidth() ; }
+
 ImageMapStorage::StorageType ImageMapStorage::String2StorageType(const string &type) {
 	if (type == "auto")
 		return ImageMapStorage::AUTO;
