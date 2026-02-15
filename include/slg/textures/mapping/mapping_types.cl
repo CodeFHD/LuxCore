@@ -28,6 +28,7 @@ typedef enum {
 
 typedef struct {
     float sinTheta, cosTheta, uScale, vScale, uDelta, vDelta;
+	bool centerrotation;
 } UVMapping2DParam;
 
 typedef enum {

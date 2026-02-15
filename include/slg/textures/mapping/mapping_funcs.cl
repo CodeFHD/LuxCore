@@ -26,15 +26,19 @@ OPENCL_FORCE_INLINE float2 UVMapping2D_Map(__global const TextureMapping2D *mapp
 		__global const HitPoint *hitPoint TEXTURES_PARAM_DECL) {
 	const float2 uv = HitPoint_GetUV(hitPoint, mapping->dataIndex EXTMESH_PARAM);
 
+	// Centered rotation
+	const float uOffset = 0.5 * mapping->uvMapping2D.centerrotation * mapping->uvMapping2D.uScale;
+	const float vOffset = 0.5 * mapping->uvMapping2D.centerrotation * mapping->uvMapping2D.vScale;
+
 	// Scale
-	const float uScaled = uv.x * mapping->uvMapping2D.uScale;
-	const float vScaled = uv.y * mapping->uvMapping2D.vScale;
+	const float uScaled = uv.x * mapping->uvMapping2D.uScale - uOffset;
+	const float vScaled = uv.y * mapping->uvMapping2D.vScale - vOffset;
 
 	// Rotate
 	const float sinTheta = mapping->uvMapping2D.sinTheta;
 	const float cosTheta = mapping->uvMapping2D.cosTheta;
-	const float uRotated = uScaled * cosTheta - vScaled * sinTheta;
-	const float vRotated = vScaled * cosTheta + uScaled * sinTheta;
+	const float uRotated = uOffset + uScaled * cosTheta - vScaled * sinTheta;
+	const float vRotated = vOffset + vScaled * cosTheta + uScaled * sinTheta;
 
 	// Translate
 	const float uTranslated = uRotated + mapping->uvMapping2D.uDelta;

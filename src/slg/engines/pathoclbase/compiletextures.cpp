@@ -103,6 +103,7 @@ void CompiledScene::CompileTextureMapping2D(slg::ocl::TextureMapping2D *mapping,
 			mapping->uvMapping2D.vScale = uvm->vScale;
 			mapping->uvMapping2D.uDelta = uvm->uDelta;
 			mapping->uvMapping2D.vDelta = uvm->vDelta;
+			mapping->uvMapping2D.centerrotation = uvm->centerrotation;
 			break;
 		}
 		case UVRANDOMMAPPING2D: {

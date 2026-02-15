@@ -67,10 +67,10 @@ Properties TextureMapping2D::ToProperties(const string &name) const {
 //------------------------------------------------------------------------------
 
 UVMapping2D::UVMapping2D(const u_int index,
-		const float rot, const float uscale, const float vscale,
+		const float rot, const bool centerrot, const float uscale, const float vscale,
 		const float udelta, const float vdelta) :
 		TextureMapping2D(index),
-		uvRotation(rot), uScale(uscale),
+		uvRotation(rot), centerrotation(centerrot), uScale(uscale),
 		vScale(vscale), uDelta(udelta), vDelta(vdelta),
 		sinTheta(sinf(Radians(-uvRotation))), cosTheta(cosf(Radians(-uvRotation))) {
 }
@@ -78,13 +78,17 @@ UVMapping2D::UVMapping2D(const u_int index,
 UV UVMapping2D::Map(const HitPoint &hitPoint) const {
 	const UV uv = hitPoint.GetUV(dataIndex);
 
+	// Centered rotation
+	const float uOffset = 0.5 * centerrotation*uScale;
+	const float vOffset = 0.5 * centerrotation*vScale;
+
 	// Scale
-	const float uScaled = uv.u * uScale;
-	const float vScaled = uv.v * vScale;
+	const float uScaled = uv.u * uScale - uOffset;
+	const float vScaled = uv.v * vScale - vOffset;
 
 	// Rotate
-	const float uRotated = uScaled * cosTheta - vScaled * sinTheta;
-	const float vRotated = vScaled * cosTheta + uScaled * sinTheta;
+	const float uRotated = uOffset + uScaled * cosTheta - vScaled * sinTheta;
+	const float vRotated = vOffset + vScaled * cosTheta + uScaled * sinTheta;
 
 	// Translate
 	const float uTranslated = uRotated + uDelta;
@@ -108,6 +112,7 @@ Properties UVMapping2D::ToProperties(const string &name) const {
 			Property(name + ".type")("uvmapping2d") <<
 			TextureMapping2D::ToProperties(name) <<
 			Property(name + ".rotation")(uvRotation) <<
+			Property(name + ".centerrotation")(centerrotation) <<
 			Property(name + ".uvscale")(uScale, vScale) <<
 			Property(name + ".uvdelta")(uDelta, vDelta);
 }

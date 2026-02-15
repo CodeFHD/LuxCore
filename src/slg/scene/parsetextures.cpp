@@ -811,8 +811,9 @@ TextureMapping2D *Scene::CreateTextureMapping2D(const string &prefixName, const 
 		const float rotation = props.Get(Property(prefixName + ".rotation")(0.0)).Get<double>();
 		const UV uvScale = props.Get(Property(prefixName + ".uvscale")(1.f, 1.f)).Get<UV>();
 		const UV uvDelta = props.Get(Property(prefixName + ".uvdelta")(0.f, 0.f)).Get<UV>();
+		const bool centerrotation = props.Get(Property(prefixName + ".centerrotation")(false)).Get<bool>();
 
-		return new UVMapping2D(dataIndex, rotation, uvScale.u, uvScale.v, uvDelta.u, uvDelta.v);
+		return new UVMapping2D(dataIndex, rotation, centerrotation, uvScale.u, uvScale.v, uvDelta.u, uvDelta.v);
 	} else if (mapType == "uvrandommapping2d") {
 		const u_int dataIndex = Clamp(props.Get(Property(prefixName + ".uvindex")(0u)).Get<u_int>(), 0u, EXTMESH_MAX_DATA_COUNT);
 

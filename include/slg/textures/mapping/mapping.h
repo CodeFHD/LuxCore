@@ -78,7 +78,7 @@ protected:
 
 class UVMapping2D : public TextureMapping2D {
 public:
-	UVMapping2D(const u_int dataIndex, const float rot, const float uScale, const float vScale,
+	UVMapping2D(const u_int dataIndex, const float rot, const bool centerrot, const float uScale, const float vScale,
 			const float uDelta, const float vDelta);
 	virtual ~UVMapping2D() { }
 
@@ -91,6 +91,7 @@ public:
 
 	const float uvRotation, uScale, vScale, uDelta, vDelta;
 	const float sinTheta, cosTheta;
+	const bool centerrotation;
 };
 
 //------------------------------------------------------------------------------
