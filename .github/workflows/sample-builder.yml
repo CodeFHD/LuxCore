@@ -350,9 +350,9 @@ jobs:
           # Remove superfluous files (hack)
           rm ${{ github.workspace }}/out/install/Release/lib/libnvrtc*.alt.*
 
-      - name: Setup tmate session (debug)
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+      #- name: Setup tmate session (debug)
+        #if: ${{ failure() }}
+        #uses: mxschmitt/action-tmate@v3
 
       - name: Install 7zip (act)
         if: ${{ env.ACT }}
