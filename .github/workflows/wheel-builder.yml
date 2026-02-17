@@ -397,9 +397,9 @@ jobs:
           path: conan-cache
           key: deps-${{ matrix.os }}-${{ matrix.python-minor}}-${{ hashFiles('**/conan-cache') }}
 
-      #- name: Setup tmate session (debug)
-        #if: ${{ failure() }}
-        #uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session (debug)
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
 
       # Upload artifacts
       - uses: actions/upload-artifact@v4
