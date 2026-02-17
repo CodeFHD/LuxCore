@@ -36,8 +36,8 @@ using namespace luxcore;
 
 namespace luxcore { namespace parselxs {
 
-PropertiesUPtr renderConfigProps;
-PropertiesUPtr sceneProps;
+PropertiesPtr renderConfigProps;
+PropertiesPtr sceneProps;
 
 luxrays::Properties overwriteProps;
 Transform worldToCamera;

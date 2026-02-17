@@ -88,8 +88,8 @@ using namespace luxcore;
 
 namespace luxcore { namespace parselxs {
 
-Properties * renderConfigProps;
-Properties * sceneProps;
+PropertiesConstPtr renderConfigProps;
+PropertiesConstPtr sceneProps;
 
 Properties overwriteProps;
 Transform worldToCamera;

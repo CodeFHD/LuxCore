@@ -57,24 +57,24 @@ extern string currentFile;
 extern unsigned int lineNum;
 
 extern Properties overwriteProps;
-extern Properties * renderConfigProps;
-extern Properties * sceneProps;
+extern PropertiesPtr renderConfigProps;
+extern PropertiesPtr sceneProps;
 
 } }
 
 void luxcore::ParseLXS(
 	const string &fileName,
-	PropertiesRPtr renderConfigProps,
-	PropertiesRPtr sceneProps
+	PropertiesRPtr p_renderConfigProps,
+	PropertiesRPtr p_sceneProps
 ) {
-	API_BEGIN("{}, {}, {}", ToArgString(fileName), ToArgString(renderConfigProps), ToArgString(sceneProps));
+	API_BEGIN("{}, {}, {}", ToArgString(fileName), ToArgString(p_renderConfigProps), ToArgString(p_sceneProps));
 
 	// Otherwise the code is not thread-safe
 	static std::mutex parseLXSMutex;
 	std::unique_lock<std::mutex> lock(parseLXSMutex);
 
-	luxcore::parselxs::renderConfigProps = renderConfigProps.get();
-	luxcore::parselxs::sceneProps = sceneProps.get();
+	luxcore::parselxs::renderConfigProps = p_renderConfigProps.get();
+	luxcore::parselxs::sceneProps = p_sceneProps.get();
 	luxcore::parselxs::ResetParser();
 
 	bool parseSuccess = false;
