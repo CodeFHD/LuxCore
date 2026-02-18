@@ -471,8 +471,7 @@ def main(
         generator = "Ninja Multi-Config"
         # Next line is a workaround to replace {{profile_dir}}, which is
         # not well handled by deployer...
-        if not os.getenv("CI"):
-            CONAN_ENV["LUX_PROFILE_DIR"] = str(output_dir.absolute() / ".conan2" / "profiles")
+        CONAN_ENV["LUX_PROFILE_DIR"] = str(output_dir.absolute() / ".conan2" / "profiles")
         main_block = [
             "install",
             "--build=missing",
