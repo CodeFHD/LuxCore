@@ -34,6 +34,14 @@ URL_SUFFIXES = {
 }
 
 
+def logger_step(step):
+    """Log a new step."""
+    length = 12
+    stars = "=" * length
+    print()
+    logger.info(stars + "  " + step + "  " + stars)
+
+
 def find_platform():
     """Find current platform."""
     system = platform.system()
@@ -305,7 +313,7 @@ def main(
     logger.info(msg)
 
     # Get settings
-    logger.info("Reading settings")
+    logger_step("Reading settings")
     with open(
         "build-system/build-settings.json",
         encoding="utf-8",
@@ -392,6 +400,7 @@ def main(
         )
 
         # Download and unzip
+        logger_step("Retrieving dependencies")
         if not args.local:
             logger.info(
                 "Downloading dependencies (url='%s')",
@@ -410,12 +419,11 @@ def main(
             with ZipFile(args.local) as downloaded:
                 downloaded.extractall(tmpdir)
 
-
         # Retrieve deps build information
         show_build_info(tmpdir)
 
         # Clean
-        logger.info("Cleaning local cache")
+        logger_step("Cleaning local cache")
         res = run_conan(
             [
                 "remove",
@@ -429,7 +437,7 @@ def main(
         copy_conf(_conan_home)  # Copy global.conf in current conan home
 
         # Install
-        logger.info("Installing")
+        logger_step("Installing")
         archive = tmpdir / "conan-cache-save.tgz"
         res = run_conan(
             [
@@ -443,7 +451,7 @@ def main(
             logger.info(line)
 
         # Check
-        logger.info("Checking integrity")
+        logger_step("Checking integrity")
         res = run_conan(
             [
                 "cache",
@@ -455,7 +463,7 @@ def main(
         logger.info("Integrity check: OK")
 
         # Installing profiles
-        logger.info("Installing profiles")
+        logger_step("Installing profiles")
         run_conan(
             [
                 "config",
@@ -467,11 +475,24 @@ def main(
         # Generate & deploy
         # About release/debug mixing, see
         # https://github.com/conan-io/conan/issues/12656
-        logger.info("Generating...")
+        logger_step("Generating...")
         generator = "Ninja Multi-Config"
         # Next line is a workaround to replace {{profile_dir}}, which is
         # not well handled by deployer...
-        CONAN_ENV["LUX_PROFILE_DIR"] = str(output_dir.absolute() / ".conan2" / "profiles")
+        CONAN_ENV["LUX_PROFILE_DIR"] = str(
+            output_dir.absolute() / ".conan2" / "profiles"
+        )
+        logger.info(
+            f"Conan profile directory is %s" % CONAN_ENV["LUX_PROFILE_DIR"]
+        )
+        run_conan = (
+            [
+                "config",
+                "install",
+                "--type=dir",
+                f"--target-folder={str(_conan_home)}",
+            ]
+        )
         main_block = [
             "install",
             "--build=missing",
@@ -500,10 +521,7 @@ def main(
                 "MinSizeRel",
             ]
         for build_type in build_types:
-            logger.info(
-                "Generating '%s'",
-                build_type,
-            )
+            logger_step("Generating '{build_type}'")
             end_block = [
                 f"--settings=&:build_type={build_type}",
                 Path(
