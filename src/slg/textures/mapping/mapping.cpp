@@ -311,9 +311,6 @@ LocalRandomMapping3D::LocalRandomMapping3D(const luxrays::Transform &w2l, const 
 Point LocalRandomMapping3D::Map(const HitPoint &hitPoint, Normal *shadeN) const {
 	Transform w2t = worldToLocal / hitPoint.localToWorld;
 
-	if (shadeN)
-		*shadeN = Normalize(w2t * hitPoint.shadeN);
-
 	// Select random parameters
 	u_int seed;
 	switch (seedType) {
@@ -345,10 +342,13 @@ Point LocalRandomMapping3D::Map(const HitPoint &hitPoint, Normal *shadeN) const 
 	const float zTranslate = Lerp(rndGen.floatValue(), zTranslateMin, zTranslateMax);
 
 	w2t =
-			Scale(xScale, yScale, zScale) *
-			RotateX(xRotation) * RotateY(yRotation) * RotateZ(zRotation) *
 			Translate(Vector(xTranslate, yTranslate, zTranslate)) *
+			RotateX(xRotation) * RotateY(yRotation) * RotateZ(zRotation) *
+			Scale(xScale, yScale, zScale) *
 			w2t;
+
+	if (shadeN)
+		*shadeN = Normalize(w2t * hitPoint.shadeN);
 
 	return w2t * hitPoint.p;
 }
