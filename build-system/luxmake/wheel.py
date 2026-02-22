@@ -112,8 +112,8 @@ def make_wheel(args):
 
     logger.info("Making wheel for version '%s' and tag '%s'", version, tag)
     with (
-        tempfile.TemporaryDirectory(delete=False) as wheeltree,
-        tempfile.TemporaryDirectory(delete=False) as raw_wheel,
+        tempfile.TemporaryDirectory() as wheeltree,
+        tempfile.TemporaryDirectory() as raw_wheel,
     ):
         # We create an install tree, with all the wheel components, then we
         # pack it into a raw wheel and eventually we repair it.
