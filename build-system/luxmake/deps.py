@@ -17,7 +17,6 @@ import json
 import platform
 from functools import cache
 
-
 from .constants import BINARY_DIR
 from .utils import logger, fail, Colors, set_logger_verbose
 from .check import check_requirements
@@ -93,13 +92,8 @@ def get_profile_name():
 @cache
 def ensure_conan_app():
     """Ensure Conan is installed."""
-    logger.info("Looking for conan")
     if not (res := shutil.which("conan")):
         fail("Conan not found!")
-    logger.info(
-        "Conan found: '%s'",
-        res,
-    )
     return res
 
 
@@ -267,22 +261,17 @@ def install(
 def conan_home():
     """Get Conan home path."""
     conan_app = ensure_conan_app()
-    res = subprocess.run(
-        [
-            conan_app,
-            "config",
-            "home",
-        ],
+    res = run_conan(
+        ["config", "home"],
         capture_output=True,
         text=True,
-        check=False,
     )
     if res.returncode:
         fail("Error while executing conan:\n%s\n%s", res.stdout, res.stderr)
     return Path(res.stdout.strip())
 
 
-def copy_conf(
+def copy_global_conf(
     dest,
 ):
     """Copy global.conf into conan tree."""
@@ -297,6 +286,28 @@ def copy_conf(
         source,
         dest,
     )
+
+
+def set_global_conf(
+    cache_dir,
+):
+    """Set global.conf file."""
+    home = Path(CONAN_ENV["CONAN_HOME"])
+    home.mkdir(parents=True, exist_ok=True)
+    global_conf = home / "global.conf"
+    global_conf.touch()
+
+    logger.info("Writing configuration file: '%s'", str(global_conf))
+    with global_conf.open("w+") as p:
+
+        def write(entry):
+            logger.info(" - %s", entry)
+            p.write(entry)
+            p.write("\n")
+
+        write(f"core.cache:storage_path={cache_dir}")
+        write(f"core.download:download_cache={cache_dir}")
+        write(f"core:non_interactive=True")
 
 
 def main(
@@ -324,6 +335,7 @@ def main(
         "Output directory: %s",
         output_dir,
     )
+    ensure_conan_app()
 
     # Command-line parameters for standalone execution (debug)
     parser = argparse.ArgumentParser()
@@ -391,6 +403,14 @@ def main(
                 "BUILD_TYPE": "Release",
             }
         )
+        del _conan_home
+
+        logger_step("Checking conan home")
+        logger.info("Conan home is %s", str(conan_home()))
+
+        # Set global.conf
+        logger_step("Setting conan configuration")
+        set_global_conf(tmpdir)
 
         # Initialize
         user = args.user or settings["Dependencies"]["user"]
@@ -435,7 +455,6 @@ def main(
         )
         for line in res.stderr.splitlines():
             logger.info(line)
-        copy_conf(_conan_home)  # Copy global.conf in current conan home
 
         # Install
         logger_step("Installing")
@@ -467,6 +486,7 @@ def main(
 
         # Install profiles in conan home
         logger_step("Installing profiles")
+        run_conan(["cache", "path", f"luxcoreconf/{release}@luxcore/luxcore"])
 
         res = run_conan(
             [
