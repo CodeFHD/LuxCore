@@ -35,8 +35,24 @@ Keywords: raytracing,ray tracing,rendering,pbr,physical based rendering,path tra
 Author: LuxCoreRender
 Requires-Python: >=3.9
 Requires-Dist: numpy>=2
-Requires-Dist: nvidia-cuda-nvrtc-cu12; sys_platform != "darwin"
+Requires-Dist: nvidia-cuda-nvrtc; sys_platform != "darwin"
 """
+
+_ENTRYPOINTS_SNIPPET = """\
+[console_scripts]
+pyluxcoretest = pyluxcoretest:main
+pyluxcore-console = pyluxcoretools.console.cmd:main
+pyluxcore-maketx = pyluxcoretools.maketx.cmd:main
+pyluxcore-merge = pyluxcoretools.merge.cmd:main
+pyluxcore-netmenu = pyluxcoretools.netmenu.cmd:main
+pyluxcore-netconsole = pyluxcoretools.netconsole.cmd:main
+pyluxcore-netnode = pyluxcoretools.netnode.cmd:main
+
+[gui_scripts]
+pyluxcore-netconsole-ui = pyluxcoretools.netconsole.ui:main
+pyluxcore-netnode-ui = pyluxcoretools.netnode.ui:main
+"""
+
 
 
 def _compute_platform_tag():
@@ -96,8 +112,8 @@ def make_wheel(args):
 
     logger.info("Making wheel for version '%s' and tag '%s'", version, tag)
     with (
-        tempfile.TemporaryDirectory() as wheeltree,
-        tempfile.TemporaryDirectory() as raw_wheel,
+        tempfile.TemporaryDirectory(delete=False) as wheeltree,
+        tempfile.TemporaryDirectory(delete=False) as raw_wheel,
     ):
         # We create an install tree, with all the wheel components, then we
         # pack it into a raw wheel and eventually we repair it.
@@ -121,10 +137,24 @@ def make_wheel(args):
         with open(dist_info / "METADATA", "w", encoding="utf-8") as f:
             f.write(_METADATA_SNIPPET.format(version))
 
+        # Export entry_points.txt file
+        with open(dist_info / "entry_points.txt", "w", encoding="utf-8") as f:
+            f.write(_ENTRYPOINTS_SNIPPET)
+
         # Copy subfolders into tree
         shutil.copytree(
             SOURCE_DIR / "python" / "pyluxcore",
             wheeltree / "pyluxcore",
+            dirs_exist_ok=True,
+        )
+        shutil.copytree(
+            SOURCE_DIR / "python" / "pyluxcoretest",
+            wheeltree / "pyluxcoretest",
+            dirs_exist_ok=True,
+        )
+        shutil.copytree(
+            SOURCE_DIR / "python" / "pyluxcoretools",
+            wheeltree / "pyluxcoretools",
             dirs_exist_ok=True,
         )
         shutil.copytree(
