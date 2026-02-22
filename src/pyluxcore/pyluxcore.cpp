@@ -2533,6 +2533,10 @@ PYBIND11_MODULE(pyluxcore, m) {
 		py::init(&SceneImpl::Create<slg::SceneRef>),
 		py::keep_alive<1, 2>()
 	)
+	.def(
+		py::init(&SceneImpl::Create<slg::SceneRef>),
+		py::keep_alive<1, 2>()
+	)
     .def(
 		py::init(&SceneImpl::Create<luxrays::PropertiesRPtr, luxrays::PropertiesRPtr>),
 		py::keep_alive<1, 2>(),
@@ -2540,6 +2544,7 @@ PYBIND11_MODULE(pyluxcore, m) {
 	)
     .def(
 		py::init(&SceneImpl::Create<luxrays::PropertiesRPtr>),
+		py::arg("resizePolicyProps") = nullptr,
 		py::keep_alive<1, 2>()
 	)
     .def(
