@@ -70,6 +70,7 @@ void Scene::ParseVolumes(const Properties &props) {
 			//const bool wasLightSource = oldMat->IsLightSource();
 
 			auto [newMatRef, oldMatPtr] = matDefs.DefineMaterial(std::move(newMat));
+			assert(oldMatRef == *oldMatPtr);
 
 			// Replace old material direct references with new one
 			objDefs.UpdateMaterialReferences(oldMatRef, newMatRef);
