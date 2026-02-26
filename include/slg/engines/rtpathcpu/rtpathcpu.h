@@ -117,7 +117,7 @@ protected:
 	bool firstFrameDone;
 
 	std::barrier<completion_t> *threadsSyncBarrier;
-	bool threadsPauseMode;
+	std::atomic<bool> threadsPauseMode;
 };
 
 }
