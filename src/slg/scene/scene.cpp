@@ -462,7 +462,7 @@ void Scene::moveToTrash(NamedObjectUPtr&& oldObj) {
 }
 
 
-void Scene::emptyTrash() {
+void Scene::EmptyTrash() {
 	std::lock_guard lk(trashMtx);
 	trashBin.clear();
 }

@@ -36,8 +36,7 @@ RTPathCPURenderThread::RTPathCPURenderThread(RTPathCPURenderEngine *engine, cons
 	PathCPURenderThread(engine, index, device) {
 }
 
-RTPathCPURenderThread::~RTPathCPURenderThread() {
-}
+RTPathCPURenderThread::~RTPathCPURenderThread() = default;
 
 void RTPathCPURenderThread::StartRenderThread() {
 	// Avoid to allocate the film thread because I'm going to use the global one
@@ -83,7 +82,7 @@ void RTPathCPURenderThread::RTRenderFunc(std::stop_token stop_token) {
 		// Check if we are in pause or edit mode
 		if (engine->threadsPauseMode) {
 			// Synchronize all threads -> This waits for RTPathCPURenderEngine::PauseThreads()
-			engine->threadsSyncBarrier->arrive_and_wait();
+			engine->threadsPauseBarrier->arrive_and_wait();
 
 			while (!stop_token.stop_requested() && engine->threadsPauseMode)
 				std::this_thread::sleep_for(100ms);

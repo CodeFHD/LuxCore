@@ -58,7 +58,7 @@ class RTPathCPUSampler;
 class RTPathCPURenderEngine : public PathCPURenderEngine {
 public:
 	RTPathCPURenderEngine(RenderConfigRef cfg);
-	~RTPathCPURenderEngine();
+	virtual ~RTPathCPURenderEngine() = default;
 
 	virtual RenderEngineType GetType() const { return GetObjectType(); }
 	virtual std::string GetTag() const { return GetObjectTag(); }
@@ -80,15 +80,11 @@ public:
 	friend class RTPathCPURenderThread;
 	friend class RTPathCPUSampler;
 
-    struct completion_t {
-        void operator()() noexcept { }
-    };
-
 protected:
 	static luxrays::PropertiesUPtr GetDefaultProps();
 
 	virtual bool IsRTMode() const { return true; }
-	
+
 	CPURenderThreadUPtr NewRenderThread(const u_int index,
 			luxrays::IntersectionDevice *device) {
 		return std::make_unique<RTPathCPURenderThread>(this, index, device);
@@ -113,10 +109,12 @@ protected:
 
 	std::mutex firstFrameMutex;
     std::condition_variable firstFrameCondition;
-	u_int firstFrameThreadDoneCount;
+	std::atomic<u_int> firstFrameThreadDoneCount;
 	bool firstFrameDone;
 
-	std::barrier<completion_t> *threadsSyncBarrier;
+	using CompletionFunction = std::function<void()>;
+	std::unique_ptr<std::barrier<CompletionFunction>> threadsSyncBarrier;  // General sync
+	std::unique_ptr<std::barrier<CompletionFunction>> threadsPauseBarrier;  // Dedicated to pause event
 	std::atomic<bool> threadsPauseMode;
 };
 

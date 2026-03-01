@@ -262,7 +262,7 @@ public:
 	void SetEnableParsePrint(bool status) { enableParsePrint = status; }
 
 	void moveToTrash(luxrays::NamedObjectUPtr&&);
-	void emptyTrash();
+	void EmptyTrash();
 
 	// Serialization
 	static SceneUPtr LoadSerialized(const std::string &fileName);
