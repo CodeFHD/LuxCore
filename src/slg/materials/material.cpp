@@ -212,69 +212,70 @@ void Material::UpdateAvgPassThroughTransparency() {
 }
 
 PropertiesUPtr Material::ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const {
-	auto props = std::make_unique<Properties>();
+	auto propsPtr = std::make_unique<Properties>();
+	auto& props = *propsPtr;
 
 	const string name = GetName();
 	if (frontTransparencyTex)
-		props->Set(Property("scene.materials." + name + ".transparency.front")(frontTransparencyTex->GetSDLValue()));
+		props.Set(Property("scene.materials." + name + ".transparency.front")(frontTransparencyTex->GetSDLValue()));
 	if (backTransparencyTex)
-		props->Set(Property("scene.materials." + name + ".transparency.back")(backTransparencyTex->GetSDLValue()));
-	props->Set(Property("scene.materials." + name + ".transparency.shadow")(passThroughShadowTransparency));
-	props->Set(Property("scene.materials." + name + ".transparency.shadowoverride")(passThroughShadowTransparencyOverride));
-	props->Set(Property("scene.materials." + name + ".id")(matID));
+		props.Set(Property("scene.materials." + name + ".transparency.back")(backTransparencyTex->GetSDLValue()));
+	props.Set(Property("scene.materials." + name + ".transparency.shadow")(passThroughShadowTransparency));
+	props.Set(Property("scene.materials." + name + ".transparency.shadowoverride")(passThroughShadowTransparencyOverride));
+	props.Set(Property("scene.materials." + name + ".id")(matID));
 
-	props->Set(Property("scene.materials." + name + ".emission.gain")(emittedGain));
-	props->Set(Property("scene.materials." + name + ".emission.power")(emittedPower));
-	props->Set(Property("scene.materials." + name + ".emission.normalizebycolor")(emittedPowerNormalize));
-	props->Set(Property("scene.materials." + name + ".emission.efficiency")(emittedEfficiency));
-	props->Set(Property("scene.materials." + name + ".emission.theta")(emittedTheta));
-	props->Set(Property("scene.materials." + name + ".emission.id")(lightID));
-	props->Set(Property("scene.materials." + name + ".emission.importance")(emittedImportance));
+	props.Set(Property("scene.materials." + name + ".emission.gain")(emittedGain));
+	props.Set(Property("scene.materials." + name + ".emission.power")(emittedPower));
+	props.Set(Property("scene.materials." + name + ".emission.normalizebycolor")(emittedPowerNormalize));
+	props.Set(Property("scene.materials." + name + ".emission.efficiency")(emittedEfficiency));
+	props.Set(Property("scene.materials." + name + ".emission.theta")(emittedTheta));
+	props.Set(Property("scene.materials." + name + ".emission.id")(lightID));
+	props.Set(Property("scene.materials." + name + ".emission.importance")(emittedImportance));
 	if (emittedTex)
-		props->Set(Property("scene.materials." + name + ".emission")(emittedTex->GetSDLValue()));
+		props.Set(Property("scene.materials." + name + ".emission")(emittedTex->GetSDLValue()));
 	if (emissionMap) {
 		const string fileName = useRealFileName ?
 			emissionMap->GetName() : imgMapCache.GetSequenceFileName(*emissionMap);
-		props->Set(Property("scene.materials." + name + ".emission.mapfile")(fileName));
-		props->Set(emissionMap->ToProperties("scene.materials." + name, false));
+		props.Set(Property("scene.materials." + name + ".emission.mapfile")(fileName));
+		props.Set(emissionMap->ToProperties("scene.materials." + name, false));
 	}
-	props->Set(Property("scene.materials." + name + ".emission.temperature")(emittedTemperature));
-	props->Set(Property("scene.materials." + name + ".emission.temperature.normalize")(emittedNormalizeTemperature));
+	props.Set(Property("scene.materials." + name + ".emission.temperature")(emittedTemperature));
+	props.Set(Property("scene.materials." + name + ".emission.temperature.normalize")(emittedNormalizeTemperature));
 
 	switch (directLightSamplingType) {
 		case DLS_ENABLED:
-			props->Set(Property("scene.materials." + name + ".emission.directlightsampling.type")("ENABLED"));
+			props.Set(Property("scene.materials." + name + ".emission.directlightsampling.type")("ENABLED"));
 			break;
 		case DLS_DISABLED:
-			props->Set(Property("scene.materials." + name + ".emission.directlightsampling.type")("DISABLED"));
+			props.Set(Property("scene.materials." + name + ".emission.directlightsampling.type")("DISABLED"));
 			break;
 		case DLS_AUTO:
-			props->Set(Property("scene.materials." + name + ".emission.directlightsampling.type")("AUTO"));
+			props.Set(Property("scene.materials." + name + ".emission.directlightsampling.type")("AUTO"));
 			break;
 		default:
 			throw runtime_error("Unknown MaterialEmissionDLSType in Material::ToProperties(): " + ToString(directLightSamplingType));
 	}
 
 	if (bumpTex)
-		props->Set(Property("scene.materials." + name + ".bumptex")(bumpTex->GetSDLValue()));
-	props->Set(Property("scene.materials." + name + ".bumpsamplingdistance")(bumpSampleDistance));
+		props.Set(Property("scene.materials." + name + ".bumptex")(bumpTex->GetSDLValue()));
+	props.Set(Property("scene.materials." + name + ".bumpsamplingdistance")(bumpSampleDistance));
 
 	if (interiorVolume)
-		props->Set(Property("scene.materials." + name + ".volume.interior")(interiorVolume->GetName()));
+		props.Set(Property("scene.materials." + name + ".volume.interior")(interiorVolume->GetName()));
 	if (exteriorVolume)
-		props->Set(Property("scene.materials." + name + ".volume.exterior")(exteriorVolume->GetName()));
+		props.Set(Property("scene.materials." + name + ".volume.exterior")(exteriorVolume->GetName()));
 		
-	props->Set(Property("scene.materials." + name + ".visibility.indirect.diffuse.enable")(isVisibleIndirectDiffuse));
-	props->Set(Property("scene.materials." + name + ".visibility.indirect.glossy.enable")(isVisibleIndirectGlossy));
-	props->Set(Property("scene.materials." + name + ".visibility.indirect.specular.enable")(isVisibleIndirectSpecular));
+	props.Set(Property("scene.materials." + name + ".visibility.indirect.diffuse.enable")(isVisibleIndirectDiffuse));
+	props.Set(Property("scene.materials." + name + ".visibility.indirect.glossy.enable")(isVisibleIndirectGlossy));
+	props.Set(Property("scene.materials." + name + ".visibility.indirect.specular.enable")(isVisibleIndirectSpecular));
 
-	props->Set(Property("scene.materials." + name + ".shadowcatcher.enable")(isShadowCatcher));
-	props->Set(Property("scene.materials." + name + ".shadowcatcher.onlyinfinitelights")(isShadowCatcherOnlyInfiniteLights));
+	props.Set(Property("scene.materials." + name + ".shadowcatcher.enable")(isShadowCatcher));
+	props.Set(Property("scene.materials." + name + ".shadowcatcher.onlyinfinitelights")(isShadowCatcherOnlyInfiniteLights));
 
-	props->Set(Property("scene.materials." + name + ".photongi.enable")(isPhotonGIEnabled));
-	props->Set(Property("scene.materials." + name + ".holdout.enable")(isHoldout));
+	props.Set(Property("scene.materials." + name + ".photongi.enable")(isPhotonGIEnabled));
+	props.Set(Property("scene.materials." + name + ".holdout.enable")(isHoldout));
 
-	return props;
+	return propsPtr;
 }
 
 void Material::UpdateMaterialReferences(MaterialConstRef oldMat, MaterialRef newMat) {
