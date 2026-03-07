@@ -155,8 +155,9 @@ PropertiesUPtr Scene::ToProperties(const bool useRealFileName) const {
 		// Check if it is not a volume
 		try {
 			VolumeConstRef vol = dynamic_cast<const Volume &>(mat);
+		} catch (std::bad_cast&) {
 			props->Set(mat.ToProperties(imgMapCache, useRealFileName));
-		} catch (std::bad_cast&) {}
+		}
 	}
 
 	// Write the object information
