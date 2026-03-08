@@ -110,17 +110,6 @@ target_link_libraries(luxcore_static PRIVATE
 add_definitions(-DCPP_API_EXPORTS ${VISIBILITY_FLAGS}) # for controlling visibility
 link_directories (${SLG_LIB_DIR} ${LuxRays_LIB_DIR})
 
-# In case of MSVC, run setup_x64.bat before all targets.
-# setup_x64.bat must therefore be in the PATH
-if(MSVC)
-    add_custom_target(setup_x64 ALL
-        COMMAND cmd /c setup_x64.bat
-        COMMENT "Running setup_x64.bat"
-    )
-    # Make all build targets depend on setup_x64
-    add_dependencies(luxcore setup_x64)
-endif()
-
 set_target_properties(luxcore PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set_target_properties(luxcore_static PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 

@@ -9,7 +9,6 @@ REM Convenience wrapper for CMake commands
 
 REM Script command (1st parameter)
 
-call setup_x64.bat
 set COMMAND=%1
 
 
