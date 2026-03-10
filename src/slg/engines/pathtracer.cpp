@@ -977,10 +977,19 @@ void PathTracer::ApplyVarianceClamp(const PathTracerThreadState &state,
 
 void PathTracer::RenderSample(PathTracerThreadState &state) const {
 	// Check if I have to trace an eye or light path
-	auto& sampler = HasToRenderEyeSample(state) ? state.eyeSampler : state.lightSampler;
-	auto& sampleResults = HasToRenderEyeSample(state) ? state.GetEyeSampleResults() : state.GetLightSampleResults();
+	Sampler *sampler;
+	vector<SampleResult> *sampleResults;
+	if (HasToRenderEyeSample(state)) {
+		// Trace an eye path
+		sampler = state.eyeSampler.get();
+		sampleResults = &state.GetEyeSampleResults();
+	} else {
+		// Trace a light path
+		sampler = state.lightSampler.get();
+		sampleResults = &state.GetLightSampleResults();
+	}
 
-	if (sampler == state.eyeSampler)
+	if (sampler == state.eyeSampler.get())
 		RenderEyeSample(
 			state.device,
 			state.scene,
@@ -998,9 +1007,9 @@ void PathTracer::RenderSample(PathTracerThreadState &state) const {
 		);
 
 	// Variance clamping
-	ApplyVarianceClamp(state, sampleResults);
+	ApplyVarianceClamp(state, *sampleResults);
 
-	sampler->NextSample(sampleResults);
+	sampler->NextSample(*sampleResults);
 }
 
 //------------------------------------------------------------------------------
