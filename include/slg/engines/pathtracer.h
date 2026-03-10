@@ -55,22 +55,25 @@ public:
 			const bool useFilmSplat = false);
 	virtual ~PathTracerThreadState();
 
+	SamplerRef GetEyeSampler() { return *eyeSampler; }
+	SamplerRef GetLightSampler() { return *lightSampler; }
+
 	luxrays::IntersectionDevice *device;
 
-	const SamplerUPtr& eyeSampler;
-	const SamplerUPtr& lightSampler;
 	SceneConstRef scene;
 	FilmRef GetFilm() { return film; }
 	FilmConstRef GetFilm() const { return film; }
 	const VarianceClamping *varianceClamping;
 
-	std::vector<SampleResult> & GetEyeSampleResults() { return eyeSampleResults; }
-	std::vector<SampleResult> & GetLightSampleResults() { return lightSampleResults; }
+	std::vector<SampleResult> & GetEyeSampleResults() { return std::ref(eyeSampleResults); }
+	std::vector<SampleResult> & GetLightSampleResults() { return std::ref(lightSampleResults); }
 
 	// Used for hybrid rendering
 	double eyeSampleCount, lightSampleCount;
 
 private:
+	const SamplerUPtr& eyeSampler;
+	const SamplerUPtr& lightSampler;
 	FilmRef film;
 	std::vector<SampleResult> eyeSampleResults, lightSampleResults;
 };

@@ -976,40 +976,45 @@ void PathTracer::ApplyVarianceClamp(const PathTracerThreadState &state,
 }
 
 void PathTracer::RenderSample(PathTracerThreadState &state) const {
-	// Check if I have to trace an eye or light path
-	Sampler *sampler;
-	vector<SampleResult> *sampleResults;
-	if (HasToRenderEyeSample(state)) {
-		// Trace an eye path
-		sampler = state.eyeSampler.get();
-		sampleResults = &state.GetEyeSampleResults();
-	} else {
-		// Trace a light path
-		sampler = state.lightSampler.get();
-		sampleResults = &state.GetLightSampleResults();
-	}
 
-	if (sampler == state.eyeSampler.get())
-		RenderEyeSample(
-			state.device,
-			state.scene,
-			state.GetFilm(),
-			*state.eyeSampler,
-			state.GetEyeSampleResults()
-		);
-	else
-		RenderLightSample(
-			state.device,
-			state.scene,
-			state.GetFilm(),
-			*state.lightSampler,
-			state.GetLightSampleResults()
-		);
+	auto Render = [&]() {
 
-	// Variance clamping
-	ApplyVarianceClamp(state, *sampleResults);
+		// Check if I have to trace an eye or light path
+		if (HasToRenderEyeSample(state)) {
+			// Trace an eye path
+			auto& sampler = state.GetEyeSampler();
+			auto& sampleResults = state.GetEyeSampleResults();
+			RenderEyeSample(
+				state.device,
+				state.scene,
+				state.GetFilm(),
+				sampler,
+				sampleResults
+			);
+			return std::make_tuple(std::ref(sampler), std::ref(sampleResults));
+		} else {
+			// Otherwise trace a light path
+			auto& sampler = state.GetLightSampler();
+			auto& sampleResults = state.GetLightSampleResults();
+			RenderLightSample(
+				state.device,
+				state.scene,
+				state.GetFilm(),
+				sampler,
+				sampleResults
+			);
+			return std::make_tuple(std::ref(sampler), std::ref(sampleResults));
+		}
+	};  // lambda
 
-	sampler->NextSample(*sampleResults);
+	// Render sample
+	auto [sampler, sampleResults] = Render();
+	assert(&sampleResults == &state.GetEyeSampleResults() || &sampleResults == &state.GetLightSampleResults());
+
+	// Apply variance clamping
+	ApplyVarianceClamp(state, sampleResults);
+
+	sampler.NextSample(sampleResults);
 }
 
 //------------------------------------------------------------------------------

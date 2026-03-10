@@ -144,29 +144,29 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 
 	// Pick a scene object to sample
 	float sceneObjPickPdf;
-	const u_int currentSceneObjIndex = engine->currentSceneObjsDist->SampleDiscrete(state.eyeSampler->GetSample(0), &sceneObjPickPdf);
+	const u_int currentSceneObjIndex = engine->currentSceneObjsDist->SampleDiscrete(state.GetEyeSampler().GetSample(0), &sceneObjPickPdf);
 	auto& sceneObj = *engine->currentSceneObjsToBake[currentSceneObjIndex];
 	auto& mesh = sceneObj.GetExtMesh();
 
 	// Pick a triangle to sample
 	float triPickPdf;
-	const u_int triangleIndex = engine->currentSceneObjDist[currentSceneObjIndex]->SampleDiscrete(state.eyeSampler->GetSample(1), &triPickPdf);
+	const u_int triangleIndex = engine->currentSceneObjDist[currentSceneObjIndex]->SampleDiscrete(state.GetEyeSampler().GetSample(1), &triPickPdf);
 
-	const float timeSample = state.eyeSampler->GetSample(4);
+	const float timeSample = state.GetEyeSampler().GetSample(4);
 	Transform localToWorld;
 	mesh.GetLocal2World(timeSample, localToWorld);
 
 	// Origin
 	Point samplePoint;
 	float b0, b1, b2;
-	mesh.Sample(localToWorld, triangleIndex, state.eyeSampler->GetSample(2), state.eyeSampler->GetSample(3),
+	mesh.Sample(localToWorld, triangleIndex, state.GetEyeSampler().GetSample(2), state.GetEyeSampler().GetSample(3),
 			&samplePoint, &b0, &b1, &b2);
 
 	const u_int sceneObjIndex = state.scene.GetObjects().GetSceneObjectIndex(sceneObj);
 	const PathVolumeInfo volInfo;
 	BSDF bsdf(state.scene, sceneObjIndex, triangleIndex,
 			samplePoint, b1, b2,
-			timeSample, state.eyeSampler->GetSample(pathTracer.eyeSampleSize), &volInfo);
+			timeSample, state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize), &volInfo);
 
 	//--------------------------------------------------------------------------
 	// Set up the sample result
@@ -191,11 +191,11 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 
 			const PathTracer::DirectLightResult directLightResult = pathTracer.DirectLightSampling(state.device, state.scene,
 					timeSample,
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 3),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 4),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 5),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 6),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 7),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 3),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 4),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 5),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 6),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 7),
 					pathInfo, 
 					Spectrum(1.f), bsdf, &sampleResult);
 
@@ -216,8 +216,8 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 				float bsdfPdfW;
 				BSDFEvent bsdfEvent;
 				const Spectrum bsdfSample = bsdf.Sample(&sampledDir,
-						state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 1),
-						state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 2),
+						state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 1),
+						state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 2),
 						&bsdfPdfW, &cosSampledDir, &bsdfEvent);
 
 				pathInfo.AddVertex(bsdf, bsdfEvent, bsdfPdfW, pathTracer.hybridBackForwardGlossinessThreshold);
@@ -235,7 +235,7 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 
 				pathTracer.RenderEyePath(
 					state.device, state.scene,
-					*state.eyeSampler,
+					state.GetEyeSampler(),
 					pathInfo,
 					eyeRay,
 					bsdfSample,
@@ -259,11 +259,11 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 
 			const PathTracer::DirectLightResult directLightResult = pathTracer.DirectLightSampling(state.device, state.scene,
 					timeSample,
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 3),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 4),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 5),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 6),
-					state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 7),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 3),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 4),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 5),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 6),
+					state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 7),
 					pathInfo, 
 					Spectrum(1.f), bsdf, &sampleResult,
 					false);
@@ -280,8 +280,8 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 				//--------------------------------------------------------------
 
 				// Ray direction
-				const float u1 = state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 1);
-				const float u2 = state.eyeSampler->GetSample(pathTracer.eyeSampleSize + 2);
+				const float u1 = state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 1);
+				const float u2 = state.GetEyeSampler().GetSample(pathTracer.eyeSampleSize + 2);
 				const Vector localSampledDir = UniformSampleHemisphere(u1, u2);
 				const Vector sampledDir = bsdf.GetFrame().ToWorld(localSampledDir);
 
@@ -301,7 +301,7 @@ void BakeCPURenderThread::RenderEyeSample(const BakeMapInfo &mapInfo, PathTracer
 
 				const float NdotL = Dot(bsdf.hitPoint.shadeN, sampledDir);
 				pathTracer.RenderEyePath(state.device, state.scene,
-						*state.eyeSampler, pathInfo, eyeRay, Spectrum(NdotL * INV_PI / samplePdf),
+						state.GetEyeSampler(), pathInfo, eyeRay, Spectrum(NdotL * INV_PI / samplePdf),
 						state.GetEyeSampleResults());
 			}
 			break;
@@ -365,7 +365,7 @@ void BakeCPURenderThread::RenderLightSample(const BakeMapInfo &mapInfo, PathTrac
 	const PathTracer::ConnectToEyeCallBackType connectToEyeCallBack = std::bind(
 			&BakeCPURenderThread::RenderConnectToEyeCallBack, this, mapInfo, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
 
-	pathTracer.RenderLightSample(state.device, state.scene, state.GetFilm(), *state.lightSampler,
+	pathTracer.RenderLightSample(state.device, state.scene, state.GetFilm(), state.GetLightSampler(),
 			state.GetLightSampleResults(), connectToEyeCallBack);
 }
 
@@ -374,13 +374,14 @@ void BakeCPURenderThread::RenderSample(const BakeMapInfo &mapInfo, PathTracerThr
 	const PathTracer &pathTracer = engine->pathTracer;
 
 	// Check if I have to trace an eye or light path
-	const SamplerUPtr& sampler =
-		pathTracer.HasToRenderEyeSample(state) ? state.eyeSampler : state.lightSampler;
+	bool eyeSampling = pathTracer.HasToRenderEyeSample(state);
+	SamplerRef sampler =
+		 eyeSampling ? state.GetEyeSampler() : state.GetLightSampler();
 
-	std::vector<SampleResult>& sampleResults = pathTracer.HasToRenderEyeSample(state) ?
+	std::vector<SampleResult>& sampleResults = eyeSampling ?
 		state.GetEyeSampleResults() : state.GetLightSampleResults();
 
-	if (sampler == state.eyeSampler)
+	if (eyeSampling)
 		RenderEyeSample(mapInfo, state);
 	else
 		RenderLightSample(mapInfo, state);
@@ -388,7 +389,7 @@ void BakeCPURenderThread::RenderSample(const BakeMapInfo &mapInfo, PathTracerThr
 	// Variance clamping
 	pathTracer.ApplyVarianceClamp(state, sampleResults);
 
-	sampler->NextSample(sampleResults);
+	sampler.NextSample(sampleResults);
 }
 
 void BakeCPURenderThread::RenderFunc(std::stop_token stop_token) {
