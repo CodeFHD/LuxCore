@@ -202,6 +202,7 @@ jobs:
 
             # llvm
             brew install llvm@20
+            brew link llvm@20 --overwrite
             LLVM_PREFIX=$(brew --prefix llvm@20)
             echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
@@ -210,6 +211,7 @@ jobs:
 
             # lld
             brew install lld@20
+            brew link lld@20 --overwrite
             LLD_PREFIX=$(brew --prefix lld@20)
 
             # Set paths
@@ -222,6 +224,7 @@ jobs:
 
             # OpenMP
             brew install libomp
+            brew link libomp --overwrite
             echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
 
