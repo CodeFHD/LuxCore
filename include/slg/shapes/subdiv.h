@@ -33,7 +33,9 @@ public:
 		luxrays::ExtTriangleMeshRef srcMesh,
 		const u_int maxLevel,
 		const float maxEdgeScreenSize,
-		const bool enhanced
+		const bool enhanced,
+		const float sharpnessThresholdRadians,
+		const float creaseWeight
 	);
 	virtual ~SubdivShape();
 
@@ -43,7 +45,9 @@ public:
 	static luxrays::ExtTriangleMeshUPtr ApplySubdiv(
 		luxrays::ExtTriangleMeshRef srcMesh,
 		const u_int maxLevel,
-		const bool enhanced
+		const bool enhanced,
+		const float sharpnessThresholdRadians,
+		const float creaseWeight
 	);
 
 protected:

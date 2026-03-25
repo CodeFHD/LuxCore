@@ -341,13 +341,18 @@ ExtTriangleMeshUPtr Scene::CreateShape(const string &shapeName, const Properties
 			Property(propName + ".enhanced")(false)
 		).Get<bool>();
 
+		const float sharpnessThresholdRadians = props.Get(Property(propName + ".sharpnessthreshold")(0.512)).Get<double>();
+		const float creaseWeight = props.Get(Property(propName + ".creaseweight")(10.0)).Get<double>();
+
 		shape = std::make_unique<SubdivShape>(
 			//camera,
 			CameraPtr(&GetCamera()),
 			static_cast<ExtTriangleMesh&>(extMeshCache.GetExtMesh(sourceMeshName)),
 			maxLevel,
 			maxEdgeScreenSize,
-			subdivEnhanced
+			subdivEnhanced,
+			sharpnessThresholdRadians,
+			creaseWeight
 		);
 
 	} else if (shapeType == "displacement") {

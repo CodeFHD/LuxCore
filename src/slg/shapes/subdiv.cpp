@@ -739,6 +739,7 @@ TopologyRefinerPtr createTopologyAdaptiveRefiner(
 	int numFaces,
 	const std::map<std::pair<int, int>, EdgeInfo>& edgeMap,
 	const float sharpnessThresholdRadians,
+	const float creaseWeight,
 	const Far::PatchTableFactory::Options& patchOptions
 ) {
 
@@ -765,10 +766,10 @@ TopologyRefinerPtr createTopologyAdaptiveRefiner(
 	std::vector<float> creaseWeights;
     for (const auto &edgePair : edgeMap) {
         const EdgeInfo &edge = edgePair.second;
-		if (edge.sharpness > 0.5f) {  // TODO parameter
+		if (edge.sharpness > sharpnessThresholdRadians) {
 			creases.push_back(edge.v0);
 			creases.push_back(edge.v1);
-			creaseWeights.push_back(10.0f);
+			creaseWeights.push_back(creaseWeight);
 		}
 	}
 	desc.numCreases = creaseWeights.size();
@@ -807,8 +808,11 @@ struct Surface {
 	/// Constructor
 	///
 	/// @param srcMesh The mesh to be subdivided
-	Surface(ExtTriangleMeshConstRef srcMesh)
-	{
+	Surface(
+		ExtTriangleMeshConstRef srcMesh,
+		const float sharpnessThresholdRadians,
+		const float creaseWeight
+	) {
 		SDL_LOG("Subdivision (enhanced) - Computing patches");
 
 		// Initialize patch table options
@@ -823,7 +827,7 @@ struct Surface {
 
 		// Mark edges for sharpness
 		std::map<std::pair<int, int>, EdgeInfo> edgeMap;
-		processEdgesForSharpness(srcMesh, edgeMap, 0.5);
+		processEdgesForSharpness(srcMesh, edgeMap, sharpnessThresholdRadians);
 
 		// Construct refiner
 		refiner = std::move(
@@ -832,7 +836,8 @@ struct Surface {
 				srcMesh.GetTotalVertexCount(),
 				srcMesh.GetTotalTriangleCount(),
 				edgeMap,
-				0.5,
+				sharpnessThresholdRadians,
+				creaseWeight,
 				patchTableOptions
 			)
 		);
@@ -1409,7 +1414,9 @@ struct MultiLayerDataEvaluator{
 // Entry point for enhanced subdivision
 ExtTriangleMeshUPtr ApplySubdiv(
 	ExtTriangleMeshRef srcMesh,
-	const u_int maxLevel
+	const u_int maxLevel,
+	const float sharpnessThresholdRadians,
+	const float creaseWeight
 ) {
 	// Remarks:
 	// All buffers (triangles, points, normals...) are enclosed in smart pointers
@@ -1422,7 +1429,7 @@ ExtTriangleMeshUPtr ApplySubdiv(
 	using std::tie;
 
 	// Create limit surface from base geometry
-	Surface surface(srcMesh);
+	Surface surface(srcMesh, sharpnessThresholdRadians, creaseWeight);
 
 	// Subdivide
 	surface.Subdivide(maxLevel);
@@ -1520,7 +1527,9 @@ SubdivShape::SubdivShape(
 	ExtTriangleMeshRef srcMesh,
 	const u_int maxLevel,
 	const float maxEdgeScreenSize,
-	const bool enhanced
+	const bool enhanced,
+	const float sharpnessThresholdRadians,
+	const float creaseWeight
 ) {
 	const double startTime = WallClockTime();
 
@@ -1562,7 +1571,13 @@ SubdivShape::SubdivShape(
 				SDL_LOG("Subdividing adapted level = " << optimizedLevel);
 
 				// Subdivide and re-try
-				auto newMesh = ApplySubdiv(*mesh, optimizedLevel, enhanced);
+				auto newMesh = ApplySubdiv(
+					*mesh,
+					optimizedLevel,
+					enhanced,
+					sharpnessThresholdRadians,
+					creaseWeight
+				);
 				SDL_LOG(
 					"Done step #" << i
 					<< " from " << mesh->GetTotalTriangleCount()
@@ -1576,7 +1591,7 @@ SubdivShape::SubdivShape(
 		} else {
 			SDL_LOG("Subdividing shape " << srcMesh.GetName() << " at level: " << maxLevel);
 
-			mesh = ApplySubdiv(srcMesh, maxLevel, enhanced);
+			mesh = ApplySubdiv(srcMesh, maxLevel, enhanced, sharpnessThresholdRadians, creaseWeight);
 		}
 	} else {
 		// Nothing to do, just make a copy
@@ -1652,7 +1667,9 @@ float SubdivShape::MaxEdgeScreenSize(CameraConstRef camera, ExtTriangleMeshRef s
 ExtTriangleMeshUPtr SubdivShape::ApplySubdiv(
 	ExtTriangleMeshRef srcMesh,
 	const u_int maxLevel,
-	const bool enhanced
+	const bool enhanced,
+	const float sharpnessThresholdRadians,
+	const float creaseWeight
 ) {
 	//--------------------------------------------------------------------------
 	// Check data
@@ -1669,7 +1686,9 @@ ExtTriangleMeshUPtr SubdivShape::ApplySubdiv(
 			<< srcMesh.GetTotalTriangleCount() << " triangles"
 		);
 
-		return enhanced::ApplySubdiv(srcMesh, maxLevel);
+		return enhanced::ApplySubdiv(
+			srcMesh, maxLevel, sharpnessThresholdRadians, creaseWeight
+		);
 	}
 	else {
 		SDL_LOG("Subdivision - Starting - "
