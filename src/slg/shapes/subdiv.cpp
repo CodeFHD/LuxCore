@@ -832,6 +832,7 @@ struct Surface {
 				srcMesh.GetTotalVertexCount(),
 				srcMesh.GetTotalTriangleCount(),
 				edgeMap,
+				0.5,
 				patchTableOptions
 			)
 		);

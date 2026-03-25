@@ -507,9 +507,12 @@ ExtTriangleMeshUPtr Scene::CreateShape(const string &shapeName, const Properties
 			std::numeric_limits<u_int>::max()
 		);
 
+		bool importNormals = props.Get(Property(propName + ".importnormals")(false)).Get<bool>();
+
 		shape = std::make_unique<MergeOnDistanceShape>(
 			static_cast<ExtTriangleMesh&>(extMeshCache.GetExtMesh(sourceMeshName)),
-			tolerance
+			tolerance,
+			importNormals
 		);
 	} else
 

@@ -26,7 +26,8 @@ class MergeOnDistanceShape : public Shape {
 public:
 	MergeOnDistanceShape(
 		luxrays::ExtTriangleMeshRef srcMesh,
-		u_int tolerance
+		u_int tolerance,
+		bool importNormals
 	);
 
 	virtual ~MergeOnDistanceShape();
@@ -34,7 +35,8 @@ public:
 
 	static luxrays::ExtTriangleMeshUPtr ApplyMergeOnDistance(
 		luxrays::ExtTriangleMeshRef srcMesh,
-		u_int tolerance
+		u_int tolerance,
+		bool importNormals
 	);
 
 protected:

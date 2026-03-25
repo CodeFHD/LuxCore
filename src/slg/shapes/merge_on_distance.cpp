@@ -85,6 +85,8 @@ inline bool compare_points(
 }
 
 
+// This is the classical Union-Find algorithm,
+// in a parallel implementation (tbb powered)
 class alignas(std::hardware_destructive_interference_size) UnionFind {
 public:
     UnionFind() {}
@@ -644,7 +646,9 @@ ClusterMap CreateClusters(const UnionFind& dsu, u_int numPoints) {
 // Returns:
 // - The merged points, in the form of clusters (map of vectors)
 //
-ClusterMap mergePoints(const Point * points, u_int numPoints, u_int tolerance) {
+ClusterMap mergePoints(
+	const Point * points, u_int numPoints, u_int tolerance, bool importNormals
+) {
 
 	// Compute grid for spatial partitioning
 	const Grid grid{ComputeGrid(points, numPoints)};
@@ -672,7 +676,8 @@ ClusterMap mergePoints(const Point * points, u_int numPoints, u_int tolerance) {
 // Replace each variable with interpolated value
 luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	const luxrays::ExtTriangleMesh& srcMesh,
-	const ClusterMap& clustermap
+	const ClusterMap& clustermap,
+	bool importNormals
 ) {
 	const auto numPoints = srcMesh.GetTotalVertexCount();
 	const auto srcPoints = srcMesh.GetVertices();
@@ -706,7 +711,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	if (srcMesh.HasNormals()) {
 		newNormals.reset(new luxrays::Normal[numNewPoints]);
 	}
-	auto newNormalsPtr = newNormals.get();
+	auto newNormalsPtr = importNormals ? newNormals.get() : nullptr;
 
 	// UV
 	std::array<std::unique_ptr<luxrays::UV>, EXTMESH_MAX_DATA_COUNT> newUVs;
@@ -778,7 +783,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 				newPointsPtr[newIdx] = newPoint;
 
 				// Compute merged normals
-				if (srcMesh.HasNormals()) {
+				if (importNormals && srcMesh.HasNormals()) {
 					luxrays::Normal newNormal = std::transform_reduce(
 						cluster.cbegin(),
 						cluster.cend(),
@@ -867,7 +872,8 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	);  // tbb::parallel_for
 
 	// Recompute triangles
-	u_int numTriangles = srcMesh.GetTotalTriangleCount();
+	const u_int numTriangles = srcMesh.GetTotalTriangleCount();
+	SDL_LOG("Number of triangles " << numTriangles);
 	auto oldTriangles = srcMesh.GetTriangles();
 	auto newTriangles = std::unique_ptr<luxrays::Triangle>(
 		luxrays::ExtTriangleMesh::AllocTrianglesBuffer(numTriangles)
@@ -877,7 +883,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 		tbb::blocked_range<u_int>(0, numTriangles),
 		[&](const tbb::blocked_range<u_int>& r) {
 			for (u_int i = r.begin(); i != r.end(); ++i) {
-				auto& oldTriangle = oldTriangles[i];
+				const auto& oldTriangle = oldTriangles[i];
 				auto newTriangle = luxrays::Triangle(
 					pointMap[oldTriangle.v[0]],
 					pointMap[oldTriangle.v[1]],
@@ -919,7 +925,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 		numTriangles,
 		newPoints.release(),
 		newTriangles.release(),
-		newNormals.release(),
+		importNormals ? newNormals.release() : nullptr,
 		meshUVs,
 		meshCols,
 		meshAlphas,
@@ -945,14 +951,15 @@ namespace slg {
 
 MergeOnDistanceShape::MergeOnDistanceShape(
 	luxrays::ExtTriangleMeshRef  srcMesh,
-	u_int tolerance
+	u_int tolerance,
+	bool importNormals
 ) {
 
 	SDL_LOG("Merge On Distance - Applying to " << srcMesh.GetName());
 
 	const double startTime = WallClockTime();
 
-	mesh = std::move(ApplyMergeOnDistance(srcMesh, tolerance));
+	mesh = std::move(ApplyMergeOnDistance(srcMesh, tolerance, importNormals));
 
 	const double endTime = WallClockTime();
 	SDL_LOG(
@@ -968,7 +975,8 @@ MergeOnDistanceShape::~MergeOnDistanceShape() {
 luxrays::ExtTriangleMeshUPtr
 MergeOnDistanceShape::ApplyMergeOnDistance(
 	luxrays::ExtTriangleMeshRef srcMesh,
-	u_int tolerance
+	u_int tolerance,
+	bool importNormals
 ) {
 
 
@@ -976,10 +984,11 @@ MergeOnDistanceShape::ApplyMergeOnDistance(
 	auto clusters = mergePoints(
 		srcMesh.GetVertices(),
 		srcMesh.GetTotalVertexCount(),
-		tolerance
+		tolerance,
+		importNormals
 	);
 
-	auto dstMesh = RecreateMesh(srcMesh, clusters);
+	auto dstMesh = RecreateMesh(srcMesh, clusters, importNormals);
 
 
 	SDL_LOG(
