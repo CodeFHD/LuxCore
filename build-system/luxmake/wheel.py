@@ -34,7 +34,7 @@ Summary: LuxCore Python bindings
 Keywords: raytracing,ray tracing,rendering,pbr,physical based rendering,path tracing
 Author: LuxCoreRender
 Requires-Python: >=3.10
-Requires-Dist: nvidia-cuda-nvrtc; sys_platform != "darwin"
+Requires-Dist: nvidia-cuda-nvrtc (==13.1.115); sys_platform != "darwin"
 """
 
 _ENTRYPOINTS_SNIPPET = """\
