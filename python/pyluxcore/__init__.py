@@ -64,7 +64,7 @@ def ensure_nvrtc():
 
     # Find path to nvidia-cuda-nvrtc libs
     try:
-        nvrtc_mod = importlib.import_module("nvidia.cu13")
+        nvrtc_mod = importlib.import_module("nvidia.cuda_nvrtc")
     except ModuleNotFoundError:
         print("nvrtc: Python module not found")
         return
