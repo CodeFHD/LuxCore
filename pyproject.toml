@@ -10,7 +10,7 @@ build-backend = "scikit_build_core.build"
 name = "pyluxcore"
 dynamic = ["version"]
 dependencies = [
-  "nvidia-cuda-nvrtc == 12.8.61; sys_platform != 'darwin'",
+  "nvidia-cuda-nvrtc-cu12 == 12.8.93; sys_platform != 'darwin'",
 ]
 requires-python = ">= 3.10"
 description = "LuxCore Python bindings"
