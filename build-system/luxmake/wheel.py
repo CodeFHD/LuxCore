@@ -12,13 +12,21 @@ import shutil
 import platform
 import os
 import shlex
+from packaging.version import Version
 from pathlib import Path
 
-from .constants import SOURCE_DIR, INSTALL_DIR, BINARY_DIR, WHEELHOUSE_DIR, WHEEL_HOOK
-from .utils import logger, pack, fail, Colors
+from .constants import (
+    SOURCE_DIR,
+    INSTALL_DIR,
+    BINARY_DIR,
+    WHEELHOUSE_DIR,
+    WHEEL_HOOK,
+)
+from .utils import logger, pack, fail, Colors, get_dep_version
 from .build import build_and_install
 from .windows import win_recompose
 
+# Following snippets are intended to wheel reconstruction
 _WHEEL_SNIPPET = """\
 Wheel-Version: 1.0
 Generator: fake 0.0.0
@@ -34,7 +42,7 @@ Summary: LuxCore Python bindings
 Keywords: raytracing,ray tracing,rendering,pbr,physical based rendering,path tracing
 Author: LuxCoreRender
 Requires-Python: >=3.10
-Requires-Dist: nvidia-cuda-nvrtc (==12.8.61); sys_platform != "darwin"
+Requires-Dist: {}; sys_platform != "darwin"
 """
 
 _ENTRYPOINTS_SNIPPET = """\
@@ -51,7 +59,6 @@ pyluxcore-netnode = pyluxcoretools.netnode.cmd:main
 pyluxcore-netconsole-ui = pyluxcoretools.netconsole.ui:main
 pyluxcore-netnode-ui = pyluxcoretools.netnode.ui:main
 """
-
 
 
 def _compute_platform_tag():
@@ -134,7 +141,15 @@ def make_wheel(args):
 
         # Export METADATA file
         with open(dist_info / "METADATA", "w", encoding="utf-8") as f:
-            f.write(_METADATA_SNIPPET.format(version))
+            nvrtc_version = get_dep_version("nvrtc")
+            major = nvrtc_version.major
+            requirement = (
+                f"nvidia-cuda-nvrtc-cu{major}=={nvrtc_version}"
+                if nvrtc_version.major <= 12
+                else f"nvidia-cuda-nvrtc=={nvrtc_version}"
+            )
+
+            f.write(_METADATA_SNIPPET.format(version, requirement))
 
         # Export entry_points.txt file
         with open(dist_info / "entry_points.txt", "w", encoding="utf-8") as f:
