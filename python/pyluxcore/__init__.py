@@ -73,7 +73,8 @@ def ensure_nvrtc():
     if platform.system() == "Linux":
         libpath = modpath / "lib"
     elif platform.system() == "Windows":
-        libpath = modpath / "bin" / "x86_64"
+        # libpath = modpath / "bin" / "x86_64" # (starting with 13.x)
+        libpath = modpath / "bin"
     else:
         return
 
