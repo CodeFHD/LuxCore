@@ -40,6 +40,7 @@ static int VertexCB(p_ply_argument argument) {
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
 	Point *p = *static_cast<Point **> (userData);
+	if (!p) return 1;
 
 	long vertIndex;
 	ply_get_argument_element(argument, nullptr, &vertIndex);
@@ -65,6 +66,7 @@ static int NormalCB(p_ply_argument argument) {
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
 	Normal *n = *static_cast<Normal **> (userData);
+	if (!n) return 1;
 
 	long normIndex;
 	ply_get_argument_element(argument, nullptr, &normIndex);
@@ -89,6 +91,7 @@ static int UVCB(p_ply_argument argument) {
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
 	UV *uv = *static_cast<UV **> (userData);
+	if (!uv) return 1;
 
 	long uvIndex;
 	ply_get_argument_element(argument, nullptr, &uvIndex);
@@ -110,6 +113,7 @@ static int ColorCB(p_ply_argument argument) {
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
 	float *c = *static_cast<float **> (userData);
+	if (!c) return 1;
 
 	long colIndex;
 	ply_get_argument_element(argument, nullptr, &colIndex);
@@ -151,6 +155,7 @@ static int AlphaCB(p_ply_argument argument) {
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
 	float *c = *static_cast<float **> (userData);
+	if (!c) return 1;
 
 	long alphaIndex;
 	ply_get_argument_element(argument, nullptr, &alphaIndex);
@@ -180,6 +185,7 @@ static int VertexAOVCB(p_ply_argument argument) {
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
 	float *c = *static_cast<float **> (userData);
+	if (!c) return 1;
 
 	long alphaIndex;
 	ply_get_argument_element(argument, nullptr, &alphaIndex);
