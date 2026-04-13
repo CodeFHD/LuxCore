@@ -97,7 +97,7 @@ bool cudaKernelCache::ForcedCompilePTX(const vector<string> &kernelsParameters, 
 	cudaOpts.push_back("--diag_suppress=68");
 
 	// Accelerate compilation
-	cudaOpts.push_back("--Ofast-compile=min");
+	//cudaOpts.push_back("--Ofast-compile=min"); # Only 12.9+
 	cudaOpts.push_back("--split-compile=0");
 
 	// Enable pre-compiled headers
