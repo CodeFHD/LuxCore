@@ -995,8 +995,14 @@ void SceneImpl::DefineMeshExt(const std::string &meshName,
 		if (!propPtr) return std::nullopt;
 
 		auto& prop = *propPtr;
-		for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i)
-			res.Set(i, std::span<T>(reinterpret_cast<T*>(prop[i]), plyNbVerts));
+		for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
+			auto p = reinterpret_cast<T*>(prop[i]);
+			if (p) {
+				res.Set(i, std::span<T>(p, plyNbVerts));
+			} else {
+				res.Set(i, std::span<T>());
+			}
+		}
 		return std::make_optional(res);
 	};
 
