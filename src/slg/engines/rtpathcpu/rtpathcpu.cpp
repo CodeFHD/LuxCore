@@ -51,6 +51,10 @@ void RTPathCPURenderEngine::StartLockLess() {
 }
 
 void RTPathCPURenderEngine::StopLockLess() {
+	// We need to resume paused sessions first,
+	// otherwise it will hang on a thread barrier.
+	if(pauseMode)
+		Resume();
 	PathCPURenderEngine::StopLockLess();
 }
 

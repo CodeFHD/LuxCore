@@ -85,16 +85,12 @@ void RTPathCPURenderThread::RTRenderFunc(std::stop_token stop_token) {
 			// Synchronize all threads -> This waits for RTPathCPURenderEngine::PauseThreads()
 			engine->threadsSyncBarrier->arrive_and_wait();
 
-			while (!stop_token.stop_requested() && engine->threadsPauseMode)
-				std::this_thread::sleep_for(100ms);
-
-			// If the above loop was broken because of the stop, we don't want to enter the second
-			// arrive_and_wait() because that would wait for the resume signal, which won't come.
-			if (stop_token.stop_requested())
-				break;
-
 			// Wait for the main thread -> This waits for RTPathCPURenderEngine::ResumeThreads()
 			engine->threadsSyncBarrier->arrive_and_wait();
+
+			// If the engine was stopped, we break here.
+			if (stop_token.stop_requested())
+				break;
 
 			(static_cast<RTPathCPUSampler *>(sampler.get()))->Reset(FilmPtr(&engine->GetFilm()));
 		}
