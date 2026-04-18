@@ -77,7 +77,7 @@ public:
 		if (layerSize) _size = layerSize;
 	}
 	auto Get(const u_int dataIndex) const {
-		assert(dataIndex < size());
+		assert(dataIndex < GetMaxLayerNumber());
 		return (*this)[dataIndex];
 	}
 	void Set(const u_int dataIndex, Layer values, size_t layerSize) {
@@ -130,10 +130,10 @@ public:
 		}
 
 		if (HasValues(dataIndex)) {
-			auto res = std::make_shared<T[]>(size());
+			auto res = std::make_shared<T[]>(GetLayerSize());
 
 			auto srcSpan = GetSpan(dataIndex);
-			auto dstSpan = std::span(res.get(), size());
+			auto dstSpan = std::span(res.get(), GetLayerSize());
 			std::copy(
 #if !defined(__clang__)
 				std::execution::par,
@@ -182,7 +182,7 @@ public:
 
 	// Base
 	using Base::operator[];  // TODO Make private
-	using Base::size;  // Size of the array
+	auto GetMaxLayerNumber() const { return Base::size(); }  // Size of the array
 
 private:
 	size_t _size = 0;

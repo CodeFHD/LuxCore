@@ -379,14 +379,14 @@ nRefinedVerts
 	}
 
 	// Allocate the new mesh
-	ExtTriangleMeshUPtr newMesh =  std::make_unique<ExtTriangleMesh>(
+	ExtTriangleMeshUPtr newMesh = std::make_unique<ExtTriangleMesh>(
 		nRefinedVerts, nRefinedFaces,
 		newVerts, newTris, newNorms,
 		newUVs, newCols, newAlphas
 	);
 
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
-		newMesh->SetVertexAOV(i, newVertAOVs.Get(i), newVertAOVs.size());
+		newMesh->SetVertexAOV(i, newVertAOVs.Get(i), newVertAOVs.GetLayerSize());
 	}
 
 	return newMesh;

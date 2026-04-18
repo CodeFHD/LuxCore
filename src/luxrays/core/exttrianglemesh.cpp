@@ -209,22 +209,25 @@ void ExtTriangleMesh::Init(
 	std::optional<ExtMeshProp<Spectrum>> meshCols,
 	std::optional<ExtMeshProp<float>> meshAlphas
 ) {
-	if (meshUVs && (meshUVs->size() > EXTMESH_MAX_DATA_COUNT)) {
+	if (meshUVs && (meshUVs->GetMaxLayerNumber() > EXTMESH_MAX_DATA_COUNT)) {
 		throw runtime_error(
-			"Error in ExtTriangleMesh::ExtTriangleMesh(): trying to define more (" +
-			ToString(meshUVs->size()) + ") UV sets than EXTMESH_MAX_DATA_COUNT"
+			"Error in ExtTriangleMesh::ExtTriangleMesh(): trying to define more ("
+			+ ToString(meshUVs->GetMaxLayerNumber())
+			+ ") UV sets than EXTMESH_MAX_DATA_COUNT"
 		);
 	}
-	if (meshCols && (meshCols->size() > EXTMESH_MAX_DATA_COUNT)) {
+	if (meshCols && (meshCols->GetMaxLayerNumber() > EXTMESH_MAX_DATA_COUNT)) {
 		throw runtime_error(
-			"Error in ExtTriangleMesh::ExtTriangleMesh(): trying to define more (" +
-			ToString(meshCols->size()) + ") Color sets than EXTMESH_MAX_DATA_COUNT"
+			"Error in ExtTriangleMesh::ExtTriangleMesh(): trying to define more ("
+			+ ToString(meshCols->GetMaxLayerNumber())
+			+ ") Color sets than EXTMESH_MAX_DATA_COUNT"
 		);
 	}
-	if (meshAlphas && (meshAlphas->size() > EXTMESH_MAX_DATA_COUNT)) {
+	if (meshAlphas && (meshAlphas->GetMaxLayerNumber() > EXTMESH_MAX_DATA_COUNT)) {
 		throw runtime_error(
-			"Error in ExtTriangleMesh::ExtTriangleMesh(): trying to define more (" +
-			ToString(meshAlphas->size()) + ") Alpha sets than EXTMESH_MAX_DATA_COUNT"
+			"Error in ExtTriangleMesh::ExtTriangleMesh(): trying to define more ("
+			+ ToString(meshAlphas->GetMaxLayerNumber())
+			+ ") Alpha sets than EXTMESH_MAX_DATA_COUNT"
 		);
 	}
 

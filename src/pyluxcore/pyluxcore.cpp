@@ -1442,7 +1442,7 @@ static std::optional<luxrays::ExtMeshProp<T>> propCopy(
 
 	auto layer_count = layers->size();
 	luxrays::ExtMeshProp<T> out;
-	if (layer_count > out.size()) {
+	if (layer_count > out.GetMaxLayerNumber()) {
 		throw std::runtime_error(
 			"Too many layers of " + objname + " for method Scene.DefineMesh()"
 		);
