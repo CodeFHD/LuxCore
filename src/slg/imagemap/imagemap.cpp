@@ -17,6 +17,7 @@
  ***************************************************************************/
 
 #include "luxrays/utils/strutils.h"
+#include "luxrays/core/randomgen.h"
 #include <OpenImageIO/typedesc.h>
 #include <sstream>
 #include <algorithm>
@@ -1706,6 +1707,26 @@ PropertiesUPtr ImageMap::ToProperties(const string &prefix, const bool includeBl
 
 bool operator==(slg::ImageMapConstRef im1, slg::ImageMapConstRef im2) {
 	return &im1 == &im2;
+}
+
+//------------------------------------------------------------------------------
+// Static random image map used by some texture
+//------------------------------------------------------------------------------
+
+ImageMapUPtr ImageMap::AllocRandomImageMap(const u_int size) {
+
+	// Initialize the random image map
+	auto randomImageMap = ImageMap::AllocImageMap(3, size, size, ImageMapConfig());
+
+	randomImageMap->SetName("Random-Image-Map");
+
+
+	RandomGenerator rndGen(123);
+	float *randomMapData = (float *)randomImageMap->GetStorage().GetPixelsData();
+	for (u_int i = 0; i < 3 * size * size; ++i)
+		randomMapData[i] = rndGen.floatValue();
+
+	return randomImageMap;
 }
 
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

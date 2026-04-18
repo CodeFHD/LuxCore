@@ -18,6 +18,7 @@
 
 #include "slg/textures/bombing.h"
 #include "slg/textures/imagemaptex.h"
+#include "slg/usings.h"
 
 using namespace std;
 using namespace luxrays;
@@ -54,9 +55,10 @@ Spectrum BombingTexture::GetSpectrumValue(const HitPoint &hitPoint) const {
 	Spectrum result = backgroundValue;
 	float resultPriority = -1.f;
 
-	auto& randomImageMapStorage =  ImageMapTexture::randomImageMap->GetStorage();
-	const u_int randomImageMapWidth = ImageMapTexture::randomImageMap->GetWidth();
-	const u_int randomImageMapHeight = ImageMapTexture::randomImageMap->GetHeight();
+	ImageMapConstRef randomIM{dynamic_cast<ImageMapConstRef>(randomImageMap)};
+	auto& randomImageMapStorage = randomIM.GetStorage();
+	const u_int randomImageMapWidth = randomIM.GetWidth();
+	const u_int randomImageMapHeight = randomIM.GetHeight();
 
 	for (int i = -1; i <= 0; ++i) {
 	  for (int j = -1; j <= 0; ++j) {

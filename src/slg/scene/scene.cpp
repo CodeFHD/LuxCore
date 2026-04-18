@@ -82,7 +82,7 @@ void Scene::Init(luxrays::PropertiesRPtr resizePolicyProps) {
 	if (resizePolicyProps)
 		imgMapCache.SetImageResizePolicy(ImageMapResizePolicy::FromProperties(*resizePolicyProps));
 	// Add random image map to imgMapCache and specify its resize policy
-	imgMapCache.DefineImageMap(ImageMapTexture::randomImageMap);
+	imgMapCache.DefineImageMap(ImageMap::AllocRandomImageMap(512));
 	imgMapCache.resizePolicyToApply.push_back(false);
 
 	enableParsePrint = true;
@@ -508,9 +508,9 @@ void Scene::RemoveUnusedImageMaps() {
 	for (u_int i = 0; i < matDefs.GetSize(); ++i)
 		matDefs.GetMaterial(i).AddReferencedImageMaps(referencedImgMaps);
 
-	// Avoid to remove random image map from imgMapCache 
-	referencedImgMaps.insert(ImageMapTexture::randomImageMap.get());
-	
+	// Avoid to remove random image map from imgMapCache
+	referencedImgMaps.insert(GetRandomImageMap().get());
+
 	// Get the list of all defined image maps
 	bool deleted = false;
 	for(ImageMapConstRef im: imgMapCache.GetImageMaps()) {
@@ -849,6 +849,8 @@ string Scene::EncodeTriangleLightNamePrefix(const string &objectName) {
 
 	return (boost::format("TL%0zx_") % robin_hood::hash_bytes(prefix.data(), sizeof(char) * prefix.size())).str();
 }
+
+ImageMapConstSPtr Scene::GetRandomImageMap() const { return randomImageMap; }
 
 namespace slg {
 // TODO This is a workaround to initialize references to scenes in default constructors.

@@ -174,7 +174,7 @@ private:
 	void CompileDLSC(const LightStrategyDLSCache& dlscLightStrategy);
 	void CompileELVC(EnvLightVisibilityCacheConstPtr visibilityMapCache);
 	void CompileLightStrategy();
-	
+
 	void CompilePhotonGI();
 	void CompilePathTracer();
 
@@ -183,7 +183,7 @@ private:
 
 	size_t maxMemPageSize;
 	std::unordered_set<std::string> enabledCode;
-}; 
+};
 
 }
 

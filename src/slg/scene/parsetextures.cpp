@@ -159,11 +159,14 @@ TextureUPtr Scene::CreateTexture(const string &texName, const Properties &props)
 		const float gain = props.Get(Property(propName + ".gain")(1.0)).Get<double>();
 		auto mapping = CreateTextureMapping2D(propName + ".mapping", props);
 		tex = ImageMapTexture::AllocImageMapTexture(
-				texName,
-				imgMapCache,
-				im,
-				std::move(mapping),
-				gain, randomizedTiling);
+			texName,
+			imgMapCache,
+			im,
+			std::move(mapping),
+			gain,
+			randomizedTiling,
+			*GetRandomImageMap()
+		);
 	} else if (texType == "constfloat1") {
 		float v = props.Get(Property(propName + ".value")(1.0)).Get<double>();
 		
@@ -645,14 +648,21 @@ TextureUPtr Scene::CreateTexture(const string &texName, const Properties &props)
 		auto& background = GetTexture(props.Get(Property(propName + ".background")(1.f)));
 		auto& bullet = GetTexture(props.Get(Property(propName + ".bullet")(1.f)));
 		auto& bulletMask = GetTexture(props.Get(Property(propName + ".bullet.mask")(0.f)));
-		
+
 		const float randomScaleFactor = Max(props.Get(Property(propName + ".bullet.randomscale.range")(.250)).Get<double>(), 0.0);
 		const bool useRandomRotation = props.Get(Property(propName + ".bullet.randomrotation.enable")(true)).Get<bool>();
 		const u_int multiBulletCount = Max(props.Get(Property(propName + ".bullet.count")(1u)).Get<u_int>(), 1u);
 
-		tex = std::make_unique<BombingTexture>(CreateTextureMapping2D(propName + ".mapping", props),
-				background, bullet, bulletMask, randomScaleFactor, useRandomRotation,
-				multiBulletCount);
+		tex = std::make_unique<BombingTexture>(
+			CreateTextureMapping2D(propName + ".mapping", props),
+			background,
+			bullet,
+			bulletMask,
+			*GetRandomImageMap(),
+			randomScaleFactor,
+			useRandomRotation,
+			multiBulletCount
+		);
 	} else
 		throw runtime_error("Unknown texture type: " + texType);
 

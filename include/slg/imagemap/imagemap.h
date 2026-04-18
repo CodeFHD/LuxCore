@@ -997,6 +997,8 @@ public:
 	);
 	~ImageMap();
 
+	static ImageMapUPtr AllocRandomImageMap(const u_int size);
+
 	void Reload();
 	void Reload(const std::string &fileName, const u_int widthHint = 0, const u_int heightHint = 0);
 

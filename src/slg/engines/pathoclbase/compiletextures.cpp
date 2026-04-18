@@ -16,6 +16,7 @@
  * limitations under the License.                                          *
  ***************************************************************************/
 
+#include "slg/usings.h"
 #if !defined(LUXRAYS_DISABLE_OPENCL)
 
 #include <iosfwd>
@@ -1204,7 +1205,7 @@ void CompiledScene::CompileTextures() {
 
 					tex->imageMapTex.randomizedTilingLUTIndex = scene.GetImageMaps().GetImageMapIndex(imt.GetRandomizedTilingLUT());
 					tex->imageMapTex.randomizedTilingInvLUTIndex = scene.GetImageMaps().GetImageMapIndex(imt.GetRandomizedTilingInvLUT());
-					tex->imageMapTex.randomImageMapIndex = scene.GetImageMaps().GetImageMapIndex(*ImageMapTexture::randomImageMap);
+					tex->imageMapTex.randomImageMapIndex = scene.GetImageMaps().GetImageMapIndex(*scene.GetRandomImageMap());
 				} else {
 					tex->imageMapTex.randomizedTiling = false;
 					tex->imageMapTex.randomizedTilingLUTIndex = NULL_INDEX;
@@ -2299,7 +2300,7 @@ void CompiledScene::CompileTextures() {
 				auto& bulletMaskTexIndex = bt.GetBulletMaskTex();
 				tex->bombingTex.bulletMaskTexIndex = scene.GetTextures().GetTextureIndex(bulletMaskTexIndex);
 
-				tex->bombingTex.randomImageMapIndex = scene.GetImageMaps().GetImageMapIndex(*ImageMapTexture::randomImageMap);
+				tex->bombingTex.randomImageMapIndex = scene.GetImageMaps().GetImageMapIndex(*scene.GetRandomImageMap());
 				break;
 			}
 			default:

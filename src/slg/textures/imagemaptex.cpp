@@ -20,31 +20,10 @@
 
 #include "slg/usings.h"
 #include "slg/textures/imagemaptex.h"
-#include "luxrays/core/randomgen.h"
 
 using namespace std;
 using namespace luxrays;
 using namespace slg;
-
-//------------------------------------------------------------------------------
-// Static random image map used by some texture
-//------------------------------------------------------------------------------
-
-ImageMapUPtr ImageMapTexture::AllocRandomImageMap(const u_int size) {
-
-	// Initialize the random image map
-	auto randomImageMap = ImageMap::AllocImageMap(3, size, size, ImageMapConfig());
-
-	randomImageMap->SetName("Random-Image-Map");
-
-
-	RandomGenerator rndGen(123);
-	float *randomMapData = (float *)randomImageMap->GetStorage().GetPixelsData();
-	for (u_int i = 0; i < 3 * size * size; ++i)
-		randomMapData[i] = rndGen.floatValue();
-
-	return randomImageMap;
-}
 
 
 //------------------------------------------------------------------------------
@@ -160,8 +139,8 @@ static inline float SoftClipContrast(const float x, const float w) {
 }
 
 Spectrum ImageMapTexture::SampleTile(const UV &vertex, const UV &offset) const {
-	const UV noiseP(vertex.u / randomImageMap->GetWidth(), vertex.v / randomImageMap->GetHeight());
-	const Spectrum noise = randomImageMap->GetSpectrum(noiseP);
+	const UV noiseP(vertex.u / randomImageMap.GetWidth(), vertex.v / randomImageMap.GetHeight());
+	const Spectrum noise = randomImageMap.GetSpectrum(noiseP);
 	const UV pos = UV(.25f, .25f) + UV(noise.c[0], noise.c[1]) * .5f + offset;
 
 	Spectrum YCbCr = RGBToYCbCr(GetImageMap().GetSpectrum(pos));
@@ -273,9 +252,12 @@ ImageMapTexture::AllocImageMapTexture(
 	ImageMapConstRef img,
 	TextureMapping2DUPtr&& mp,
 	const float g,
-	const bool rt
+	const bool rt,
+	ImageMapConstRef randomIM
 ) {
-	auto imt = std::make_unique<ImageMapTexture>(texName, img, std::move(mp), g, rt);
+	auto imt = std::make_unique<ImageMapTexture>(
+		texName, img, std::move(mp), g, rt, randomIM
+	);
 
 	if (rt) {
 		// I need to add the LUTs to the ImageMapCache
@@ -295,12 +277,14 @@ ImageMapTexture::ImageMapTexture(
 	ImageMapConstRef img,
 	TextureMapping2DUPtr&& mp,
 	const float g,
-	const bool rt
+	const bool rt,
+	ImageMapConstRef randomIM
 ) :
 	imageMap(img),
 	mapping(std::move(mp)),
 	gain(g),
-	randomizedTiling(rt)
+	randomizedTiling(rt),
+	randomImageMap(randomIM)
 {
 	SetName(texName);
 

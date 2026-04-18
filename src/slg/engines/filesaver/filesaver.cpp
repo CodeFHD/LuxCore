@@ -467,11 +467,13 @@ void FileSaverRenderEngine::ExportScene(RenderConfigRef renderConfig,
 		// Write the image map information
 		SDL_LOG("Saving image maps information:");
 		std::vector<std::reference_wrapper<const ImageMap>> ims;
-		renderConfig.GetScene().GetImageMaps().GetImageMaps(ims);
+		auto& scene = renderConfig.GetScene();
+		scene.GetImageMaps().GetImageMaps(ims);
 		for (u_int i = 0; i < ims.size(); ++i) {
 			// Avoid to save ImageMapTexture::randomImageMap
-			if (&ims[i].get() != ImageMapTexture::randomImageMap.get()) {
-				const string fileName = (dirPath / renderConfig.GetScene().GetImageMaps().GetSequenceFileName(ims[i])).generic_string();
+			if (&ims[i].get() != scene.GetRandomImageMap().get()) {
+				const std::string fileName =
+					(dirPath / scene.GetImageMaps().GetSequenceFileName(ims[i])).generic_string();
 				SDL_LOG("  " + fileName);
 				ims[i].get().WriteImage(fileName);
 			}

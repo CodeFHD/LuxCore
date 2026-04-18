@@ -22,9 +22,11 @@
 #include <functional>
 #include <memory>
 
+#include "cuew.h"
 #include "luxrays/usings.h"
 #include "slg/imagemap/imagemap.h"
 #include "slg/textures/texture.h"
+#include "slg/usings.h"
 
 namespace slg {
 
@@ -39,7 +41,8 @@ public:
 		ImageMapConstRef img,
 		TextureMapping2DUPtr&& mp,
 		const float g,
-		const bool rt
+		const bool rt,
+		ImageMapConstRef randomIM
 	);
 
 	virtual TextureType GetType() const { return IMAGEMAP; }
@@ -61,13 +64,20 @@ public:
 
 	virtual luxrays::PropertiesUPtr ToProperties(const ImageMapCache &imgMapCache, const bool useRealFileName) const;
 
-	static std::unique_ptr<ImageMapTexture> AllocImageMapTexture(const std::string &texName,
-		ImageMapCache &imgMapCache, ImageMapConstRef img,
-		TextureMapping2DUPtr&& mp, const float g, const bool rt);
+	static std::unique_ptr<ImageMapTexture> AllocImageMapTexture(
+		const std::string &texName,
+		ImageMapCache &imgMapCache,
+		ImageMapConstRef img,
+		TextureMapping2DUPtr&& mp,
+		const float g,
+		const bool rt,
+		ImageMapConstRef randomIM
+	);
 
 	static ImageMapUPtr AllocRandomImageMap(const u_int size);
 
-	inline static ImageMapSPtr randomImageMap = std::move(AllocRandomImageMap(512));
+	//inline static ImageMapSPtr randomImageMap = std::move(AllocRandomImageMap(512));
+	//TODO
 
 	virtual ~ImageMapTexture();
 
@@ -77,6 +87,7 @@ private:
 	luxrays::Spectrum RandomizedTilingGetSpectrumValue(const luxrays::UV &pos) const;
 
 	ImageMapConstRef imageMap;
+	ImageMapConstRef randomImageMap;
 	TextureMapping2DUPtr mapping;
 	float gain;
 

@@ -98,6 +98,7 @@ class Scene {
 public:
 	// Constructor used to create a scene by calling methods
 	Scene(luxrays::PropertiesRPtr resizePolicyProps = nullptr);
+
 	// Constructor used to create a scene from properties
 	Scene(
 		luxrays::PropertiesRPtr&& scnProps,
@@ -276,13 +277,14 @@ public:
 	void moveToTrash(luxrays::NamedObjectUPtr&&);
 	void emptyTrash();
 
+	ImageMapConstSPtr GetRandomImageMap() const;
+
 	// Serialization
 	static SceneUPtr LoadSerialized(const std::string &fileName);
 	static void SaveSerialized(const std::string &fileName, SceneUPtr&& scene);
 
 	static std::string EncodeTriangleLightNamePrefix(const std::string &objectName);
 
-	// 
 
 protected:
 	//--------------------------------------------------------------------------
@@ -290,7 +292,10 @@ protected:
 	// This volume is (optionally) applied to rays hitting nothing
 	VolumeConstPtr defaultWorldVolume;
 
+	// This image map is required for some other textures
+	ImageMapSPtr randomImageMap;
 
+	// Here are the containers for the scene elements:
 	ExtMeshCache extMeshCache; // Mesh objects cache
 	ImageMapCache imgMapCache; // Image maps cache
 
@@ -307,7 +312,7 @@ protected:
 	std::vector<luxrays::NamedObjectUPtr> trashBin;
 	mutable std::mutex trashMtx;
 
-	// DataSet ownership is not very clear, we keep it shared
+	// DataSet ownership is not very clear, we set it shared
 	luxrays::DataSetSPtr dataSet;
 
 	// The bounding sphere of the scene (including the camera)

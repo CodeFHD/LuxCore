@@ -20,6 +20,7 @@
 #define	_SLG_BOMBINGTEX_H
 
 #include "slg/textures/texture.h"
+#include "slg/usings.h"
 
 namespace slg {
 
@@ -29,12 +30,19 @@ namespace slg {
 
 class BombingTexture : public Texture {
 public:
-	BombingTexture(TextureMapping2DUPtr&& mp, TextureConstRef backgroundTx,
-			TextureConstRef bulletTx, TextureConstRef bulletMaskTx,
-			const float randomScaleFctr, const bool useRandomRot,
-			const u_int multiBulletCnt) :
+	BombingTexture(
+			TextureMapping2DUPtr&& mp,
+			TextureConstRef backgroundTx,
+			TextureConstRef bulletTx,
+			TextureConstRef bulletMaskTx,
+			ImageMapConstRef randomIM,
+			const float randomScaleFctr,
+			const bool useRandomRot,
+			const u_int multiBulletCnt
+	) :
 			mapping(std::move(mp)), backgroundTex(backgroundTx), bulletTex(bulletTx),
 			bulletMaskTex(bulletMaskTx),
+			randomImageMap(randomIM),
 			randomScaleFactor(randomScaleFctr), useRandomRotation(useRandomRot),
 			multiBulletCount(multiBulletCnt) { }
 
@@ -62,6 +70,7 @@ public:
 private:
 
 	TextureMapping2DUPtr mapping;
+	ImageMapConstRef randomImageMap;
 
 	// Underlying textures. reference_wrapper is necessary in order to be able
 	// rebind ref despite constness.
