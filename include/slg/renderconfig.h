@@ -118,8 +118,8 @@ public:
 	);
 
 	// Accessors
-	SceneConstRef GetScene() const { return sceneRef; }
-	SceneRef GetScene() { return sceneRef; }
+	SceneConstRef GetScene() const { return *sceneRef; }
+	SceneRef GetScene() { return *sceneRef; }
 	PropertiesConstRef GetConfig() const { return *cfg; }
 	PropertiesRef GetConfig() { return *cfg; }
 	PropertiesRPtr GetConfigPtr() { return cfg; }
@@ -161,7 +161,7 @@ private:
 	//   RenderConfig constructor will generate an internal scene, and sceneRef will
 	//   be set to reference this internal scene
 	SceneUPtr internalScene;
-	std::reference_wrapper<Scene> sceneRef;
+	ScenePtr sceneRef;
 };
 
 }  // namespace slg

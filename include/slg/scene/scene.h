@@ -369,8 +369,6 @@ private:
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
-extern slg::Scene NullScene;
-
 }  // namespace slg
 
 BOOST_CLASS_VERSION(slg::Scene, 1)

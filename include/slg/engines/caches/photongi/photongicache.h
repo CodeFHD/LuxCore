@@ -267,7 +267,7 @@ public:
 	PhotonGICache(SceneConstRef scn, const PhotonGICacheParams &params);
 	virtual ~PhotonGICache();
 
-	void SetScene(SceneRef scn) { scene = scn; }
+	void SetScene(SceneRef scn) { scene = &scn; }
 	PhotonGIDebugType GetDebugType() const { return params.debugType; }
 
 	bool IsIndirectEnabled() const { return params.indirect.enabled; }
@@ -337,7 +337,7 @@ private:
 
 	template<class Archive> void serialize(Archive &ar, const u_int version);
 
-	std::reference_wrapper<const Scene> scene;
+	SceneConstPtr scene;
 
 	PhotonGICacheParams params;
 

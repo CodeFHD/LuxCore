@@ -56,7 +56,7 @@ float PhotonGICache::EvaluateBestRadius() {
 	PGICFilm2SceneRadiusValidator validator(*this);
 
 	return Film2SceneRadius(
-			scene, imagePlaneRadius, defaultRadius,
+			*scene, imagePlaneRadius, defaultRadius,
 			params.photon.maxPathDepth,
 			params.photon.timeStart, params.photon.timeEnd,
 			&validator);

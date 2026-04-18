@@ -58,14 +58,18 @@ using namespace slg;
 // Scene
 //------------------------------------------------------------------------------
 
-Scene::Scene(luxrays::PropertiesRPtr resizePolicyProps) {
+Scene::Scene(luxrays::PropertiesRPtr resizePolicyProps) :
+	randomImageMap(ImageMap::AllocRandomImageMap(512))
+{
 	Init(resizePolicyProps);
 }
 
 Scene::Scene(
 	PropertiesRPtr scnProps,
 	PropertiesRPtr resizePolicyProps
-) {
+) :
+	randomImageMap(ImageMap::AllocRandomImageMap(512))
+{
 	Init(resizePolicyProps);
 
 	Parse(scnProps);
@@ -851,11 +855,5 @@ string Scene::EncodeTriangleLightNamePrefix(const string &objectName) {
 }
 
 ImageMapConstSPtr Scene::GetRandomImageMap() const { return randomImageMap; }
-
-namespace slg {
-// TODO This is a workaround to initialize references to scenes in default constructors.
-// Correct solution would be to use boost serialization support for references
-Scene NullScene;
-}
 
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4

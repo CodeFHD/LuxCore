@@ -25,6 +25,7 @@
 #include <boost/algorithm/string.hpp> 
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/optional.hpp>
 
 #include "luxrays/usings.h"
 #include "luxrays/utils/serializationutils.h"
@@ -89,7 +90,7 @@ static std::unique_ptr<Properties> defaultProperties;
 RenderConfig::RenderConfig(Private p, PropertiesRPtr props, SceneRef scn)
 	:
 	cfg(std::make_unique<Properties>()),
-	sceneRef(scn)
+	sceneRef(&scn)
 {
 	InitDefaultProperties();
 
@@ -110,7 +111,7 @@ RenderConfig::RenderConfig(Private p, PropertiesRPtr props, SceneRef scn)
 RenderConfig::RenderConfig(Private p, PropertiesRPtr props)
 	:
 	cfg(std::make_unique<Properties>()),
-	sceneRef(NullScene)  // Temporary, awaiting scene construction
+	sceneRef(nullptr)  // Temporary, awaiting scene construction
 {
 	InitDefaultProperties();
 
@@ -129,7 +130,7 @@ RenderConfig::RenderConfig(Private p, PropertiesRPtr props)
 		std::make_unique<Properties>(sceneFileName),
 		props
 	);
-	sceneRef = *internalScene;
+	sceneRef = internalScene.get();
 
 	if (!GetScene().HasCamera()) {
 		throw std::runtime_error(
@@ -146,11 +147,11 @@ RenderConfig::RenderConfig(
 	PropertiesUPtr&& p_cfg, SceneRef p_scn, SceneUPtr&& p_internalscene
 ) :
 	cfg(std::move(p_cfg)),
-	sceneRef(p_scn),
+	sceneRef(&p_scn),
 	internalScene(std::move(p_internalscene))
 {
 	if (internalScene) {
-		sceneRef = *internalScene;
+		sceneRef = internalScene.get();
 	}
 }
 
@@ -585,7 +586,7 @@ void slg::RenderConfig::save_construct_data(
 	ar << t->internalScene;
 
     // Save SceneRef (as a pointer)
-    ar << & t->sceneRef;
+    ar << t->sceneRef;
 }
 
 template<class Archive>
@@ -601,7 +602,7 @@ void slg::RenderConfig::load_construct_data(
 	SceneUPtr sptr;
 	ar >> sptr;
 
-	Scene * sref;  // Load reference as a pointer
+	decltype(sceneRef) sref;  // Load reference as a pointer
 	ar >> sref;
 
     // invoke inplace constructor to initialize instance of RenderConfig

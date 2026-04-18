@@ -34,7 +34,7 @@ class PGICSceneVisibility : public SceneVisibility<PGICVisibilityParticle> {
 public:
 	PGICSceneVisibility(PhotonGICache &cache) :
 		SceneVisibility(
-			cache.scene,
+			*cache.scene,
 			cache.visibilityParticles,
 			cache.params.photon.maxPathDepth,
 			cache.params.visibility.maxSampleCount,

@@ -117,7 +117,7 @@ bool TracePhotonsThread::TracePhotonPath(RandomGenerator &rndGen,
 	newCausticPhotons.clear();
 	vector<u_int> allNearEntryIndices;
 
-	SceneConstRef scene = pgic.scene;
+	SceneConstRef scene = *pgic.scene;
 	auto& camera = scene.GetCamera();
 
 	bool usefulPath = false;

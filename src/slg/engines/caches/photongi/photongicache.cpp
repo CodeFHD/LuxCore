@@ -40,14 +40,14 @@ using namespace slg;
 //------------------------------------------------------------------------------
 
 PhotonGICache::PhotonGICache() :
-		scene(slg::NullScene),
+		scene(nullptr),
 		visibilityParticlesKdTree(nullptr),
 		radiancePhotonsBVH(nullptr) ,
 		causticPhotonsBVH(nullptr) {
 }
 
 PhotonGICache::PhotonGICache(SceneConstRef scn, const PhotonGICacheParams &p) :
-		scene(scn), params(p),
+		scene(&scn), params(p),
 		visibilityParticlesKdTree(nullptr),
 		radiancePhotonsBVH(nullptr) ,
 		indirectPhotonTracedCount(0),
