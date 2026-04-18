@@ -386,7 +386,7 @@ nRefinedVerts
 	);
 
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
-		newMesh->SetVertexAOV(i, newVertAOVs.Get(i), newVertAOVs.GetLayerSize());
+		newMesh->SetVertexAOV(i, newVertAOVs.GetLayer(i), newVertAOVs.GetLayerSize());
 	}
 
 	return newMesh;
@@ -1518,7 +1518,7 @@ ExtTriangleMeshUPtr ApplySubdiv(
 	// Handle AOVs
 	auto tessAOVs_released = tessAOVs.releaseLayers();
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
-		newMesh->SetVertexAOV(i, tessAOVs_released.GetSpan(i));
+		newMesh->SetVertexAOV(i, tessAOVs_released.GetLayerSpan(i));
 	}
 
 	return newMesh;

@@ -384,7 +384,7 @@ ExtTriangleMeshUPtr ExtTriangleMesh::LoadPly(const string &fileName) {
 		if (numbers[i] == 0) {
 			values[i] = nullptr;
 		} else {
-			values.Allocate(i, numbers[i]);
+			values.AllocateLayer(i, numbers[i]);
 		}
 	};
 

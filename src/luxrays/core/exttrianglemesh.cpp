@@ -171,7 +171,7 @@ ExtTriangleMesh::ExtTriangleMesh(
 	) {
 		auto meshProp = ExtMeshProp<T>();
 		if (optionalSpan) {
-			meshProp.Set(0, *optionalSpan);
+			meshProp.SetLayer(0, *optionalSpan);
 		}
 		return meshProp;
 	};
@@ -324,12 +324,12 @@ void ExtTriangleMesh::ApplyTransform(const Transform &trans) {
 void ExtTriangleMesh::CopyAOV(ExtTriangleMeshRef destMesh) const {
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (HasVertexAOV(i)) {
-			const auto [layer, size] = vertAOV.Copy(i);
+			const auto [layer, size] = vertAOV.CopyLayer(i);
 			destMesh.SetVertexAOV(i, layer, size);
 		}
 
 		if (HasTriAOV(i)) {
-			auto [layer, size] = triAOV.Copy(i);
+			auto [layer, size] = triAOV.CopyLayer(i);
 			destMesh.SetTriAOV(i, layer, size);
 		}
 	}
@@ -368,9 +368,9 @@ ExtTriangleMeshUPtr ExtTriangleMesh::CopyExt(
 	ExtMeshProp<float> as;
 
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
-		us.Set(i, uvs.Copy(i, meshUVs));
-		cs.Set(i, cols.Copy(i, meshCols));
-		as.Set(i, alphas.Copy(i, meshAlphas));
+		us.SetLayer(i, uvs.CopyLayer(i, meshUVs));
+		cs.SetLayer(i, cols.CopyLayer(i, meshCols));
+		as.SetLayer(i, alphas.CopyLayer(i, meshAlphas));
 	}
 
 	auto m =  std::make_unique<ExtTriangleMesh>(vertCount, triCount,
@@ -395,15 +395,15 @@ ExtTriangleMeshUPtr ExtTriangleMesh::Copy(
 ) const {
 	ExtMeshProp<UV> meshUVs;
 	if (mUVs)
-		meshUVs.Set(0, *mUVs);
+		meshUVs.SetLayer(0, *mUVs);
 
 	ExtMeshProp<Spectrum> meshCols;
 	if (mCols)
-		meshCols.Set(0, *mCols);
+		meshCols.SetLayer(0, *mCols);
 
 	ExtMeshProp<float> meshAlphas;
 	if (mAlphas)
-		meshAlphas.Set(0, *mAlphas);
+		meshAlphas.SetLayer(0, *mAlphas);
 
 	return CopyExt(
 		meshVertices,
@@ -448,19 +448,19 @@ ExtTriangleMeshUPtr ExtTriangleMesh::Merge(
 
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; i++) {
 		if (mesh0.HasUVs(i))
-			meshUVs.Allocate(i, totalVertexCount);
+			meshUVs.AllocateLayer(i, totalVertexCount);
 
 		if (mesh0.HasColors(i))
-			meshCols.Allocate(i, totalVertexCount);
+			meshCols.AllocateLayer(i, totalVertexCount);
 
 		if (mesh0.HasAlphas(i))
-			meshAlphas.Allocate(i, totalVertexCount);
+			meshAlphas.AllocateLayer(i, totalVertexCount);
 
 		if (mesh0.HasVertexAOV(i))
-			meshVertAOV.Allocate(i, totalVertexCount);
+			meshVertAOV.AllocateLayer(i, totalVertexCount);
 
 		if (mesh0.HasTriAOV(i))
-			meshTriAOV.Allocate(i, totalTriangleCount);
+			meshTriAOV.AllocateLayer(i, totalTriangleCount);
 	}
 
 	u_int vIndex = 0;
@@ -556,8 +556,8 @@ ExtTriangleMeshUPtr ExtTriangleMesh::Merge(
 	);
 
 	for (u_int dataIndex = 0; dataIndex < EXTMESH_MAX_DATA_COUNT; dataIndex++) {
-		newMesh->SetVertexAOV(dataIndex, meshVertAOV.Get(dataIndex), meshVertAOV.GetLayerSize());
-		newMesh->SetTriAOV(dataIndex, meshTriAOV.Get(dataIndex), meshTriAOV.GetLayerSize());
+		newMesh->SetVertexAOV(dataIndex, meshVertAOV.GetLayer(dataIndex), meshVertAOV.GetLayerSize());
+		newMesh->SetTriAOV(dataIndex, meshTriAOV.GetLayer(dataIndex), meshTriAOV.GetLayerSize());
 	}
 
 	return newMesh;

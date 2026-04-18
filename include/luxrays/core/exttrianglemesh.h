@@ -70,31 +70,31 @@ public:
 	}
 
 	// Per-layer
-	void Allocate(const u_int dataIndex, size_t layerSize) {
+	void AllocateLayer(const u_int layerIndex, size_t layerSize) {
 		assert(!_size || _size == layerSize);  // Should always be the same size once it
 										  // has been set
-		(*this)[dataIndex] = std::make_shared<T[]>(layerSize);
+		(*this)[layerIndex] = std::make_shared<T[]>(layerSize);
 		if (layerSize) _size = layerSize;
 	}
-	auto Get(const u_int dataIndex) const {
-		assert(dataIndex < GetMaxLayerNumber());
-		return (*this)[dataIndex];
+	auto GetLayer(const u_int layerIndex) const {
+		assert(layerIndex < GetMaxLayerNumber());
+		return (*this)[layerIndex];
 	}
-	void Set(const u_int dataIndex, Layer values, size_t layerSize) {
+	void SetLayer(const u_int layerIndex, Layer values, size_t layerSize) {
 		assert(!_size || _size == layerSize);
-		(*this)[dataIndex] = values;
+		(*this)[layerIndex] = values;
 		if (layerSize) _size = layerSize;
 	}
-	void Set(const u_int dataIndex, std::tuple<Layer, size_t> in) {
+	void SetLayer(const u_int layerIndex, std::tuple<Layer, size_t> in) {
 		auto [layer, layerSize] = in;
-		Set(dataIndex, layer, layerSize);
+		SetLayer(layerIndex, layer, layerSize);
 	}
-	void Set(const u_int dataIndex, std::span<T> in) {
+	void SetLayer(const u_int layerIndex, std::span<T> in) {
 		auto layerSize = in.size();
 		assert(!_size || _size == layerSize);
 
-		Allocate(dataIndex, layerSize);
-		auto layerSpan = GetSpan(dataIndex);
+		AllocateLayer(layerIndex, layerSize);
+		auto layerSpan = GetLayerSpan(layerIndex);
 
 		std::copy(
 #if !defined(__clang__)
@@ -107,32 +107,32 @@ public:
 		if (layerSize) _size = layerSize;
 	}
 
-	void Delete(const u_int dataIndex) {
-		(*this)[dataIndex].reset();
-		(*this)[dataIndex] = nullptr;
+	void DeleteLayer(const u_int layerIndex) {
+		(*this)[layerIndex].reset();
+		(*this)[layerIndex] = nullptr;
 	}
-	bool HasValues(const u_int dataIndex) const {
-		return (*this)[dataIndex] != nullptr;
+	bool LayerHasValues(const u_int layerIndex) const {
+		return (*this)[layerIndex] != nullptr;
 	}
 
-	std::span<T> GetSpan(const u_int dataIndex) const {
-		auto& layer = (*this)[dataIndex];
+	std::span<T> GetLayerSpan(const u_int layerIndex) const {
+		auto& layer = (*this)[layerIndex];
 		if (!layer) return std::span<T>();
 		return std::span<T>(layer.get(), _size);
 	}
 
-	std::tuple<Layer, size_t> Copy(
-		const u_int dataIndex,
+	std::tuple<Layer, size_t> CopyLayer(
+		const u_int layerIndex,
 		const std::optional<ExtMeshProp<T>> force = std::nullopt
 	) const {
 		if (force) {
-			return std::make_tuple(force->Get(dataIndex), force->GetLayerSize());
+			return std::make_tuple(force->GetLayer(layerIndex), force->GetLayerSize());
 		}
 
-		if (HasValues(dataIndex)) {
+		if (LayerHasValues(layerIndex)) {
 			auto res = std::make_shared<T[]>(GetLayerSize());
 
-			auto srcSpan = GetSpan(dataIndex);
+			auto srcSpan = GetLayerSpan(layerIndex);
 			auto dstSpan = std::span(res.get(), GetLayerSize());
 			std::copy(
 #if !defined(__clang__)
@@ -152,31 +152,31 @@ public:
 	// All layers
 	void DeleteAll() {
 		for (size_t i = 0; i < this->size(); ++i)
-			Delete(i);
+			DeleteLayer(i);
 	}
 	size_t GetLayerSize() const { return _size; }
 
 	// Serialization
 	template<typename Archive>
-	void Serialize(const u_int dataIndex, Archive& ar, size_t count) const {
-		const bool hasValues = HasValues(dataIndex);
+	void Serialize(const u_int layerIndex, Archive& ar, size_t count) const {
+		const bool hasValues = LayerHasValues(layerIndex);
 		ar & hasValues;
 		if (hasValues) {
-			auto data = (*this)[dataIndex].get();
+			auto data = (*this)[layerIndex].get();
 			ar & boost::serialization::make_array(data, count);
 		}
 	}
 
 	template<typename Archive>
-	void Deserialize(const u_int dataIndex, Archive& ar, size_t count) {
+	void Deserialize(const u_int layerIndex, Archive& ar, size_t count) {
 		bool hasValues;
 		ar & hasValues;
 		if (hasValues) {
-			Allocate(dataIndex, count);
-			auto data = (*this)[dataIndex].get();
+			AllocateLayer(layerIndex, count);
+			auto data = (*this)[layerIndex].get();
 			ar & boost::serialization::make_array(data, count);
 		} else {
-			(*this)[dataIndex] = nullptr;
+			(*this)[layerIndex] = nullptr;
 		}
 	}
 
@@ -220,41 +220,41 @@ public:
 	}
 
 	virtual bool HasNormals() const = 0;
-	virtual bool HasUVs(const u_int dataIndex) const = 0;
-	virtual bool HasColors(const u_int dataIndex) const = 0;
-	virtual bool HasAlphas(const u_int dataIndex) const = 0;
+	virtual bool HasUVs(const u_int layerIndex) const = 0;
+	virtual bool HasColors(const u_int layerIndex) const = 0;
+	virtual bool HasAlphas(const u_int layerIndex) const = 0;
 	
-	virtual bool HasVertexAOV(const u_int dataIndex) const = 0;
-	virtual bool HasTriAOV(const u_int dataIndex) const = 0;
+	virtual bool HasVertexAOV(const u_int layerIndex) const = 0;
+	virtual bool HasTriAOV(const u_int layerIndex) const = 0;
 	
 	virtual Normal GetGeometryNormal(const luxrays::Transform &local2World, const u_int triIndex) const = 0;
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int triIndex, const u_int vertIndex) const = 0;
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int vertIndex) const = 0;
 
-	virtual UV GetUV(const u_int vertIndex, const u_int dataIndex) const = 0;
-	virtual Spectrum GetColor(const u_int vertIndex, const u_int dataIndex) const = 0;
-	virtual float GetAlpha(const u_int vertIndex, const u_int dataIndex) const = 0;
+	virtual UV GetUV(const u_int vertIndex, const u_int layerIndex) const = 0;
+	virtual Spectrum GetColor(const u_int vertIndex, const u_int layerIndex) const = 0;
+	virtual float GetAlpha(const u_int vertIndex, const u_int layerIndex) const = 0;
 
-	virtual float GetVertexAOV(const u_int vertIndex, const u_int dataIndex) const = 0;
-	virtual float GetTriAOV(const u_int triIndex, const u_int dataIndex) const = 0;
+	virtual float GetVertexAOV(const u_int vertIndex, const u_int layerIndex) const = 0;
+	virtual float GetTriAOV(const u_int triIndex, const u_int layerIndex) const = 0;
 	
 	virtual bool GetTriBaryCoords(const luxrays::Transform &local2World, const u_int triIndex, const Point &hitPoint, float *b1, float *b2) const = 0;
     virtual void GetDifferentials(const luxrays::Transform &local2World,
-			const u_int triIndex, const Normal &shadeNormal, const u_int dataIndex,
+			const u_int triIndex, const Normal &shadeNormal, const u_int layerIndex,
 			Vector *dpdu, Vector *dpdv,
 			Normal *dndu, Normal *dndv) const;
 
 	virtual Normal InterpolateTriNormal(const luxrays::Transform &local2World,
 			const u_int triIndex, const float b1, const float b2) const = 0;
 	virtual UV InterpolateTriUV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const = 0;
+			const u_int layerIndex) const = 0;
 	virtual Spectrum InterpolateTriColor(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const = 0;
+			const u_int layerIndex) const = 0;
 	virtual float InterpolateTriAlpha(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const = 0;
+			const u_int layerIndex) const = 0;
 
 	virtual float InterpolateTriVertexAOV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const = 0;
+			const u_int layerIndex) const = 0;
 
 	virtual void Delete() = 0;
 	virtual void Save(const std::string &fileName) const = 0;
@@ -316,68 +316,68 @@ public:
 
 	// AOV
 	void SetVertexAOV(
-		const u_int dataIndex,
+		const u_int layerIndex,
 		std::shared_ptr<float[]> values,
 		size_t size
 	) {
-		vertAOV.Set(dataIndex, values, size);
+		vertAOV.SetLayer(layerIndex, values, size);
 	}
 	void SetVertexAOV(
-		const u_int dataIndex,
+		const u_int layerIndex,
 		std::span<float> dataSpan
 	) {
-		vertAOV.Set(dataIndex, dataSpan);
+		vertAOV.SetLayer(layerIndex, dataSpan);
 	}
-	void DeleteVertexAOV(const u_int dataIndex) { vertAOV.Delete(dataIndex); }
-	auto GetVertexAOVs(const u_int dataIndex) const { return vertAOV.Get(dataIndex); }
-	virtual bool HasVertexAOV(const u_int dataIndex) const {
-		return vertAOV.HasValues(dataIndex);
+	void DeleteVertexAOV(const u_int layerIndex) { vertAOV.DeleteLayer(layerIndex); }
+	auto GetVertexAOVs(const u_int layerIndex) const { return vertAOV.GetLayer(layerIndex); }
+	virtual bool HasVertexAOV(const u_int layerIndex) const {
+		return vertAOV.LayerHasValues(layerIndex);
 	}
 
 	// Triangle AOV
 	void SetTriAOV(
-		const u_int dataIndex, std::shared_ptr<float[]> values, size_t size
+		const u_int layerIndex, std::shared_ptr<float[]> values, size_t size
 	) {
-		triAOV.Set(dataIndex, values, size);
+		triAOV.SetLayer(layerIndex, values, size);
 	}
 	void SetTriAOV(
-		const u_int dataIndex, std::span<float> dataSpan
+		const u_int layerIndex, std::span<float> dataSpan
 	) {
-		triAOV.Set(dataIndex, dataSpan);
+		triAOV.SetLayer(layerIndex, dataSpan);
 	}
-	void DeleteTriAOV(const u_int dataIndex) { triAOV.Delete(dataIndex); }
-	auto GetTriAOVs(const u_int dataIndex) const { return triAOV.Get(dataIndex); }
-	virtual bool HasTriAOV(const u_int dataIndex) const {
-		return triAOV.HasValues(dataIndex);
+	void DeleteTriAOV(const u_int layerIndex) { triAOV.DeleteLayer(layerIndex); }
+	auto GetTriAOVs(const u_int layerIndex) const { return triAOV.GetLayer(layerIndex); }
+	virtual bool HasTriAOV(const u_int layerIndex) const {
+		return triAOV.LayerHasValues(layerIndex);
 	}
 
 	// UV
-	void SetUVs(const u_int dataIndex, std::shared_ptr<UV[]> values, size_t size) {
-		uvs.Set(dataIndex, values, size);
+	void SetUVs(const u_int layerIndex, std::shared_ptr<UV[]> values, size_t size) {
+		uvs.SetLayer(layerIndex, values, size);
 	}
-	void DeleteUVs(const u_int dataIndex) { uvs.Delete(dataIndex); }
-	auto GetUVs(const u_int dataIndex) const { return uvs.Get(dataIndex); }
-	virtual bool HasUVs(const u_int dataIndex) const { return uvs.HasValues(dataIndex); }
+	void DeleteUVs(const u_int layerIndex) { uvs.DeleteLayer(layerIndex); }
+	auto GetUVs(const u_int layerIndex) const { return uvs.GetLayer(layerIndex); }
+	virtual bool HasUVs(const u_int layerIndex) const { return uvs.LayerHasValues(layerIndex); }
 	const auto& GetAllUVs() const { return uvs; }
 
 	// Vertex colors
-	void SetColors(const u_int dataIndex, std::shared_ptr<Spectrum[]> values, size_t size) {
-		cols.Set(dataIndex, values, size);
+	void SetColors(const u_int layerIndex, std::shared_ptr<Spectrum[]> values, size_t size) {
+		cols.SetLayer(layerIndex, values, size);
 	}
-	void DeleteColors(const u_int dataIndex) { cols.Delete(dataIndex); }
-	auto GetColors(const u_int dataIndex) const { return cols.Get(dataIndex); }
-	virtual bool HasColors(const u_int dataIndex) const {
-		return cols.HasValues(dataIndex);
+	void DeleteColors(const u_int layerIndex) { cols.DeleteLayer(layerIndex); }
+	auto GetColors(const u_int layerIndex) const { return cols.GetLayer(layerIndex); }
+	virtual bool HasColors(const u_int layerIndex) const {
+		return cols.LayerHasValues(layerIndex);
 	}
 	const auto& GetAllColors() const { return cols; }
 
 	// Vertex alphas
-	void SetAlphas(const u_int dataIndex, std::shared_ptr<float[]> values, size_t size) {
-		alphas.Set(dataIndex, values, size);
+	void SetAlphas(const u_int layerIndex, std::shared_ptr<float[]> values, size_t size) {
+		alphas.SetLayer(layerIndex, values, size);
 	}
-	void DeleteAlphas(const u_int dataIndex) { alphas.Delete(dataIndex); }
-	auto GetAlphas(const u_int dataIndex) const { return alphas.Get(dataIndex); }
-	virtual bool HasAlphas(const u_int dataIndex) const { return alphas.HasValues(dataIndex); }
+	void DeleteAlphas(const u_int layerIndex) { alphas.DeleteLayer(layerIndex); }
+	auto GetAlphas(const u_int layerIndex) const { return alphas.GetLayer(layerIndex); }
+	virtual bool HasAlphas(const u_int layerIndex) const { return alphas.LayerHasValues(layerIndex); }
 	const auto& GetAllAlphas() const { return alphas; }
 
 
@@ -398,21 +398,21 @@ public:
 		return (appliedTransSwapsHandedness ? -1.f : 1.f) * normals[vertIndex];
 	}
 
-	virtual UV GetUV(const u_int vertIndex, const u_int dataIndex) const { return uvs[dataIndex][vertIndex]; }
-	virtual Spectrum GetColor(const u_int vertIndex, const u_int dataIndex) const { return cols[dataIndex][vertIndex]; }
-	virtual float GetAlpha(const u_int vertIndex, const u_int dataIndex) const {
+	virtual UV GetUV(const u_int vertIndex, const u_int layerIndex) const { return uvs[layerIndex][vertIndex]; }
+	virtual Spectrum GetColor(const u_int vertIndex, const u_int layerIndex) const { return cols[layerIndex][vertIndex]; }
+	virtual float GetAlpha(const u_int vertIndex, const u_int layerIndex) const {
 		assert(vertIndex < alphas.GetLayerSize());
-		return alphas[dataIndex][vertIndex];
+		return alphas[layerIndex][vertIndex];
 	}
-	virtual float GetVertexAOV(const u_int vertIndex, const u_int dataIndex) const {
-		if (HasTriAOV(dataIndex))
-			return vertAOV[dataIndex][vertIndex];
+	virtual float GetVertexAOV(const u_int vertIndex, const u_int layerIndex) const {
+		if (HasTriAOV(layerIndex))
+			return vertAOV[layerIndex][vertIndex];
 		else
 			return 0.f;
 	}
-	virtual float GetTriAOV(const u_int triIndex, const u_int dataIndex) const {
-		if (HasTriAOV(dataIndex))
-			return triAOV[dataIndex][triIndex];
+	virtual float GetTriAOV(const u_int triIndex, const u_int layerIndex) const {
+		if (HasTriAOV(layerIndex))
+			return triAOV[layerIndex][triIndex];
 		else
 			return 0.f;
 	}
@@ -438,41 +438,41 @@ public:
 	}
 
 	virtual UV InterpolateTriUV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
-		if (HasUVs(dataIndex)) {
+			const u_int layerIndex) const {
+		if (HasUVs(layerIndex)) {
 			const Triangle &tri = tris[triIndex];
 			const float b0 = 1.f - b1 - b2;
-			return b0 * uvs[dataIndex][tri.v[0]] + b1 * uvs[dataIndex][tri.v[1]] + b2 * uvs[dataIndex][tri.v[2]];
+			return b0 * uvs[layerIndex][tri.v[0]] + b1 * uvs[layerIndex][tri.v[1]] + b2 * uvs[layerIndex][tri.v[2]];
 		} else
 			return UV(0.f, 0.f);
 	}
 
 	virtual Spectrum InterpolateTriColor(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
-		if (HasColors(dataIndex)) {
+			const u_int layerIndex) const {
+		if (HasColors(layerIndex)) {
 			const Triangle &tri = tris[triIndex];
 			const float b0 = 1.f - b1 - b2;
-			return b0 * cols[dataIndex][tri.v[0]] + b1 * cols[dataIndex][tri.v[1]] + b2 * cols[dataIndex][tri.v[2]];
+			return b0 * cols[layerIndex][tri.v[0]] + b1 * cols[layerIndex][tri.v[1]] + b2 * cols[layerIndex][tri.v[2]];
 		} else
 			return Spectrum(1.f);
 	}
 
 	virtual float InterpolateTriAlpha(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
-		if (HasAlphas(dataIndex)) {
+			const u_int layerIndex) const {
+		if (HasAlphas(layerIndex)) {
 			const Triangle &tri = tris[triIndex];
 			const float b0 = 1.f - b1 - b2;
-			return b0 * alphas[dataIndex][tri.v[0]] + b1 * alphas[dataIndex][tri.v[1]] + b2 * alphas[dataIndex][tri.v[2]];
+			return b0 * alphas[layerIndex][tri.v[0]] + b1 * alphas[layerIndex][tri.v[1]] + b2 * alphas[layerIndex][tri.v[2]];
 		} else
 			return 1.f;
 	}
 	
 	virtual float InterpolateTriVertexAOV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
-		if (HasVertexAOV(dataIndex)) {
+			const u_int layerIndex) const {
+		if (HasVertexAOV(layerIndex)) {
 			const Triangle &tri = tris[triIndex];
 			const float b0 = 1.f - b1 - b2;
-			return b0 * vertAOV[dataIndex][tri.v[0]] + b1 * vertAOV[dataIndex][tri.v[1]] + b2 * vertAOV[dataIndex][tri.v[2]];
+			return b0 * vertAOV[layerIndex][tri.v[0]] + b1 * vertAOV[layerIndex][tri.v[1]] + b2 * vertAOV[layerIndex][tri.v[2]];
 		} else
 			return 0.f;
 	}
@@ -654,12 +654,12 @@ public:
 	virtual float GetBevelRadius() const { return static_cast<const ExtTriangleMesh&>(*mesh).GetBevelRadius(); }
 
 	virtual bool HasNormals() const { return static_cast<const ExtTriangleMesh&>(*mesh).HasNormals(); }
-	virtual bool HasUVs(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasUVs(dataIndex); }
-	virtual bool HasColors(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasColors(dataIndex); }
-	virtual bool HasAlphas(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasAlphas(dataIndex); }
+	virtual bool HasUVs(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasUVs(layerIndex); }
+	virtual bool HasColors(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasColors(layerIndex); }
+	virtual bool HasAlphas(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasAlphas(layerIndex); }
 	
-	virtual bool HasVertexAOV(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasVertexAOV(dataIndex); }
-	virtual bool HasTriAOV(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasTriAOV(dataIndex); }
+	virtual bool HasVertexAOV(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasVertexAOV(layerIndex); }
+	virtual bool HasTriAOV(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasTriAOV(layerIndex); }
 
 	virtual Normal GetGeometryNormal(const luxrays::Transform &local2World, const u_int triIndex) const {
 		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<const ExtTriangleMesh&>(*mesh).GetGeometryNormal(Transform::TRANS_IDENTITY, triIndex));
@@ -670,21 +670,21 @@ public:
 	virtual Normal GetShadeNormal(const luxrays::Transform &local2World, const u_int vertIndex) const {
 		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<const ExtTriangleMesh&>(*mesh).GetShadeNormal(Transform::TRANS_IDENTITY, vertIndex));
 	}
-	virtual UV GetUV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetUV(vertIndex, dataIndex);
+	virtual UV GetUV(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetUV(vertIndex, layerIndex);
 	}
-	virtual Spectrum GetColor(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetColor(vertIndex, dataIndex);
+	virtual Spectrum GetColor(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetColor(vertIndex, layerIndex);
 	}
-	virtual float GetAlpha(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetAlpha(vertIndex, dataIndex);
+	virtual float GetAlpha(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetAlpha(vertIndex, layerIndex);
 	}
 
-	virtual float GetVertexAOV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetVertexAOV(vertIndex, dataIndex);
+	virtual float GetVertexAOV(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetVertexAOV(vertIndex, layerIndex);
 	}
-	virtual float GetTriAOV(const unsigned triIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetTriAOV(triIndex, dataIndex);
+	virtual float GetTriAOV(const unsigned triIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetTriAOV(triIndex, layerIndex);
 	}
 
 	virtual bool GetTriBaryCoords(const luxrays::Transform &local2World, const u_int triIndex,
@@ -705,27 +705,27 @@ public:
 	}
 
 	virtual UV InterpolateTriUV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriUV(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 
 	virtual Spectrum InterpolateTriColor(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriColor(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 	
 	virtual float InterpolateTriAlpha(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriAlpha(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 	
 	virtual float InterpolateTriVertexAOV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriVertexAOV(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 
 	virtual bool IntersectBevel(const luxrays::Ray &ray, const luxrays::RayHit &rayHit,
@@ -770,12 +770,12 @@ public:
 	virtual float GetBevelRadius() const { return static_cast<const ExtTriangleMesh&>(*mesh).GetBevelRadius(); }
 
 	virtual bool HasNormals() const { return static_cast<const ExtTriangleMesh&>(*mesh).HasNormals(); }
-	virtual bool HasUVs(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasUVs(dataIndex); }
-	virtual bool HasColors(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasColors(dataIndex); }
-	virtual bool HasAlphas(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasAlphas(dataIndex); }
+	virtual bool HasUVs(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasUVs(layerIndex); }
+	virtual bool HasColors(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasColors(layerIndex); }
+	virtual bool HasAlphas(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasAlphas(layerIndex); }
 
-	virtual bool HasVertexAOV(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasVertexAOV(dataIndex); }
-	virtual bool HasTriAOV(const u_int dataIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasTriAOV(dataIndex); }
+	virtual bool HasVertexAOV(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasVertexAOV(layerIndex); }
+	virtual bool HasTriAOV(const u_int layerIndex) const { return static_cast<const ExtTriangleMesh&>(*mesh).HasTriAOV(layerIndex); }
 
 	virtual Normal GetGeometryNormal(const luxrays::Transform &local2World, const u_int triIndex) const {
 		const bool transSwapsHandedness = local2World.SwapsHandedness();
@@ -789,21 +789,21 @@ public:
 		const bool transSwapsHandedness = local2World.SwapsHandedness();
 		return (transSwapsHandedness ? -1.f : 1.f) * Normalize(local2World * static_cast<const ExtTriangleMesh&>(*mesh).GetShadeNormal(local2World, vertIndex));
 	}
-	virtual UV GetUV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetUV(vertIndex, dataIndex);
+	virtual UV GetUV(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetUV(vertIndex, layerIndex);
 	}
-	virtual Spectrum GetColor(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetColor(vertIndex, dataIndex);
+	virtual Spectrum GetColor(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetColor(vertIndex, layerIndex);
 	}
-	virtual float GetAlpha(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetAlpha(vertIndex, dataIndex);
+	virtual float GetAlpha(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetAlpha(vertIndex, layerIndex);
 	}
 
-	virtual float GetVertexAOV(const unsigned vertIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetVertexAOV(vertIndex, dataIndex);
+	virtual float GetVertexAOV(const unsigned vertIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetVertexAOV(vertIndex, layerIndex);
 	}
-	virtual float GetTriAOV(const unsigned triIndex, const u_int dataIndex) const {
-		return static_cast<const ExtTriangleMesh&>(*mesh).GetTriAOV(triIndex, dataIndex);
+	virtual float GetTriAOV(const unsigned triIndex, const u_int layerIndex) const {
+		return static_cast<const ExtTriangleMesh&>(*mesh).GetTriAOV(triIndex, layerIndex);
 	}
 
 	virtual bool GetTriBaryCoords(const luxrays::Transform &local2World, const u_int triIndex,
@@ -823,27 +823,27 @@ public:
 	}
 
 	virtual UV InterpolateTriUV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriUV(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 	
 	virtual Spectrum InterpolateTriColor(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriColor(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 	
 	virtual float InterpolateTriAlpha(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriAlpha(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 
 	virtual float InterpolateTriVertexAOV(const u_int triIndex, const float b1, const float b2,
-			const u_int dataIndex) const {
+			const u_int layerIndex) const {
 		return static_cast<const ExtTriangleMesh&>(*mesh).InterpolateTriVertexAOV(triIndex,
-				b1, b2, dataIndex);
+				b1, b2, layerIndex);
 	}
 
 	virtual void Save(const std::string &fileName) const { static_cast<const ExtTriangleMesh&>(*mesh).Save(fileName); }

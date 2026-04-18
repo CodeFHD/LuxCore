@@ -1461,7 +1461,7 @@ static std::optional<luxrays::ExtMeshProp<T>> propCopy(
 		auto [data, numData] = dataCopy<float, T, &AllocBuffer, N>(
 			layer, meshName, objname
 		);
-		out.Set(i, std::shared_ptr<T[]>(std::move(data)), numData);
+		out.SetLayer(i, std::shared_ptr<T[]>(std::move(data)), numData);
 	}
 	return out;
 

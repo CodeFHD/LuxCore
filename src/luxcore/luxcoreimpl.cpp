@@ -998,9 +998,9 @@ void SceneImpl::DefineMeshExt(const std::string &meshName,
 		for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 			auto p = reinterpret_cast<T*>(prop[i]);
 			if (p) {
-				res.Set(i, std::span<T>(p, plyNbVerts));
+				res.SetLayer(i, std::span<T>(p, plyNbVerts));
 			} else {
-				res.Set(i, std::span<T>());
+				res.SetLayer(i, std::span<T>());
 			}
 		}
 		return std::make_optional(res);

@@ -718,8 +718,8 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	luxrays::ExtMeshProp<luxrays::UV> srcUVs;
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (srcMesh.HasUVs(i)) {
-			srcUVs.Set(i, srcMesh.GetUVs(i), numPoints);
-			newUVs.Allocate(i, numNewPoints);
+			srcUVs.SetLayer(i, srcMesh.GetUVs(i), numPoints);
+			newUVs.AllocateLayer(i, numNewPoints);
 		}
 	}
 
@@ -728,7 +728,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (srcMesh.HasColors(i)) {
 			srcColors[i] = srcMesh.GetColors(i);
-			newColors.Allocate(i, numNewPoints);
+			newColors.AllocateLayer(i, numNewPoints);
 		}
 	}
 
@@ -737,7 +737,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (srcMesh.HasAlphas(i)) {
 			srcAlphas[i] = srcMesh.GetAlphas(i);
-			newAlphas.Allocate(i, numNewPoints);
+			newAlphas.AllocateLayer(i, numNewPoints);
 		}
 	}
 
@@ -746,7 +746,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (srcMesh.HasVertexAOV(i)) {
 			srcVertexAOVs[i] = srcMesh.GetVertexAOVs(i);
-			newVertexAOVs.Allocate(i, numNewPoints);
+			newVertexAOVs.AllocateLayer(i, numNewPoints);
 		}
 	}
 
@@ -933,7 +933,7 @@ luxrays::ExtTriangleMeshUPtr RecreateMesh(
 	// Copy AOV to new mesh
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		if (srcMesh.HasVertexAOV(i)) {
-			newMesh->SetVertexAOV(i, newVertexAOVs.Get(i), newVertexAOVs.GetLayerSize());
+			newMesh->SetVertexAOV(i, newVertexAOVs.GetLayer(i), newVertexAOVs.GetLayerSize());
 		}
 	}
 
