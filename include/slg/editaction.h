@@ -39,6 +39,7 @@ typedef enum {
 class EditActionList {
 public:
 	EditActionList() { actions = 0; };
+	EditActionList(EditActionList& editActions) { actions = editActions.GetActions(); };
 
 	void Reset() { actions = 0; }
 	void AddAction(const EditAction a) { actions |= a; };

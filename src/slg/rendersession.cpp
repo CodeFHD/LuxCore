@@ -98,7 +98,7 @@ void RenderSession::BeginSceneEdit() {
 
 void RenderSession::EndSceneEdit() {
 	// Make a copy of the edit actions
-	const EditActionList& editActions = renderConfig.GetScene().GetEditActions();
+	const EditActionList editActions(renderConfig.GetScene().GetEditActions());
 
 	if ((renderEngine->GetType() != RTPATHOCL) &&
 			(renderEngine->GetType() != RTPATHCPU)) {
