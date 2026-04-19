@@ -25,7 +25,7 @@ class LuxCore(ConanFile):
     """Conan recipe."""
 
     name = "luxcore"
-    version = "2.11.0"
+    version = "2.11.0-a.4"
     user = "luxcore"
     channel = "luxcore"
 
