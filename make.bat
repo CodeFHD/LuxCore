@@ -102,8 +102,6 @@ call %LUXMAKE% clean
 goto :EOF
 
 :WheelTest
-call %LUXMAKE% config
-call %LUXMAKE% build-and-install pyluxcore
 call %LUXMAKE% wheel-test
 goto :EOF
 

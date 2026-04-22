@@ -23,6 +23,7 @@ from .constants import (
 )
 from .utils import logger, pack, fail, Colors, get_dep_version
 from .build import build_and_install
+from .config import config
 from .windows import win_recompose
 
 # Following snippets are intended to wheel reconstruction
@@ -101,6 +102,7 @@ def make_wheel(args):
     )
     # Build and install pyluxcore
     args.target = "pyluxcore"
+    config(args)
     build_and_install(args)
 
     # Compute version
