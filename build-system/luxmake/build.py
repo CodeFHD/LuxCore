@@ -4,7 +4,7 @@
 
 """Build and install commands."""
 
-from .constants import INSTALL_DIR, BUILD_TYPE, BUILD_DIR
+from .constants import PARAMS
 from .utils import run_cmake, fail
 from .presets import get_presets, PresetType
 
@@ -13,7 +13,7 @@ def build(
     args,
 ):
     """CMake build."""
-    preset = _get_preset_from_build_type(BUILD_TYPE)
+    preset = _get_preset_from_build_type(PARAMS.BUILD_TYPE)
     cmd = [
         "--build",
         f"--preset {preset}",
@@ -28,9 +28,9 @@ def install(
     """CMake install."""
     cmd = [
         "--install",
-        str(BUILD_DIR),
-        f"--prefix {INSTALL_DIR}",
-        f"--config {BUILD_TYPE}",
+        str(PARAMS.BUILD_DIR),
+        f"--prefix {PARAMS.INSTALL_DIR}",
+        f"--config {PARAMS.BUILD_TYPE}",
         f"--component {args.target}",
     ]
     run_cmake(cmd)

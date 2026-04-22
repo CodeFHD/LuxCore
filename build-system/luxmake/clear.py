@@ -8,7 +8,7 @@ import shutil
 import sys
 import subprocess
 
-from .constants import BINARY_DIR
+from .constants import PARAMS
 from .utils import logger
 from .presets import get_presets, PresetType
 from .utils import run_cmake
@@ -36,7 +36,12 @@ def win_rmdir(directory):
     if sys.platform == "win32":
         try:
             # Use /s /q to remove directory and all subdirectories/files, quietly
-            subprocess.run(["cmd", "/c", "rmdir", "/s", "/q", directory], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(
+                ["cmd", "/c", "rmdir", "/s", "/q", directory],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
         except subprocess.CalledProcessError:
             pass  # Continue silently if directory does not exist or command fails
 
@@ -52,9 +57,9 @@ def clear(
         "dependencies",
         "install",
     ):
-        if not BINARY_DIR:
+        if not PARAMS.BINARY_DIR:
             raise RuntimeError("Invalid binary directory")
-        directory = BINARY_DIR / subdir
+        directory = PARAMS.BINARY_DIR / subdir
         logger.info(
             "Removing '%s'",
             directory,

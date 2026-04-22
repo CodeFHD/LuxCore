@@ -17,7 +17,7 @@ import json
 import platform
 from functools import cache
 
-from .constants import BINARY_DIR
+from .constants import PARAMS
 from .utils import logger, fail, Colors, set_logger_verbose
 from .check import check_requirements
 
@@ -115,7 +115,7 @@ def run_conan(
         stderr=subprocess.STDOUT,
         bufsize=1,
         universal_newlines=True,
-        env=kwargs["env"]
+        env=kwargs["env"],
     ) as proc:
         for line in proc.stdout:
             line = line.rstrip()
@@ -226,7 +226,11 @@ def get_existing_config(config_file):
         return []
     with config_file.open() as f:
         # Minimal filtering: remove blank lines and lines starting with '#' (comments...)
-        return [l.rstrip() for l in f.readlines() if l.rstrip() and not l.startswith('#')]
+        return [
+            l.rstrip()
+            for l in f.readlines()
+            if l.rstrip() and not l.startswith("#")
+        ]
 
 
 def show_build_info(destdir):
@@ -371,7 +375,7 @@ def main(
         "-o",
         "--output",
         type=Path,
-        default=BINARY_DIR,
+        default=PARAMS.BINARY_DIR,
         help="Output directory",
     )
     parser.add_argument(
@@ -512,7 +516,9 @@ def main(
         profile_dir = output_dir.absolute() / ".conan2" / "profiles"
         profile_dir.mkdir(parents=True, exist_ok=True)
         logger.info("")
-        logger.info("Deploying profiles from %s to %s", src_profile_dir, profile_dir)
+        logger.info(
+            "Deploying profiles from %s to %s", src_profile_dir, profile_dir
+        )
         run_conan(
             [
                 "config",
@@ -599,7 +605,7 @@ def deps(
     _,
 ):
     """Install dependencies."""
-    main([f"--output={BINARY_DIR}"])
+    main([f"--output={PARAMS.BINARY_DIR}"])
 
 
 # Historically, this module was independent; there are some remnants of this

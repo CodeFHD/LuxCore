@@ -14,13 +14,7 @@ import os
 import shlex
 from pathlib import Path
 
-from .constants import (
-    SOURCE_DIR,
-    INSTALL_DIR,
-    BINARY_DIR,
-    WHEELHOUSE_DIR,
-    WHEEL_HOOK,
-)
+from .constants import PARAMS
 from .utils import logger, pack, fail, Colors, get_dep_version
 from .build import build_and_install
 from .config import config
@@ -83,7 +77,7 @@ def _compute_platform_tag():
 
 def _get_lib_paths():
     """Get library paths for dependencies."""
-    base = BINARY_DIR / "dependencies" / "full_deploy" / "host"
+    base = PARAMS.BINARY_DIR / "dependencies" / "full_deploy" / "host"
     paths = (str(p.absolute()) for p in base.rglob("**/bin"))
     result = os.pathsep.join(paths)
     return result
@@ -91,6 +85,15 @@ def _get_lib_paths():
 
 def make_wheel(args):
     """Build a wheel."""
+    # Set default build type to debug
+    PARAMS.DEFAULT_BUILD_TYPE = "Debug"
+
+    # Build and install pyluxcore
+    args.target = "pyluxcore"
+    config(args)
+    build_and_install(args)
+
+    # Disclaim
     logger.warning(
         f"{Colors.WARNING2}"
         "This command builds a TEST wheel, "
@@ -100,10 +103,6 @@ def make_wheel(args):
         "DO NOT USE IN PRODUCTION."
         f"{Colors.ENDC}"
     )
-    # Build and install pyluxcore
-    args.target = "pyluxcore"
-    config(args)
-    build_and_install(args)
 
     # Compute version
     build_settings_file = Path("build-system", "build-settings.json")
@@ -160,27 +159,27 @@ def make_wheel(args):
 
         # Copy subfolders into tree
         shutil.copytree(
-            SOURCE_DIR / "python" / "pyluxcore",
+            PARAMS.SOURCE_DIR / "python" / "pyluxcore",
             wheeltree / "pyluxcore",
             dirs_exist_ok=True,
         )
         shutil.copytree(
-            SOURCE_DIR / "python" / "pyluxcoretest",
+            PARAMS.SOURCE_DIR / "python" / "pyluxcoretest",
             wheeltree / "pyluxcoretest",
             dirs_exist_ok=True,
         )
         shutil.copytree(
-            SOURCE_DIR / "python" / "pyluxcoretools",
+            PARAMS.SOURCE_DIR / "python" / "pyluxcoretools",
             wheeltree / "pyluxcoretools",
             dirs_exist_ok=True,
         )
         shutil.copytree(
-            INSTALL_DIR / "pyluxcore",
+            PARAMS.INSTALL_DIR / "pyluxcore",
             wheeltree / "pyluxcore",
             dirs_exist_ok=True,
         )
         shutil.copytree(
-            INSTALL_DIR / "pyluxcore.libs",
+            PARAMS.INSTALL_DIR / "pyluxcore.libs",
             wheeltree / "pyluxcore.libs",
             dirs_exist_ok=True,
         )
@@ -191,7 +190,7 @@ def make_wheel(args):
         wheelname = f"pyluxcore-{version}-{tag}.whl"
 
         # Then repair
-        wheel_lib_dir = INSTALL_DIR / "lib"
+        wheel_lib_dir = PARAMS.INSTALL_DIR / "lib"
         logger.info("Repairing wheel")
         input_path = raw_wheel_dir / wheelname
         cmd = [
@@ -203,7 +202,7 @@ def make_wheel(args):
             "-l",
             _get_lib_paths(),
             "-o",
-            WHEELHOUSE_DIR,
+            PARAMS.WHEELHOUSE_DIR,
             input_path,
         ]
         try:
@@ -214,15 +213,15 @@ def make_wheel(args):
 
         # And, for Windows, recompose
         if platform.system() == "Windows":
-            args.wheel = WHEELHOUSE_DIR / wheelname
+            args.wheel = PARAMS.WHEELHOUSE_DIR / wheelname
             win_recompose(args)
 
         # Finally, execute hook if exists
-        if WHEEL_HOOK:
-            logger.info("Executing hook: " + WHEEL_HOOK)
+        if PARAMS.WHEEL_HOOK:
+            logger.info("Executing hook: " + PARAMS.WHEEL_HOOK)
             try:
                 result = subprocess.check_output(
-                    shlex.split(WHEEL_HOOK), text=True
+                    shlex.split(PARAMS.WHEEL_HOOK), text=True
                 )
             except subprocess.CalledProcessError as err:
                 fail(err)
