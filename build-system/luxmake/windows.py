@@ -17,6 +17,7 @@ import re
 
 from .utils import pack, unpack, logger, fail
 
+# pylint:disable=line-too-long
 WHEEL_INFO_RE = re.compile(
     r"""^(?P<namever>(?P<name>[^\s-]+?)-(?P<ver>[^\s-]+?))(-(?P<build>\d[^\s-]*))?
      -(?P<pyver>[^\s-]+?)-(?P<abi>[^\s-]+?)-(?P<plat>\S+)\.whl$""",

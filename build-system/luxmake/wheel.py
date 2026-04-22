@@ -94,7 +94,7 @@ def make_wheel(args):
     build_and_install(args)
 
     # Disclaim
-    logger.warning(
+    disclaimer = (
         f"{Colors.WARNING2}"
         "This command builds a TEST wheel, "
         "not fully compliant to standard "
@@ -103,6 +103,7 @@ def make_wheel(args):
         "DO NOT USE IN PRODUCTION."
         f"{Colors.ENDC}"
     )
+    logger.warning(disclaimer)
 
     # Compute version
     build_settings_file = Path("build-system", "build-settings.json")
@@ -143,7 +144,7 @@ def make_wheel(args):
         # Export METADATA file
         with open(dist_info / "METADATA", "w", encoding="utf-8") as f:
             nvrtc_version = get_dep_version("nvrtc")
-            logger.info(f"NVRTC version: {nvrtc_version}")
+            logger.info("NVRTC version: %s", nvrtc_version)
             major = int(nvrtc_version.split(".")[0])
             requirement = (
                 f"nvidia-cuda-nvrtc-cu{major}=={nvrtc_version}"
@@ -218,7 +219,7 @@ def make_wheel(args):
 
         # Finally, execute hook if exists
         if PARAMS.WHEEL_HOOK:
-            logger.info("Executing hook: " + PARAMS.WHEEL_HOOK)
+            logger.info("Executing hook: %s", PARAMS.WHEEL_HOOK)
             try:
                 result = subprocess.check_output(
                     shlex.split(PARAMS.WHEEL_HOOK), text=True

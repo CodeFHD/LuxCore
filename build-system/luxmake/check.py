@@ -106,12 +106,13 @@ def check(name, min_version=None, mandatory=True):
             )
     if version_str:
         logger.info(
-            prefix + "Found '%s', version '%s'",
+            "%sFound '%s', version '%s'",
+            prefix,
             app,
             version_str,
         )
     else:
-        logger.info(prefix + "Found '%s'", app)
+        logger.info("%sFound '%s'", prefix, app)
 
     return True
 

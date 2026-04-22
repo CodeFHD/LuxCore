@@ -35,7 +35,8 @@ def win_rmdir(directory):
     """(Windows only) Remove directory, using DOS command."""
     if sys.platform == "win32":
         try:
-            # Use /s /q to remove directory and all subdirectories/files, quietly
+            # Use /s /q to remove directory and all subdirectories/files,
+            # quietly
             subprocess.run(
                 ["cmd", "/c", "rmdir", "/s", "/q", directory],
                 check=True,
@@ -43,7 +44,8 @@ def win_rmdir(directory):
                 stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError:
-            pass  # Continue silently if directory does not exist or command fails
+            # Continue silently if directory does not exist or command fails
+            pass
 
 
 def clear(

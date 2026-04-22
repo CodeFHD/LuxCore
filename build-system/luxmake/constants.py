@@ -9,6 +9,7 @@ import pathlib
 
 
 class Parameters:
+    """Singleton class for global parameters handling."""
 
     _instance = None
 
@@ -18,6 +19,11 @@ class Parameters:
         return cls._instance
 
     _internals = {"DEFAULT_BUILD_TYPE": "Release"}
+
+    # Rest of the class is setter/getter, with transparent intention,
+    # so we will deactivate pylint
+    # pylint:disable=invalid-name
+    # pylint:disable=missing-function-docstring
 
     @property
     def DEFAULT_BUILD_TYPE(self):

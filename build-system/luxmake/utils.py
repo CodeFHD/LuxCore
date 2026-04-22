@@ -99,7 +99,9 @@ def _run_find_package(dep):
     """Run a find_package in cmake."""
     with tempfile.TemporaryDirectory() as folder:
         folder = pathlib.Path(folder)
-        with open(folder / "CMakeLists.txt", "w") as cmakelists:
+        with open(
+            folder / "CMakeLists.txt", "w", encoding="utf-8"
+        ) as cmakelists:
             cmakelists.write(_CMAKE_FIND_PACKAGE_SNIPPET.format(dep))
             cmakelists.close()
             statement = [
@@ -129,8 +131,7 @@ def get_dep_version(dep):
 
     # Run cmake and parse output
     cmake_result = _run_find_package(dep)
-    versions = re.findall(r"@@([A-Za-z0-9.]+)@@", cmake_result)
-    if not versions:
+    if not (versions := re.findall(r"@@([A-Za-z0-9.]+)@@", cmake_result)):
         raise ValueError(f"No dependency '{dep}' found")
     version, *_ = versions
 

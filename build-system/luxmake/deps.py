@@ -38,7 +38,7 @@ def logger_step(step):
     length = 12
     stars = "*" * length
     logger.info("")
-    logger.info(stars + "  " + step + "  " + stars)
+    logger.info("%s  %s  %s", stars, step, stars)
 
 
 def find_platform():
@@ -107,7 +107,6 @@ def run_conan(
     kwargs["text"] = kwargs.get("text", True)
     args = [conan_app] + args
     logger.debug(args)
-    returncode = 0
     lines = []
     with subprocess.Popen(
         args,
@@ -224,8 +223,9 @@ def get_existing_config(config_file):
     if not config_file.exists():
         logger.info("No global.conf found")
         return []
-    with config_file.open() as f:
-        # Minimal filtering: remove blank lines and lines starting with '#' (comments...)
+    with config_file.open(encoding="utf-8") as f:
+        # Minimal filtering: remove blank lines and lines starting with '#'
+        # (comments...)
         return [
             l.rstrip()
             for l in f.readlines()
@@ -310,16 +310,16 @@ def set_global_conf(cache_dir, existing_config):
     global_conf.touch()
 
     logger.info("Writing configuration file: '%s'", str(global_conf))
-    with global_conf.open("w+") as p:
+    with global_conf.open("w+") as conf:
 
         def write(entry):
             logger.info(" - %s", entry)
-            p.write(entry.rstrip())
-            p.write("\n")
+            conf.write(entry.rstrip())
+            conf.write("\n")
 
         write(f"core.cache:storage_path={cache_dir}")
         write(f"core.download:download_cache={cache_dir}")
-        write(f"core:non_interactive=True")
+        write("core:non_interactive=True")
         for line in existing_config:
             write(line)
 
@@ -412,12 +412,11 @@ def main(
     logger_step("Getting existing config")
     config_file = conan_home() / "global.conf"
     logger.info("Reading %s", str(config_file))
-    existing_config = get_existing_config(config_file)
-    if not existing_config:
+    if not (existing_config := get_existing_config(config_file)):
         logger.info("<empty>")
     else:
         for line in existing_config:
-            logger.info(" - " + line)
+            logger.info(" - %s", line)
 
     # Process
     # We download in a separate, temporary environment
@@ -484,12 +483,11 @@ def main(
 
         # Install
         logger_step("Installing")
-        archive = tmpdir / "conan-cache-save.tgz"
         res = run_conan(
             [
                 "cache",
                 "restore",
-                archive,
+                tmpdir / "conan-cache-save.tgz",
             ],
         )
 
@@ -539,7 +537,7 @@ def main(
         # not well handled by deployer...
         CONAN_ENV["LUX_PROFILE_DIR"] = str(profile_dir)
 
-        logger.info(f"Conan profile directory is %s" % profile_dir)
+        logger.info("Conan profile directory is %s", profile_dir)
         main_block = [
             "install",
             "--build=missing",

@@ -13,7 +13,7 @@ from .utils import run_cmake, fail, logger
 
 
 def config(
-    args,
+    _,  # args (unused)
 ):
     """CMake config."""
     # Check whether presets exist
