@@ -91,10 +91,11 @@ def _get_lib_paths():
 def make_wheel(args):
     """Build a wheel."""
     logger.warning(
-        f"{Colors.WARNING}"
+        f"{Colors.WARNING2}"
         "This command builds a TEST wheel, "
         "not fully compliant to standard "
         "and only intended for test. "
+        f"{Colors.WARNING3}"
         "DO NOT USE IN PRODUCTION."
         f"{Colors.ENDC}"
     )
@@ -142,7 +143,7 @@ def make_wheel(args):
         with open(dist_info / "METADATA", "w", encoding="utf-8") as f:
             nvrtc_version = get_dep_version("nvrtc")
             logger.info(f"NVRTC version: {nvrtc_version}")
-            major = int(nvrtc_version.split('.')[0])
+            major = int(nvrtc_version.split(".")[0])
             requirement = (
                 f"nvidia-cuda-nvrtc-cu{major}=={nvrtc_version}"
                 if major <= 12

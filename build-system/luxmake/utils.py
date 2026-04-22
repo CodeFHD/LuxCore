@@ -41,6 +41,8 @@ class Colors:
     OKCYAN = "\033[96m"
     OKGREEN = "\033[92m"
     WARNING = "\033[93m"
+    WARNING2 = "\033[33m"
+    WARNING3 = "\033[4;33m"
     FAIL = "\033[91m"
     ENDC = "\033[0m"
     BOLD = "\033[1m"
@@ -102,7 +104,7 @@ def _run_find_package(dep):
             cmakelists.close()
             statement = [
                 "-S",
-                f'{folder}',
+                f"{folder}",
                 "-B",
                 f'{folder / "build"}',
                 f"-DCMAKE_TOOLCHAIN_FILE={str(_TOOLCHAIN.absolute())}",
