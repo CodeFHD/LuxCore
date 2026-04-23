@@ -186,7 +186,7 @@ jobs:
               arch='x86_64';
             }
             else {
-              target = '14.2';  // Required by opensubdiv
+              target = '15.0';  // Required by libomp
               arch='armv8';
             }
             core.exportVariable('MACOSX_DEPLOYMENT_TARGET', target);
