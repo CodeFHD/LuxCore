@@ -390,6 +390,12 @@ def main(
         action="store_true",
         help="Extended presets (including RelWithDebInfo & MinSizeRel)",
     )
+    parser.add_argument(
+        "-b",
+        "--build-type",
+        help="Build type from deps",
+        default="Release",
+    )
     if call_args is None:
         args = parser.parse_args()  # Parse command line
     else:
@@ -536,6 +542,7 @@ def main(
         # Next line is a workaround to replace {{profile_dir}}, which is
         # not well handled by deployer...
         CONAN_ENV["LUX_PROFILE_DIR"] = str(profile_dir)
+        build_type = args.build_type or "Release"
 
         logger.info("Conan profile directory is %s", profile_dir)
         main_block = [
@@ -545,7 +552,7 @@ def main(
             "--deployer=full_deploy",
             f"--deployer-folder={output_dir}/dependencies",
             f"--output-folder={output_dir}",
-            "--settings=build_type=Release",
+            f"--settings=build_type={build_type}",
             f"--conf:all=tools.cmake.cmaketoolchain:generator={generator}",
         ]
         if not os.getenv("DEPS_WITHOUT_SUDO"):

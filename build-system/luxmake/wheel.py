@@ -12,6 +12,7 @@ import shutil
 import platform
 import os
 import shlex
+import itertools
 from pathlib import Path
 
 from .constants import PARAMS
@@ -78,8 +79,11 @@ def _compute_platform_tag():
 def _get_lib_paths():
     """Get library paths for dependencies."""
     base = PARAMS.BINARY_DIR / "dependencies" / "full_deploy" / "host"
-    paths = (str(p.absolute()) for p in base.rglob("**/bin"))
-    result = os.pathsep.join(paths)
+    paths_bin = (str(p.absolute()) for p in base.rglob("**/bin"))
+    paths_lib = (str(p.absolute()) for p in base.rglob("**/lib"))
+    paths = itertools.chain(paths_bin, paths_lib)
+    result = [ ["-l", Path(p)] for p in paths ]
+    result = list(itertools.chain.from_iterable(result))
     return result
 
 
@@ -200,8 +204,7 @@ def make_wheel(args):
             "repairwheel",
             "-l",
             wheel_lib_dir,
-            "-l",
-            _get_lib_paths(),
+            *_get_lib_paths(),
             "-o",
             PARAMS.WHEELHOUSE_DIR,
             input_path,
