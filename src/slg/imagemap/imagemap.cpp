@@ -18,6 +18,8 @@
 
 #include "luxrays/utils/strutils.h"
 #include "luxrays/core/randomgen.h"
+#include "slg/slg.h"
+#include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
 #include <sstream>
 #include <algorithm>
@@ -891,14 +893,18 @@ void ImageMap::Init(
 	const u_int heightHint
 ) {
 	const string resolvedFileName = SLG_FileNameResolver.ResolveFile(fileName);
+#ifndef NDEBUG
+	SDL_LOG("OIIO version: " << OIIO::openimageio_version());
+#endif
 	SDL_LOG("Reading texture map: " << resolvedFileName);
 
 	if (!std::filesystem::exists(resolvedFileName))
 		throw runtime_error("ImageMap file doesn't exist: " + resolvedFileName);
 
 
+	OIIO::attribute("openexr:core", 1);  // Nota: crash if not set
 	ImageSpec config;
-	config.attribute ("oiio:UnassociatedAlpha", 1);
+	config["oiio:UnassociatedAlpha"] = 1;
 	auto in = ImageInput::open(resolvedFileName, &config);
 
 	if (!in)
@@ -1604,9 +1610,10 @@ pair<u_int, u_int> ImageMap::GetSize(const std::string &fileName) {
 	if (!std::filesystem::exists(resolvedFileName))
 		throw runtime_error("ImageMap file doesn't exist: " + resolvedFileName);
 	else {
+		OIIO::attribute("openexr:core", 1);  // Nota: crash if not set
 		ImageSpec config;
-		config.attribute ("oiio:UnassociatedAlpha", 1);
-		unique_ptr<ImageInput> in(ImageInput::open(resolvedFileName, &config));
+		config["oiio:UnassociatedAlpha"] = 1;
+		auto in = ImageInput::open(resolvedFileName, &config);
 
 		if (in.get()) {
 			const ImageSpec &spec = in->spec();
