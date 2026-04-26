@@ -121,7 +121,7 @@ REM Run it under cmd.exe
 REM 'setup_x64.bat' must be in PATH
 call :MsvcInit
 set LUX_BUILD_TYPE=Debug
-set LUX_SANITIZER=1
+set LUX_SANITIZE=1
 set CMAKE_BUILD_PARALLEL_LEVEL=1
 call :Config
 call :BuildAndInstall luxcore
