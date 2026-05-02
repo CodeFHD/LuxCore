@@ -138,7 +138,7 @@ endif()
 
 if(LINUX OR APPLE)
   add_link_options("LINKER:-Bsymbolic")
-endif
+endif()
 
 if (LUXRAYS_DISABLE_OPENCL)
   ADD_DEFINITIONS("-DLUXRAYS_DISABLE_OPENCL")

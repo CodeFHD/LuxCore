@@ -511,15 +511,12 @@ target_link_libraries(slg-core PRIVATE
   OpenMP::OpenMP_CXX
 )
 
-<<<<<<< HEAD
-=======
 if(APPLE)
   target_link_libraries(slg-core PRIVATE llvm-openmp::llvm-openmp)
 else()
   target_link_libraries(slg-core PRIVATE OpenMP::OpenMP_CXX)
 endif(APPLE)
 
->>>>>>> parent of f285a9fbc (Replace llvm-openmp::llvm-openmp by plain OpenMP::OpenMP (due to dep evolution))
 #############################################################################
 #
 # SLG Kernels library
