@@ -39,7 +39,12 @@ target_link_libraries(pyluxcore PRIVATE
     openimageio::openimageio
     embree::embree
 )
-target_link_libraries(pyluxcore PRIVATE OpenMP::OpenMP_CXX)
+
+if(APPLE)
+  target_link_libraries(pyluxcore PRIVATE llvm-openmp::llvm-openmp)
+else()
+  target_link_libraries(pyluxcore PRIVATE OpenMP::OpenMP_CXX)
+endif(APPLE)
 
 set_target_properties(pyluxcore PROPERTIES PREFIX "")
 if(MSVC)

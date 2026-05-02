@@ -68,7 +68,13 @@ include_directories(${PROJECT_SOURCE_DIR}/deps/lut)
 
 add_library(bcd STATIC ${BCD_SRCS})
 
-target_link_libraries(bcd PRIVATE boost::boost Eigen3::Eigen OpenMP::OpenMP_CXX)
+target_link_libraries(bcd PRIVATE boost::boost Eigen3::Eigen)
+
+if(APPLE)
+  target_link_libraries(bcd PRIVATE llvm-openmp::llvm-openmp)
+else()
+  target_link_libraries(bcd PRIVATE OpenMP::OpenMP_CXX)
+endif(APPLE)
 
 # Required by VisualStudio to have M_PI defined
 add_definitions("-D_USE_MATH_DEFINES")
@@ -505,6 +511,15 @@ target_link_libraries(slg-core PRIVATE
   OpenMP::OpenMP_CXX
 )
 
+<<<<<<< HEAD
+=======
+if(APPLE)
+  target_link_libraries(slg-core PRIVATE llvm-openmp::llvm-openmp)
+else()
+  target_link_libraries(slg-core PRIVATE OpenMP::OpenMP_CXX)
+endif(APPLE)
+
+>>>>>>> parent of f285a9fbc (Replace llvm-openmp::llvm-openmp by plain OpenMP::OpenMP (due to dep evolution))
 #############################################################################
 #
 # SLG Kernels library
