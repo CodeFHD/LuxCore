@@ -165,8 +165,9 @@ def LuxRaysDeviceTests():
         deviceList = pyluxcore.GetOpenCLDeviceList()
     except RuntimeError as err:
         print(str(err))
-        return
+        return None
     print("OpenCL device list: %s\n" % str(deviceList), flush=True)
+    return deviceList
 
 
 ################################################################################
@@ -870,7 +871,9 @@ def main():
         # os.chdir(os.path.dirname(__file__))
 
         PropertiesTests()
-        LuxRaysDeviceTests()
+        devices = LuxRaysDeviceTests()
+        if devices is None:
+            return
         SimpleRender()
         GetOutputTest()
         ExtractConfiguration()
