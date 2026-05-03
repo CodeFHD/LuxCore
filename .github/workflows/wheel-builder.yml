@@ -182,11 +182,11 @@ jobs:
           # Arm: opensubdiv
           script: |
             if ('${{ runner.arch }}' == 'X64') {
-              target = '14.0';  // Required by libomp
+              target = '11.0';  // Required by libomp
               arch='x86_64';
             }
             else {
-              target = '15.0';  // Required by libomp
+              target = '14.2';  // Required by opensubdiv
               arch='armv8';
             }
             core.exportVariable('MACOSX_DEPLOYMENT_TARGET', target);
@@ -222,11 +222,6 @@ jobs:
             # Set flags
             echo "LDFLAGS=${LD_FLAGS} -fuse-ld=${LLD_PREFIX}/bin/ld64.lld -L${LLVM_PREFIX}/lib -L${LLD_PREFIX}/lib" >> $GITHUB_ENV
             echo "CPPFLAGS=${CPPFLAGS} -I${LLVM_PREFIX}/include -I${LLD_PREFIX}/include" >> $GITHUB_ENV
-
-            # OpenMP
-            brew install libomp
-            brew link libomp --overwrite
-            echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
 
       # TODO: The following block is an ugly hack but, at the moment (2025-02-25),
