@@ -71,7 +71,7 @@ add_library(bcd STATIC ${BCD_SRCS})
 target_link_libraries(bcd PRIVATE boost::boost Eigen3::Eigen)
 
 if(APPLE)
-  target_link_libraries(bcd PRIVATE llvm-openmp::llvm-openmp)
+  target_link_libraries(bcd PRIVATE OpenMP::OpenMP)
 else()
   target_link_libraries(bcd PRIVATE OpenMP::OpenMP_CXX)
 endif(APPLE)
@@ -512,7 +512,7 @@ target_link_libraries(slg-core PRIVATE
 )
 
 if(APPLE)
-  target_link_libraries(slg-core PRIVATE llvm-openmp::llvm-openmp)
+  target_link_libraries(slg-core PRIVATE OpenMP::OpenMP)
 else()
   target_link_libraries(slg-core PRIVATE OpenMP::OpenMP_CXX)
 endif(APPLE)
