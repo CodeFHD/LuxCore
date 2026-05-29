@@ -55,7 +55,8 @@ public:
 	static RenderEngine *FromProperties(RenderConfigRef rcfg);
 
 protected:
-	static luxrays::PropertiesUPtr GetDefaultProps();
+
+	static luxrays::PropertiesRPtr GetDefaultProps() { return defaultProps; }
 
 	virtual void InitFilm();
 	virtual void StartLockLess();
@@ -71,6 +72,10 @@ private:
 	void SaveScene();
 
 	std::string renderEngineType, exportFormat, directoryName, fileName;
+
+	static luxrays::PropertiesUPtr InitDefaultProps();
+	inline const static luxrays::PropertiesUPtr defaultProps{FileSaverRenderEngine::InitDefaultProps()};
+
 };
 
 }

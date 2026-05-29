@@ -521,7 +521,7 @@ RenderEngine *FileSaverRenderEngine::FromProperties(RenderConfigRef rcfg) {
 	return new FileSaverRenderEngine(rcfg);
 }
 
-PropertiesUPtr FileSaverRenderEngine::GetDefaultProps() {
+PropertiesUPtr FileSaverRenderEngine::InitDefaultProps() {
 	auto props = std::make_unique<Properties>();
 	*props <<
 			Property("renderengine.type")(GetObjectTag()) <<
@@ -532,4 +532,5 @@ PropertiesUPtr FileSaverRenderEngine::GetDefaultProps() {
 
 	return props;
 }
+
 // vim: autoindent noexpandtab tabstop=4 shiftwidth=4
