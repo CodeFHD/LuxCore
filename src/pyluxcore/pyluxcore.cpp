@@ -2636,7 +2636,9 @@ PYBIND11_MODULE(pyluxcore, m) {
 		),
 		py::keep_alive<1, 2>()
 	)
-    .def("GetRenderConfig", &RenderSession_GetRenderConfig)
+	//TODO
+    //.def("GetRenderConfig", &RenderSession_GetRenderConfig)
+    .def("GetRenderConfig", &luxcore::detail::RenderSessionImpl::GetRenderConfig)
     .def("Start", &luxcore::detail::RenderSessionImpl::Start)
     .def("Stop", &luxcore::detail::RenderSessionImpl::Stop)
     .def("IsStarted", &luxcore::detail::RenderSessionImpl::IsStarted)
