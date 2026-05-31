@@ -455,8 +455,8 @@ private:
 	slg::SceneUPtr internalScene;
 
 	// Reference to the working scene. Depending on object construction, it can
-	// be an external scene, or the internal scene below
-	std::reference_wrapper<slg::Scene> sceneRef;
+	// be an external scene, or the internal scene above
+	slg::SceneRef sceneRef;
 
 };
 

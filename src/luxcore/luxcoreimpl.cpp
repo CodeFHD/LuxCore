@@ -1604,7 +1604,7 @@ const Scene& RenderConfigImpl::GetScene() const {
 
 	API_RETURN("{}", (void *)&result);
 
-	return result;
+	return std::cref(result);
 }
 
 Scene& RenderConfigImpl::GetScene() {
@@ -1614,7 +1614,7 @@ Scene& RenderConfigImpl::GetScene() {
 
 	API_RETURN("{}", (void *)&result);
 
-	return result;
+	return std::ref(result);
 }
 
 bool RenderConfigImpl::HasCachedKernels() const {
