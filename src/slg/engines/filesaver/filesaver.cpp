@@ -57,12 +57,11 @@ void FileSaverRenderEngine::StartLockLess() {
 	//--------------------------------------------------------------------------
 	// Rendering parameters
 	//--------------------------------------------------------------------------
-	SLG_LOG("Default properties:" << *GetDefaultProps());
 	renderEngineType = cfg.Get(GetDefaultProps()->Get("filesaver.renderengine.type")).Get<string>();
 	exportFormat = cfg.Get(GetDefaultProps()->Get("filesaver.format")).Get<string>();
 	directoryName = cfg.Get(GetDefaultProps()->Get("filesaver.directory")).Get<string>();
 	fileName = cfg.Get(GetDefaultProps()->Get("filesaver.filename")).Get<string>();
-	
+
 	SaveScene();
 }
 
