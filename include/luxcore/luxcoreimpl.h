@@ -492,6 +492,10 @@ public:
 		std::unique_ptr<FilmImpl>& startFilm  // Out
 	);
 
+	// Copy not authorized
+	RenderConfigImpl(const RenderConfigImpl&) = delete;
+	RenderConfigImpl& operator=(RenderConfigImpl&) = delete;
+
 	virtual ~RenderConfigImpl() = default;
 
 	luxrays::PropertiesRPtr GetProperties() const;
