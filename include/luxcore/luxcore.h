@@ -811,6 +811,9 @@ public:
  */
 CPP_EXPORT class CPP_API Scene {
 public:
+	Scene(const Scene&) = delete;
+	Scene& operator=(Scene&) = delete;
+
 	/*!
 	* \brief Types of image map channel selection.
 	*/
@@ -1241,6 +1244,7 @@ public:
 	static unsigned int *AllocTrianglesBuffer(const unsigned int meshTriCount);
 
 protected:
+	Scene() = default;
 	virtual void DefineImageMapUChar(const std::string &imgMapName,
 			unsigned char *pixels, const float gamma, const unsigned int channels,
 			const unsigned int width, const unsigned int height,
