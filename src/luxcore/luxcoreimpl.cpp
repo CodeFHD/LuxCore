@@ -1573,7 +1573,7 @@ PropertiesRPtr RenderConfigImpl::GetProperties() const {
 	//API_RETURN("{}", ToArgString(result));
 	API_END();
 
-	return result;
+	return renderConfig->GetConfigPtr();
 }
 
 const Property RenderConfigImpl::GetProperty(const std::string &name) const {
@@ -1781,12 +1781,12 @@ void RenderSessionImpl::InitFilm() {
 	film = std::make_unique<FilmImplSession>(*this);
 }
 
-RenderConfigImplRef RenderSessionImpl::GetRenderConfig() {
+RenderConfigImplConstRef RenderSessionImpl::GetRenderConfig() const {
 	API_BEGIN_NOARGS();
 
 	API_RETURN("{}", (void *)&renderConfig);
 
-	return renderConfig;
+	return std::cref(renderConfig);
 }
 
 std::shared_ptr<RenderState> RenderSessionImpl::GetRenderState() {

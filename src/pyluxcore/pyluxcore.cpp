@@ -2043,20 +2043,6 @@ static py::tuple RenderConfig_GetFilmSize(luxcore::detail::RenderConfigImpl *ren
 // Glue for RenderSession class
 //------------------------------------------------------------------------------
 
-static RenderConfigImpl& RenderSession_GetRenderConfig(
-	const std::unique_ptr<luxcore::detail::RenderSessionImpl> & renderSession
-) {
-  return static_cast<luxcore::detail::RenderConfigImpl&>(
-		  renderSession->GetRenderConfig()
-	);
-}
-
-//luxcore::detail::FilmImplRef
-//RenderSession_GetFilm(
-	//const std::unique_ptr<luxcore::detail::RenderSessionImpl> & renderSession
-//) {
-  //return static_cast<luxcore::detail::FilmImpl&>(renderSession->GetFilm());
-//}
 
 static std::shared_ptr<luxcore::detail::RenderStateImpl>
 RenderSession_GetRenderState(
@@ -2619,7 +2605,7 @@ PYBIND11_MODULE(pyluxcore, m) {
 
   py::class_<luxcore::detail::RenderSessionImpl, py::smart_holder>(m, "RenderSession")
 	.def(
-		py::init<>(&RenderSessionImpl::Create<RenderConfigImplRef>),
+		py::init<>(&RenderSessionImpl::Create<luxcore::detail::RenderConfigImpl&>),
 		py::keep_alive<1, 2>()
 	)
 

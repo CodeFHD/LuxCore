@@ -83,6 +83,7 @@ using SceneConstPtr = std::unique_ptr<const Scene>;
 class RenderConfig;
 using RenderConfigRPtr = std::unique_ptr<RenderConfig>;
 using RenderConfigRef = RenderConfig &;
+using RenderConfigConstRef = const RenderConfig &;
 
 class RenderState;
 using RenderStateRPtr = std::shared_ptr<RenderState>;
@@ -1506,7 +1507,7 @@ public:
 	 *
 	 * \return a reference to the RenderingConfig.
 	 */
-	virtual const RenderConfigRef GetRenderConfig() = 0;
+	virtual RenderConfigConstRef GetRenderConfig() const = 0;
 
 	/*!
 	 * \brief Returns a pointer to the current RenderState. The session must be

@@ -612,7 +612,7 @@ public:
 		const std::string &startFilmFileName
 	);
 
-	RenderConfigImplRef GetRenderConfig() override;
+	RenderConfigImplConstRef GetRenderConfig() const override;
 	std::shared_ptr<RenderState> GetRenderState() override;
 
 	void Start() override;
@@ -650,7 +650,7 @@ public:
 
 private:
 	// Back link, not owned
-	RenderConfigImplRef renderConfig;
+	RenderConfigImplConstRef renderConfig;
 
 	// RenderSessionImpl creates and owns a slg::RenderSession and a FilmImpl
 	// RenderSession must not be shared

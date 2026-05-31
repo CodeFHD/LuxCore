@@ -122,7 +122,7 @@ public:
 	SceneRef GetScene() { return *sceneRef; }
 	PropertiesConstRef GetConfig() const { return *cfg; }
 	PropertiesRef GetConfig() { return *cfg; }
-	PropertiesRPtr GetConfigPtr() { return cfg; }
+	PropertiesRPtr GetConfigPtr() const { return cfg; }
 
 
 	// Serialization stuff
