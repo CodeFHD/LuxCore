@@ -2565,11 +2565,6 @@ PYBIND11_MODULE(pyluxcore, m) {
 		py::keep_alive<1, 2>(),
 		py::keep_alive<1, 3>()
 	)
-    //.def(py::init<luxrays::Properties, SceneImplPtr >()[with_custodian_and_ward<1, 3>()])
-    //.def(
-		//py::init<luxrays::PropertiesRPtr, std::unique_ptr<luxcore::detail::SceneImpl> >()
-			//, py::return_value_policy::move)
-    //.def("__init__", make_constructor(RenderConfig_LoadFile))
     //.def(py::init(&RenderConfig_LoadFile)) TODO
     .def("GetProperties", &luxcore::detail::RenderConfigImpl::GetProperties)
     .def("GetProperty", &luxcore::detail::RenderConfigImpl::GetProperty)
