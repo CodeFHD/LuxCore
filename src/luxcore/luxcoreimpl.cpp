@@ -1843,7 +1843,7 @@ void RenderSessionImpl::EndSceneEdit() {
 	renderSession->EndSceneEdit();
 
 	// Invalidate the scene properties cache
-	auto& sceneimpl = dynamic_cast<SceneImpl&>(renderConfig.GetScene());
+	const auto& sceneimpl = dynamic_cast<const SceneImpl&>(renderConfig.GetScene());
 	sceneimpl.scenePropertiesCache->Clear();
 
 	API_END();
