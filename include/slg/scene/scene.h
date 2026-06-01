@@ -293,7 +293,7 @@ protected:
 	VolumeConstPtr defaultWorldVolume;
 
 	// This image map is required for some other textures
-	ImageMapSPtr randomImageMap;
+	inline static ImageMapSPtr randomImageMap{ImageMap::AllocRandomImageMap(512)};
 
 	// Here are the containers for the scene elements:
 	ExtMeshCache extMeshCache; // Mesh objects cache

@@ -58,8 +58,7 @@ using namespace slg;
 // Scene
 //------------------------------------------------------------------------------
 
-Scene::Scene(luxrays::PropertiesRPtr resizePolicyProps) :
-	randomImageMap(ImageMap::AllocRandomImageMap(512))
+Scene::Scene(luxrays::PropertiesRPtr resizePolicyProps)
 {
 	Init(resizePolicyProps);
 }
@@ -67,8 +66,7 @@ Scene::Scene(luxrays::PropertiesRPtr resizePolicyProps) :
 Scene::Scene(
 	PropertiesRPtr scnProps,
 	PropertiesRPtr resizePolicyProps
-) :
-	randomImageMap(ImageMap::AllocRandomImageMap(512))
+)
 {
 	Init(resizePolicyProps);
 
@@ -86,7 +84,7 @@ void Scene::Init(luxrays::PropertiesRPtr resizePolicyProps) {
 	if (resizePolicyProps)
 		imgMapCache.SetImageResizePolicy(ImageMapResizePolicy::FromProperties(*resizePolicyProps));
 	// Add random image map to imgMapCache and specify its resize policy
-	imgMapCache.DefineImageMap(ImageMap::AllocRandomImageMap(512));
+	imgMapCache.DefineImageMap(randomImageMap);
 	imgMapCache.resizePolicyToApply.push_back(false);
 
 	enableParsePrint = true;
