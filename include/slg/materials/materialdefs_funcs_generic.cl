@@ -228,7 +228,8 @@ OPENCL_FORCE_INLINE float3 SchlickBSDF_CoatingF(const float3 ks, const float rou
 	const float cosi = fabs(sampledDir.z);
 
 	const float3 wh = normalize(fixedDir + sampledDir);
-	const float3 S = FresnelSchlick_Evaluate(ks, fabs(dot(sampledDir, wh)));
+	const float cosi_Schlick = clamp(fabs(dot(sampledDir, wh)), 0.f, 1.f);
+	const float3 S = FresnelSchlick_Evaluate(ks, cosi_Schlick);
 
 	const float G = SchlickDistribution_G(roughness, fixedDir, sampledDir);
 
