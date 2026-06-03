@@ -2283,6 +2283,12 @@ PYBIND11_MODULE(pyluxcore, m) {
 			{ return std::make_unique<luxrays::Properties>(s); }
 		)
 	)
+    .def(
+		py::init(
+			[](const Properties& props) -> std::unique_ptr<luxrays::Properties>
+			{ return props.Clone(); }
+		)
+	)
 
     // Required because Properties::Set is overloaded
 	.def<luxrays::Properties &(luxrays::Properties::*)(PropertyRPtr)>
