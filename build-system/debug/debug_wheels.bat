@@ -17,11 +17,11 @@ FOR /F "tokens=*" %%g IN ('gh auth token') do (SET TOKEN=%%g)
 
 act.exe workflow_dispatch^
   --action-offline-mode^
-  --platform="windows-latest=-self-hosted"^
+  --platform="windows-2022=-self-hosted"^
   --job=build-wheels^
   --pull=false^
   --secret="GITHUB_TOKEN=%TOKEN%"^
-  --matrix=os:windows-latest^
+  --matrix=os:windows-2022^
   --matrix=python-minor:11^
   --artifact-server-path=/tmp/pyluxcore^
   --rm
