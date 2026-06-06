@@ -90,8 +90,7 @@ static int UVCB(p_ply_argument argument) {
 	void *userData = nullptr;
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
-	UV *uv = *static_cast<UV **> (userData);
-	if (!uv) return 1;
+	auto uv = *static_cast<ExtMeshProp<UV>::Layer *> (userData);
 
 	long uvIndex;
 	ply_get_argument_element(argument, nullptr, &uvIndex);
@@ -112,8 +111,8 @@ static int ColorCB(p_ply_argument argument) {
 	void *userData = nullptr;
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
-	float *c = *static_cast<float **> (userData);
-	if (!c) return 1;
+	auto c = *static_cast<ExtMeshProp<float>::Layer *> (userData);
+	//float *c = *static_cast<float **> (userData);
 
 	long colIndex;
 	ply_get_argument_element(argument, nullptr, &colIndex);
@@ -154,8 +153,7 @@ static int AlphaCB(p_ply_argument argument) {
 	void *userData = nullptr;
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
-	float *c = *static_cast<float **> (userData);
-	if (!c) return 1;
+	auto c = *static_cast<ExtMeshProp<float>::Layer *> (userData);
 
 	long alphaIndex;
 	ply_get_argument_element(argument, nullptr, &alphaIndex);
@@ -184,8 +182,7 @@ static int VertexAOVCB(p_ply_argument argument) {
 	void *userData = nullptr;
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
-	float *c = *static_cast<float **> (userData);
-	if (!c) return 1;
+	auto c = *static_cast<ExtMeshProp<float>::Layer *> (userData);
 
 	long alphaIndex;
 	ply_get_argument_element(argument, nullptr, &alphaIndex);
@@ -249,7 +246,7 @@ static int TriAOVCB(p_ply_argument argument) {
 	void *userData = nullptr;
 	ply_get_argument_user_data(argument, &userData, &userIndex);
 
-	float *triAOV = *static_cast<float **> (userData);
+	auto triAOV = *static_cast<ExtMeshProp<float>::Layer *> (userData);
 
 	long triAOVIndex;
 	ply_get_argument_element(argument, nullptr, &triAOVIndex);
@@ -321,20 +318,19 @@ ExtTriangleMeshUPtr ExtTriangleMesh::LoadPly(const string &fileName) {
 	// This is our own extension to file PLY format in order to support multiple
 	// UVs, Colors and Alphas for each vertex
 
+	// Output buffers
+
 	ExtMeshProp<UV> uvs; // Vertex uvs
 	ExtMeshProp<Spectrum> cols; // Vertex colors
 	ExtMeshProp<float> alphas; // Vertex alphas
 	ExtMeshProp<float> vertexAOVs; // Vertex AOV
-	//array<UV *, EXTMESH_MAX_DATA_COUNT> uvs;
-	//array<Spectrum *, EXTMESH_MAX_DATA_COUNT> cols;
-	//array<float *, EXTMESH_MAX_DATA_COUNT> alphas;
-	//array<float *, EXTMESH_MAX_DATA_COUNT> vertexAOVs;
 
 	array<u_int, EXTMESH_MAX_DATA_COUNT> plyNbUVs;
 	array<u_int, EXTMESH_MAX_DATA_COUNT> plyNbColors;
 	array<u_int, EXTMESH_MAX_DATA_COUNT> plyNbAlphas;
 	array<u_int, EXTMESH_MAX_DATA_COUNT> plyNbVertexAOVs;
-	
+
+	// Get output buffer sizes
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
 		const string suffix = (i == 0) ? "" : ToString(i);
 
@@ -374,38 +370,40 @@ ExtTriangleMeshUPtr ExtTriangleMesh::LoadPly(const string &fileName) {
 		}
 	}
 
+	// Allocate buffers
 	p = TriangleMesh::AllocVerticesBuffer(plyNbVerts);
 	if (plyNbNormals == 0)
 		n = nullptr;
 	else
 		n = new Normal[plyNbNormals];
 
-	auto setProp = [&]<typename V, typename N>(V values, N numbers, u_int i) {
+	// Helper
+	auto allocProp = [&]<typename V, typename N>(V& values, const N& numbers, u_int i) {
 		if (numbers[i] == 0) {
 			values[i] = nullptr;
 		} else {
 			values.AllocateLayer(i, numbers[i]);
 		}
 	};
-
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
-		setProp(uvs, plyNbUVs, i);
-		setProp(cols, plyNbColors, i);
-		setProp(alphas, plyNbAlphas, i);
-		setProp(vertexAOVs, plyNbVertexAOVs, i);
-		setProp(TriAOVs, plyNbTriAOVs, i);
+		allocProp(uvs, plyNbUVs, i);
+		allocProp(cols, plyNbColors, i);
+		allocProp(alphas, plyNbAlphas, i);
+		allocProp(vertexAOVs, plyNbVertexAOVs, i);
+		allocProp(TriAOVs, plyNbTriAOVs, i);
 	}
 
+	// Read data
 	if (!ply_read(plyfile)) {
 		stringstream ss;
 		ss << "Unable to parse PLY file '" << fileName << "'";
 
 		delete[] p;
 		delete[] n;
-		
+
 		throw runtime_error(ss.str());
 	}
-	
+
 	ply_close(plyfile);
 
 	// Copy triangle indices vector
@@ -414,7 +412,7 @@ ExtTriangleMeshUPtr ExtTriangleMesh::LoadPly(const string &fileName) {
 
 	auto mesh = std::make_unique<ExtTriangleMesh>(plyNbVerts, vi.size(), p, tris, n, uvs, cols, alphas);
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
-		mesh->SetVertexAOV(i, vertexAOVs[i], plyNbVerts);
+		//mesh->SetVertexAOV(i, vertexAOVs[i], plyNbVerts);  TODO
 		mesh->SetTriAOV(i, TriAOVs[i], vi.size());
 	}
 	
