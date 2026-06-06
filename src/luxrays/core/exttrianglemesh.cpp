@@ -347,30 +347,39 @@ ExtTriangleMeshUPtr ExtTriangleMesh::CopyExt(
 	Point *vs = meshVertices;
 	if (!vs) {
 		vs = AllocVerticesBuffer(vertCount);
-		copy(vertices, vertices + vertCount, vs);
+		std::copy(vertices, vertices + vertCount, vs);
 	}
 
 	Triangle *ts = meshTris;
 	if (!ts) {
 		ts = AllocTrianglesBuffer(triCount);
-		copy(tris, tris + triCount, ts);
+		std::copy(tris, tris + triCount, ts);
 	}
 
 	Normal *ns = meshNormals;
 	if (!ns && HasNormals()) {
 		ns = new Normal[vertCount];
-		copy(normals, normals + vertCount, ns);
+		std::copy(normals, normals + vertCount, ns);
 	}
 
 
-	ExtMeshProp<UV> us;
-	ExtMeshProp<Spectrum> cs;
-	ExtMeshProp<float> as;
+	// Optionals: UV, colors, alphas. Initialize from source
+	ExtMeshProp<UV> us = uvs;
+	ExtMeshProp<Spectrum> cs = cols;
+	ExtMeshProp<float> as = alphas;
 
+
+	// Copy overwriting values
 	for (u_int i = 0; i < EXTMESH_MAX_DATA_COUNT; ++i) {
-		us.SetLayer(i, uvs.CopyLayer(i, meshUVs));
-		cs.SetLayer(i, cols.CopyLayer(i, meshCols));
-		as.SetLayer(i, alphas.CopyLayer(i, meshAlphas));
+		if (meshUVs) {
+			us.SetLayer(i, uvs.CopyLayer(i, meshUVs));
+		}
+		if (meshCols) {
+			cs.SetLayer(i, cols.CopyLayer(i, meshCols));
+		}
+		if (meshAlphas) {
+			as.SetLayer(i, alphas.CopyLayer(i, meshAlphas));
+		}
 	}
 
 	auto m =  std::make_unique<ExtTriangleMesh>(vertCount, triCount,
@@ -409,9 +418,9 @@ ExtTriangleMeshUPtr ExtTriangleMesh::Copy(
 		meshVertices,
 		meshTris,
 		meshNormals,
-		meshUVs,
-		meshCols,
-		meshAlphas,
+		mUVs ? std::optional(meshUVs) : std::nullopt,
+		mCols ? std::optional(meshCols) : std::nullopt,
+		mAlphas ? std::optional(meshAlphas) : std::nullopt,
 		bRadius
 	);
 }
