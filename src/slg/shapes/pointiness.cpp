@@ -17,11 +17,13 @@
  ***************************************************************************/
 
 #include <boost/format.hpp>
+#include <limits>
 #include <optional>
 
 #include "luxrays/core/exttrianglemesh.h"
 #include "slg/shapes/pointiness.h"
 #include "slg/scene/scene.h"
+#include "slg/shapes/merge_on_distance.h"
 
 using namespace std;
 using namespace luxrays;
@@ -68,10 +70,17 @@ protected:
 	const Point *verts_;
 };
 
-PointinessShape::PointinessShape(ExtTriangleMeshRef srcMesh, const u_int destAOVIndex) {
-	SDL_LOG("Pointiness shape " << srcMesh.GetName());
+PointinessShape::PointinessShape(ExtTriangleMeshRef rawSrcMesh, const u_int destAOVIndex) {
+	// rawSrcMesh is source mesh before merge-on-distance
+	SDL_LOG("Pointiness shape " << rawSrcMesh.GetName());
 
 	const double startTime = WallClockTime();
+
+	// Merge vertices on distance
+	auto srcMeshPtr = MergeOnDistanceShape::ApplyMergeOnDistance(
+		rawSrcMesh, std::numeric_limits<float>::min(), true
+	);
+	auto& srcMesh = *srcMeshPtr;
 
 	const u_int originalVertCount = srcMesh.GetTotalVertexCount();
 	const u_int triCount = srcMesh.GetTotalTriangleCount();
