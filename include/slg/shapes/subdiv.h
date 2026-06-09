@@ -34,6 +34,7 @@ public:
 		const u_int maxLevel,
 		const float maxEdgeScreenSize,
 		const bool enhanced,
+		const bool merge_before,  // Apply merge on distance beforehands
 		const float sharpnessThresholdRadians,
 		const float creaseWeight
 	);
@@ -46,6 +47,7 @@ public:
 		luxrays::ExtTriangleMeshRef srcMesh,
 		const u_int maxLevel,
 		const bool enhanced,
+		const bool merge_before,
 		const float sharpnessThresholdRadians,
 		const float creaseWeight
 	);

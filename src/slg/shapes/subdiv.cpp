@@ -1541,6 +1541,7 @@ SubdivShape::SubdivShape(
 	const u_int maxLevel,
 	const float maxEdgeScreenSize,
 	const bool enhanced,
+	const bool merge_before,
 	const float sharpnessThresholdRadians,
 	const float creaseWeight
 ) {
@@ -1556,10 +1557,11 @@ SubdivShape::SubdivShape(
 	if (maxLevel > 0) {
 
 		// Merge vertices on distance
-		auto srcMeshPtr = MergeOnDistanceShape::ApplyMergeOnDistance(
-			rawSrcMesh, std::numeric_limits<float>::min(), true
-		);
-		auto& srcMesh = *srcMeshPtr;
+		auto srcMeshPtr = merge_before ?
+			MergeOnDistanceShape::ApplyMergeOnDistance(
+				rawSrcMesh, std::numeric_limits<float>::min(), true
+			) : nullptr;
+		auto& srcMesh = merge_before ? *srcMeshPtr : rawSrcMesh;
 
 		if (camera && (maxEdgeScreenSize > 0.f)) {
 			SDL_LOG("Subdividing shape " << srcMesh.GetName()
@@ -1594,6 +1596,7 @@ SubdivShape::SubdivShape(
 					*mesh,
 					optimizedLevel,
 					enhanced,
+					merge_before,
 					sharpnessThresholdRadians,
 					creaseWeight
 				);
@@ -1610,7 +1613,7 @@ SubdivShape::SubdivShape(
 		} else {
 			SDL_LOG("Subdividing shape " << srcMesh.GetName() << " at level: " << maxLevel);
 
-			mesh = ApplySubdiv(srcMesh, maxLevel, enhanced, sharpnessThresholdRadians, creaseWeight);
+			mesh = ApplySubdiv(srcMesh, maxLevel, enhanced, merge_before, sharpnessThresholdRadians, creaseWeight);
 		}
 	} else {
 		// Nothing to do, just make a copy
@@ -1687,6 +1690,7 @@ ExtTriangleMeshUPtr SubdivShape::ApplySubdiv(
 	ExtTriangleMeshRef srcMesh,
 	const u_int maxLevel,
 	const bool enhanced,
+	const bool merge_before,
 	const float sharpnessThresholdRadians,
 	const float creaseWeight
 ) {
