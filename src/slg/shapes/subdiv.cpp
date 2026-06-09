@@ -1537,7 +1537,7 @@ ExtTriangleMeshUPtr ApplySubdiv(
 
 SubdivShape::SubdivShape(
 	CameraConstPtr camera,
-	ExtTriangleMeshRef srcMesh,
+	ExtTriangleMeshRef rawSrcMesh,
 	const u_int maxLevel,
 	const float maxEdgeScreenSize,
 	const bool enhanced,
@@ -1554,6 +1554,12 @@ SubdivShape::SubdivShape(
 	}
 
 	if (maxLevel > 0) {
+
+		// Merge vertices on distance
+		auto srcMeshPtr = MergeOnDistanceShape::ApplyMergeOnDistance(
+			rawSrcMesh, std::numeric_limits<float>::min(), true
+		);
+		auto& srcMesh = *srcMeshPtr;
 
 		if (camera && (maxEdgeScreenSize > 0.f)) {
 			SDL_LOG("Subdividing shape " << srcMesh.GetName()
@@ -1609,11 +1615,11 @@ SubdivShape::SubdivShape(
 	} else {
 		// Nothing to do, just make a copy
 		SDL_LOG("Subdivision: level=0 - Skipping");
-		mesh = srcMesh.Copy();
+		mesh = rawSrcMesh.Copy();
 	}
 
 	if (maxLevel > 0) {
-		SDL_LOG("Subdivided shape from " << srcMesh.GetTotalTriangleCount() << " to " << mesh->GetTotalTriangleCount() << " faces");
+		SDL_LOG("Subdivided shape from " << rawSrcMesh.GetTotalTriangleCount() << " to " << mesh->GetTotalTriangleCount() << " faces");
 	}
 
 	// For some debugging
