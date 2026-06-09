@@ -46,7 +46,7 @@ MBVHAccel::~MBVHAccel() {
 	if (initialized) {
 		for(const BVHAccel *bvh: uniqueLeafs)
 			delete bvh;
-		delete bvhRootTree;
+		delete[] bvhRootTree;
 	}
 }
 
