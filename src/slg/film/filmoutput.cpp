@@ -569,13 +569,12 @@ void Film::Output(
 
 		using Buffer10 = std::unique_ptr< GenericFrameBuffer<1, 0, u_int> >;
 
-		std::optional<std::reference_wrapper<Buffer10>> _channel;
 		auto selector = [&](const FilmOutputs::FilmOutputType t) -> const Buffer10 &
 		{
 			switch (t) {
-				case FilmOutputs::MATERIAL_ID: return std::ref(channel_MATERIAL_ID);
-				case FilmOutputs::OBJECT_ID: return std::ref(channel_OBJECT_ID);
-				case FilmOutputs::SAMPLECOUNT: return std::ref(channel_SAMPLECOUNT);
+				case FilmOutputs::MATERIAL_ID: return std::cref(channel_MATERIAL_ID);
+				case FilmOutputs::OBJECT_ID: return std::cref(channel_OBJECT_ID);
+				case FilmOutputs::SAMPLECOUNT: return std::cref(channel_SAMPLECOUNT);
 				default: throw runtime_error(
 					"Unknown film output type in Film::Output(): " + ToString(type)
 				);
