@@ -390,7 +390,7 @@ jobs:
         #uses: mxschmitt/action-tmate@v3
 
       # Upload artifacts
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         id: upload
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ matrix.python-minor }}
