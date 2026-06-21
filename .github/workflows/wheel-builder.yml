@@ -104,7 +104,7 @@ jobs:
         shell: bash
         run: |
           case ${{ runner.os }} in
-            Linux) _workspace="/project";;
+            Linux) _workspace="$GITHUB_WORKSPACE";;
             Windows) _workspace=$(cygpath -u $GITHUB_WORKSPACE);;
             macOS) _workspace="$GITHUB_WORKSPACE";;
             *) echo "Unhandled os ${{ runner.os }}";exit 64;;
